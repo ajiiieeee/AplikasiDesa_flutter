@@ -15,6 +15,7 @@ import 'package:digitalv/screens/detail_berita.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:digitalv/models/detail_berita.dart';
+import 'package:digitalv/screens/chatbot_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/globals.dart';
@@ -255,79 +256,92 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF0057A6), Color(0xFF003D73)],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                 Text(
-                                  'Pengaduan!',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                 Text(
-                                  'Lakukan pengaduan jika anda memiliki keluhan, saran, atau masukan.',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => Pengaduan(),
-                                      ),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFDCC478),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'Klik Disini',
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.black,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      SizedBox(width: 5),
-                                      Icon(
-                                        Icons.arrow_forward_rounded,
-                                        color: Colors.black,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Image.asset('assets/images/boy.png', width: 100),
-                        ],
-                      ),
+                Row(
+  crossAxisAlignment: CrossAxisAlignment.end,
+  children: [
+    Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1565C0),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pengaduan!',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Lakukan pengaduan jika anda memiliki keluhan, saran, atau masukan. Silakan sampaikan melalui laman ini untuk kami tindak lanjuti.',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 32,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Pengaduan(),
                     ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: const Text("Klik Disini"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 10),
+
+    GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatbotScreen(),
+          ),
+        );
+      },
+      child: Column(
+        children: [
+          Image.asset(
+            'assets/images/devi.png',
+            width: 85,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Tanya Devi",
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
                     const SizedBox(height: 15),
                      Text(
                       'Kategori Layanan',

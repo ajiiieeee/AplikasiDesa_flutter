@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
       
 
       // home: BottomNavBar(),
-      home: isLoggedIn ? const BottomNavBar() : const OnBoardingScreen() ,
+      home: const BottomNavBar(),
     );
   }
 }

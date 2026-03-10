@@ -45,7 +45,7 @@ dependencies:
   image_picker: ^1.0.4
   image_cropper: ^9.1.0
   timeago: ^3.3.0
-
+ 
   # permission_handler: ^10.2.0
   # file_picker: ^10.1.2
   # The following adds the Cupertino Icons font to your application.
@@ -100,6 +100,7 @@ flutter:
     - assets/images/onboard1.png
     - assets/images/onboard2.png
     - assets/images/onboard3.png
+    - assets/images/robot.png
 
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
