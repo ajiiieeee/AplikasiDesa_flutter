@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/gemini_service.dart';
+import '../services/groq_service.dart';
 import '../services/surat_service.dart';
 
 class ChatbotScreen extends StatefulWidget {
@@ -79,7 +79,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     } else {
 
-      balasan = await GeminiService.sendMessage(pesanUser);
+      balasan = await GroqService.sendMessage(pesanUser);
 
     }
 
