@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class GroqService {
 
   // 🔒 Sebaiknya nanti pindahkan ke .env
-  static const String apiKey = "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";
+  // static const String apiKey = "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";
 
   static Future<String> sendMessage(String message) async {
 
@@ -15,7 +15,7 @@ class GroqService {
       final response = await http.post(
         url,
         headers: {
-          "Authorization": "Bearer $apiKey",
+          // "Authorization": "Bearer $apiKey",
           "Content-Type": "application/json",
         },
         body: jsonEncode({
