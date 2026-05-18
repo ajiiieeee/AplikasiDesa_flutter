@@ -1,15 +1,8 @@
-import 'package:digitalv/screens/form_aktakelahiran.dart';
-import 'package:digitalv/screens/form_aktaperkawinan.dart';
-import 'package:digitalv/screens/form_kartukeluarga.dart';
-import 'package:digitalv/screens/form_ktp.dart';
-import 'package:digitalv/screens/form_pindahpenduduk.dart';
-import 'package:digitalv/screens/form_sktm.dart';
-import 'package:digitalv/screens/form_suratmiskin.dart';
 import 'package:digitalv/screens/info_profile.dart';
 import 'package:digitalv/screens/notifikasi.dart';
 import 'package:flutter/material.dart';
 import 'package:digitalv/screens/pengaduan.dart';
-import 'package:digitalv/screens/form_kematian.dart';
+import 'package:digitalv/screens/form_pengajuan.dart';
 import 'package:digitalv/screens/info_berita.dart';
 import 'package:digitalv/screens/detail_berita.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -35,55 +28,32 @@ class _HomeScreenState extends State<HomeScreen> {
   String namaUser = 'User'; // Default
   String _fotoProfil = '';
 
-  @override
+ @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _refreshProfile();
+    fetchLayanan();
+  }
+
+  Future<void> fetchLayanan() async {
+    try {
+      final response = await http.get(Uri.parse('$baseURL/surat'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          layanan = jsonDecode(response.body);
+          isLoadingLayanan = false;
+        });
+      }
+    } catch (e) {
+      print(e);
+    }
   }
 
   // List layanan (menu utama)
-  final List<Map<String, dynamic>> layanan = [
-    {
-      'icon': Icons.insert_drive_file,
-      'label': 'Akta Kelahiran',
-      'color': const Color(0xFF1976D2),
-    },
-    {
-      'icon': Icons.family_restroom,
-      'label': 'Kartu Keluarga',
-      'color': const Color(0xFF388E3C),
-    },
-    {
-      'icon': Icons.credit_card,
-      'label': 'KTP',
-      'color': const Color(0xFF455A64),
-    },
-    {
-      'icon': Icons.money_sharp,
-      'label': 'SKTM',
-      'color': const Color(0xFFFF9307),
-    },
-    {
-      'icon': Icons.diversity_3,
-      'label': 'Akta Perkawinan',
-      'color': const Color(0xFF6A1B9A),
-    },
-    {
-      'icon': Icons.airline_seat_flat,
-      'label': 'Akta Kematian',
-      'color': const Color(0xFF607D8B),
-    },
-    {
-      'icon': Icons.apartment,
-      'label': 'Pindah Penduduk',
-      'color': const Color(0xFFA70011),
-    },
-    {
-      'icon': Icons.receipt_long,
-      'label': 'Pernyataan Miskin',
-      'color': const Color(0xFF74351F),
-    },
-  ];
+  List<dynamic> layanan = [];
+  bool isLoadingLayanan = true;
+
 
   // Fungsi untuk ambil daftar berita dari API
   Future<List<Berita>> fetchBeritaList() async {
@@ -115,19 +85,45 @@ class _HomeScreenState extends State<HomeScreen> {
     return Color.lerp(baseColor, Colors.white, 0.7)!;
   }
 
-  // Memuat ulang data profil
   Future<void> _refreshProfile() async {
-    await getProfilFromApi(context); // Ambil data dari API
-    await _loadUserData;
+    await getProfilFromApi(
+      context,
+    ); 
+    await _loadUserData(); 
   }
 
   // Mengambil data nama dan foto dari SharedPreferences
-  void _loadUserData() async {
+  Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+
+    final nama = prefs.getString('nama_lengkap') ?? 'User';
+    final fotoProfil = prefs.getString('foto_profil') ?? '';
+
+    String fotoProfilUrl = '';
+
+    if (fotoProfil.isNotEmpty) {
+      if (fotoProfil.startsWith('http')) {
+        fotoProfilUrl = fotoProfil.replaceFirst('/api/storage/', '/storage/');
+      } else {
+        final cleanPath =
+            fotoProfil.startsWith('/') ? fotoProfil.substring(1) : fotoProfil;
+
+        fotoProfilUrl = '$serverURL/$cleanPath';
+      }
+    }
+
+    await prefs.setString('foto_profil', fotoProfilUrl);
+
+    if (!mounted) return;
+
     setState(() {
-      namaUser = prefs.getString('nama') ?? 'User';
-      _fotoProfil = prefs.getString('foto_profil') ?? '';
+      namaUser = nama;
+      _fotoProfil = fotoProfilUrl;
     });
+
+    print('===== Data Profil dari SharedPreferences =====');
+    print('Nama: $namaUser');
+    print('Foto Profil: $_fotoProfil');
   }
 
   // Menyimpan data nama pengguna (misalnya setelah login)
@@ -225,15 +221,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                         child: CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Colors.white,
+                          radius: 35,
+                          backgroundColor: Colors.grey.shade200,
                           backgroundImage:
                               _image != null
                                   ? FileImage(_image!)
-                                  : _fotoProfil.isNotEmpty
-                                  ? NetworkImage(_fotoProfil)
-                                  : null,
-                                ),
+                                  : NetworkImage(
+                                        _fotoProfil.isNotEmpty
+                                            ? _fotoProfil
+                                            : '$serverURL/storage/foto_profil/default.jpg',
+                                      )
+                                      as ImageProvider,
+                        ),
                               ),
                             ),
                           ],
@@ -365,66 +364,65 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisSpacing: 8,
                             childAspectRatio: 1,
                           ),
-                      itemBuilder: (context, index) {
+                     itemBuilder: (context, index) {
                         final item = layanan[index];
-                        final backgroundColor = tintColor(item['color']);
+
+                        final List<Color> colors = [
+                          const Color(0xFF1976D2),
+                          const Color(0xFF388E3C),
+                          const Color(0xFFFF9307),
+                          const Color(0xFF6A1B9A),
+                          const Color(0xFFA70011),
+                        ];
+
+                        final Color baseColor = colors[index % colors.length];
+
+                        final backgroundColor = tintColor(baseColor);
+
                         return GestureDetector(
                           onTap: () async {
-                            if (_isNavigating) return; // Cegah push ganda
-                              _isNavigating = true;
-                            Widget targetPage;
+                            if (_isNavigating) return;
 
-                            switch (index) {
-                              case 0:
-                                targetPage = FormAktakelahiran();
-                                break;
-                              case 1:
-                                targetPage = FormKartukeluarga();
-                                break;
-                              case 2:
-                                targetPage = FormKtp();
-                                break;
-                              case 3:
-                                targetPage = FormSktm();
-                                break;
-                              case 4:
-                                targetPage = FormAktaPerkawinan();
-                                break;
-                              case 5:
-                                targetPage = FormKematian();
-                                break;
-                              case 6:
-                                targetPage = FormPindahpenduduk();
-                                break;
-                              case 7:
-                                targetPage = FormSuratmiskin();
-                                break;
-                              default:
-                                _isNavigating = false;
-                                return; // tidak ada aksi
-                            }
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => targetPage),
-                        );
+                            _isNavigating = true;
 
-                        _isNavigating = false; // aktifkan kembali setelah kembali dari push
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                       FormPengajuan(
+                                      idSurat: item['id_surat'],
+                                    )
+                              ),
+                            );
+
+                            _isNavigating = false;
                           },
+
                           child: Column(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
                                   color: backgroundColor,
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                                child: Icon(item['icon'], color: item['color']),
+                                child: Icon(
+                                  Icons.description,
+                                  color: baseColor,
+                                  size: 28,
+                                ),
                               ),
-                              const SizedBox(height: 5),
+
+                              const SizedBox(height: 8),
+
                               Text(
-                                item['label'],
-                                style: const TextStyle(fontSize: 11),
+                                item['nama_surat'],
                                 textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ],
                           ),
@@ -567,7 +565,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               ),
                                               const SizedBox(height: 2),
                                               Text(
-                                                item.tanggal,
+                                                item.createdAt,
                                                 style: const TextStyle(
                                                   fontSize: 10,
                                                   color: Colors.white70,

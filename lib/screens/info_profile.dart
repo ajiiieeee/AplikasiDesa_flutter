@@ -6,6 +6,7 @@ import '../screens/detail_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../controllers/ProfileController.dart';
 import '../widgets/snackbarcustom.dart'; 
+import '../config/globals.dart';
 import 'package:image_picker/image_picker.dart'; // Ambil gambar dari galeri/kamera
 import 'package:image_cropper/image_cropper.dart'; // Crop gambar
 import 'package:image_cropper/image_cropper.dart' as cropper;
@@ -27,62 +28,14 @@ class _InfoProfileState extends State<InfoProfile> {
   String _email = '';
   String _fotoProfil = '';
 
- @override
+  @override
   void initState() {
     super.initState();
     _refreshProfile();
   }
 
-  Future<void> _pickImageAndUpload() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      // Crop gambar terlebih dahulu
-      CroppedFile? croppedFile = await ImageCropper().cropImage(
-        sourcePath: pickedFile.path,
-        compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 90,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Foto',
-            toolbarColor: const Color(0xFF0057A6),
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: false,
-          ),
-          IOSUiSettings(title: 'Crop Foto'),
-        ],
-      );
-
-      if (croppedFile != null) {
-        File imageFile = File(croppedFile.path); // Konversi ke File
-        setState(() {
-          _image = imageFile;
-        });
-
-        await uploadFotoProfil(context, _image!);
-      } else {
-        showCustomSnackbar(
-          context: context,
-          message: 'Pemotongan gambar dibatalkan',
-          backgroundColor: Colors.orange,
-          icon: Icons.warning,
-        );
-      }
-    } else {
-      showCustomSnackbar(
-        context: context,
-        message: 'Tidak ada gambar dipilih',
-        backgroundColor: Colors.orange,
-        icon: Icons.warning,
-      );
-    }
-  }
-
-
   Future<void> _refreshProfile() async {
-    await getProfilFromApi(context);  
+    await getProfilFromApi(context);
     await _loadProfileData();
   }
 
@@ -94,9 +47,32 @@ class _InfoProfileState extends State<InfoProfile> {
     final nama = prefs.getString('nama_lengkap') ?? 'Belum diatur';
     final noHP = prefs.getString('no_hp') ?? 'Belum diatur';
     final email = prefs.getString('email') ?? 'Belum diatur';
-    final fotoProfil = prefs.getString('foto_profil') ?? '';
 
-    // Logging ke console
+    String fotoProfil = prefs.getString('foto_profil') ?? '';
+
+    if (fotoProfil.isEmpty || fotoProfil == 'null') {
+      fotoProfil = '$serverURL/storage/foto_profil/default.jpg';
+    } else {
+      // Jangan ganti ke baseURL, karena baseURL ada /api
+      // Kalau masih ada /api/storage, ubah jadi /storage
+      fotoProfil = fotoProfil.replaceFirst('/api/storage/', '/storage/');
+
+      // Kalau masih berupa path saja, tambahkan serverURL
+      if (!fotoProfil.startsWith('http')) {
+        final cleanPath =
+            fotoProfil.startsWith('/') ? fotoProfil.substring(1) : fotoProfil;
+
+        fotoProfil = '$serverURL/$cleanPath';
+      }
+
+      // Rapikan jika ada slash dobel
+      fotoProfil = fotoProfil.replaceFirst('$serverURL//', '$serverURL/');
+
+      // Kalau memang semua file profil kamu jpg, boleh aktifkan ini
+      fotoProfil = fotoProfil.replaceAll('.png', '.jpg');
+    }
+
+    if (!mounted) return;
 
     setState(() {
       _nik = nik;
@@ -106,6 +82,45 @@ class _InfoProfileState extends State<InfoProfile> {
       _email = email;
       _fotoProfil = fotoProfil;
     });
+  }
+  Future<void> _pickImageAndUpload() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile == null) return;
+
+    CroppedFile? croppedFile = await ImageCropper().cropImage(
+      sourcePath: pickedFile.path,
+      compressFormat: ImageCompressFormat.jpg,
+      compressQuality: 90,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Crop Foto',
+          toolbarColor: const Color(0xFF0057A6),
+          toolbarWidgetColor: Colors.white,
+          aspectRatioPresets: [CropAspectRatioPreset.square],
+        ),
+        IOSUiSettings(title: 'Crop Foto'),
+      ],
+    );
+
+    if (croppedFile == null) {
+      showCustomSnackbar(
+        context: context,
+        message: 'Pemotongan gambar dibatalkan',
+        backgroundColor: Colors.orange,
+        icon: Icons.warning,
+      );
+      return;
+    }
+
+    final imageFile = File(croppedFile.path);
+
+    setState(() {
+      _image = imageFile;
+    });
+
+    await uploadFotoProfil(context, imageFile);
   }
 
 
@@ -148,13 +163,17 @@ class _InfoProfileState extends State<InfoProfile> {
               child: Stack(
                 children: [
                   CircleAvatar(
-                    radius: 55, 
+                    radius: 35,
+                    backgroundColor: Colors.grey.shade200,
                     backgroundImage:
                         _image != null
-                             ? FileImage(_image!)
-                            : (_fotoProfil.isNotEmpty
-                                ? NetworkImage(_fotoProfil)
-                                : null),
+                            ? FileImage(_image!)
+                            : NetworkImage(
+                                  _fotoProfil.isNotEmpty
+                                      ? _fotoProfil
+                                      : '$serverURL/storage/foto_profil/default.jpg',
+                                )
+                                as ImageProvider,
                   ),
                   Positioned(
                     bottom: 0,
@@ -249,26 +268,6 @@ class _InfoProfileState extends State<InfoProfile> {
                   buildProfileRow('E-Mail', _email),
                   
                   const SizedBox(height: 8),
-                  // InkWell(
-                  //   // onTap: () {
-                  //   //   Navigator.push(
-                  //   //     context,
-                  //   //     MaterialPageRoute(
-                  //   //       builder: (context) => const UbahPasswordPage(),
-                  //   //     ),
-                  //   //   );
-                  //   // },
-                  //   child: Text(
-                  //     'Ubah Password',
-                  //     style: GoogleFonts.poppins(
-                  //       fontSize: 14,
-                  //       color: Color(0xFF0057A6),
-                  //       fontWeight: FontWeight.bold,
-
-                  //     ),
-                  //   ),
-                  // ),
-                  
                 ],
               ),
             ),

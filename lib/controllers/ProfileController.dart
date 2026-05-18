@@ -31,14 +31,32 @@ Future<void> getProfilFromApi(BuildContext context) async {
       final jsonResponse = json.decode(response.body);
       final data = jsonResponse['data'];
 
+      final fotoProfil = data['foto_profil']?.toString() ?? '';
+
+      String fotoProfilUrl = '';
+
+      if (fotoProfil.isNotEmpty) {
+        if (fotoProfil.startsWith('http')) {
+          fotoProfilUrl = fotoProfil.replaceFirst('/api/storage/', '/storage/');
+        } else {
+          final cleanPath =
+              fotoProfil.startsWith('/') ? fotoProfil.substring(1) : fotoProfil;
+
+          fotoProfilUrl = '$serverURL/$cleanPath';
+        }
+      }
+
       await prefs.setString('no_kk', data['no_kk'] ?? '');
       await prefs.setString('nama_lengkap', data['nama_lengkap'] ?? '');
       await prefs.setString('no_hp', data['no_hp'] ?? '');
       await prefs.setString('email', data['email'] ?? '');
-      await prefs.setString('foto_profil', data['foto_profil'] ?? '');
+      await prefs.setString('foto_profil', fotoProfilUrl);
+
+      print('Foto Profil Baru: $fotoProfilUrl');
     } else {
       final message =
           json.decode(response.body)['error'] ?? 'Terjadi kesalahan';
+
       showCustomSnackbar(
         context: context,
         message: message,

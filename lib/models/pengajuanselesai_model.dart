@@ -1,5 +1,5 @@
 class StatusSelesaiModel {
-  final String idPengajuan;
+  final int idPengajuan;
   final String namaSurat;
   final String updatedAt;
   final String status;
@@ -15,7 +15,7 @@ class StatusSelesaiModel {
 
   factory StatusSelesaiModel.fromJson(Map<String, dynamic> json) {
     return StatusSelesaiModel(
-      idPengajuan: json['id_pengajuan'],
+      idPengajuan: int.tryParse(json['id_pengajuan'].toString()) ?? 0,
       namaSurat: json['nama_surat'],
       updatedAt: json['updated_at'],
       status: json['status'],

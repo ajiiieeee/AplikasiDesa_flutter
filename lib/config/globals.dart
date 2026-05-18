@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+// Base URL utama
+ const String serverURL = "http://127.0.0.1:8000";
+// const String serverURL = "http://192.168.1.22:8000";
 
-// const String baseURL = "http://10.0.2.2:8000/api"; //emulator
-const String baseURL = "http://digitalvillage.my.id/api"; 
-// const String baseURL = "http://127.0.0.1:8000/api"; //chrome
+// Base URL API
+const String baseURL = "$serverURL/api";
 
 const Map<String, String> headers = {
   'Content-Type': 'application/json',
@@ -15,7 +17,7 @@ void errorSnackBar(BuildContext context, String text) {
     SnackBar(
       backgroundColor: Colors.red,
       content: Text(text),
-      duration: const Duration(seconds: 3), 
-      )
+      duration: const Duration(seconds: 3),
+    ),
   );
 }

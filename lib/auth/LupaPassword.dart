@@ -64,7 +64,7 @@ class LupaPassword extends StatelessWidget {
 
                           const SizedBox(height: 12),
                           Text(
-                            'Masukkan email akun Anda, kami akan mengirimkan kode OTP',
+                            'Masukkan nomor HP akun Anda, kami akan mengirimkan kode OTP melalui WhatsApp',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
                               color: Colors.white,
@@ -73,7 +73,6 @@ class LupaPassword extends StatelessWidget {
                           ),
                           const SizedBox(height: 40),
 
-                          // Input email
                           Container(
                             decoration: BoxDecoration(
                               color: Colors.white,
@@ -87,15 +86,15 @@ class LupaPassword extends StatelessWidget {
                               ],
                             ),
                             child: TextField(
-                              onChanged: controller.setEmail,
-                              keyboardType: TextInputType.emailAddress,
+                              onChanged: controller.setNoHp,
+                              keyboardType: TextInputType.phone,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
                               decoration: const InputDecoration(
-                                hintText: 'Masukkan email',
-                                prefixIcon: Icon(Icons.email_outlined),
+                                hintText: 'Masukkan nomor HP',
+                                prefixIcon: Icon(Icons.phone_android),
                                 hintStyle: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black54,
@@ -127,12 +126,12 @@ class LupaPassword extends StatelessWidget {
                                   controller.isLoading
                                       ? null
                                       : () {
-                                        if (controller.email.isEmpty ||
-                                            !controller.email.contains('@')) {
+                                        if (controller.noHp.isEmpty ||
+                                            controller.noHp.length < 10) {
                                           showCustomSnackbar(
                                             context: context,
                                             message:
-                                                'Masukkan email yang valid',
+                                                'Masukkan nomor HP yang valid',
                                             backgroundColor: Colors.red,
                                             icon: Icons.error,
                                           );

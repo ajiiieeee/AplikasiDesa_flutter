@@ -1,3 +1,4 @@
+import 'package:digitalv/widgets/bottom_navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -12,13 +13,14 @@ import 'package:digitalv/screens/status.dart';
 
 
 class FormPengajuan extends StatefulWidget {
-  const FormPengajuan({super.key});
+  final String idSurat;
 
+  const FormPengajuan({super.key, required this.idSurat});
   @override
-  State<FormPengajuan> createState() => _FormPengajuanState();
+  State<FormPengajuan> createState() => _FormPengajuan();
 }
 
-class _FormPengajuanState extends State<FormPengajuan> {
+class _FormPengajuan extends State<FormPengajuan> {
   final TextEditingController namaController = TextEditingController();
   final TextEditingController nikController = TextEditingController();
   final TextEditingController tempatLahirController = TextEditingController();
@@ -31,14 +33,47 @@ class _FormPengajuanState extends State<FormPengajuan> {
   final TextEditingController statusKeluargaController = TextEditingController();
   final TextEditingController pekerjaanController = TextEditingController();
   final TextEditingController pendidikanController = TextEditingController();
-  final TextEditingController keperluanController = TextEditingController();
+  final TextEditingController keteranganController = TextEditingController();
+  bool isLoading = false;
 
-  File? _foto1; // foto kk
+  Map<String, dynamic>? suratData;
+  List<dynamic> persyaratan = [];
+
+  Map<int, File?> uploadedFiles = {};
 
   @override
   void initState() {
     super.initState();
     _loadUserData(); // ← ini penting!
+    fetchSurat();
+  }
+
+  Future<void> fetchSurat() async {
+    final response = await http.get(Uri.parse('$baseURL/surat'));
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+
+      final surat = data.firstWhere(
+        (item) => item['id_surat'] == widget.idSurat,
+      );
+
+      List<dynamic> tempPersyaratan = [];
+
+      for (int i = 1; i <= 9; i++) {
+        final berkas = surat['berkas$i'];
+
+        if (berkas != null && berkas != '') {
+          tempPersyaratan.add({'nama_berkas': berkas});
+        }
+      }
+
+      setState(() {
+        suratData = surat;
+
+        persyaratan = tempPersyaratan;
+      });
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -59,14 +94,129 @@ class _FormPengajuanState extends State<FormPengajuan> {
       });
     }
   }
+  Future<void> _submitForm() async {
+    final keperluan = keteranganController.text.trim();
+
+    if (keperluan.isEmpty) {
+      showCustomSnackbar(
+        context: context,
+        message: 'Form keterangan harus diisi.',
+        backgroundColor: Colors.orange,
+        icon: Icons.warning_amber_rounded,
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    final uri = Uri.parse('$baseURL/pengajuan');
+    final request = http.MultipartRequest('POST', uri);
+
+    request.headers.addAll({'Accept': 'application/json'});
+
+    request.fields['id_surat'] = suratData?['id_surat']?.toString() ?? '';
+    request.fields['nik'] = nikController.text.trim();
+    request.fields['keterangan'] = keperluan;
+    request.fields['tanggal_diajukan'] = DateTime.now().toIso8601String();
+
+    print('URL dikirim: $uri');
+    print('ID Surat dikirim: ${request.fields['id_surat']}');
+    print('NIK dikirim: ${request.fields['nik']}');
+    print('Keterangan dikirim: ${request.fields['keterangan']}');
+    print('Tanggal dikirim: ${request.fields['tanggal_diajukan']}');
+
+    for (int i = 0; i < uploadedFiles.length; i++) {
+      File? file = uploadedFiles[i];
+
+      if (file != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('foto${i + 1}', file.path),
+        );
+      }
+    }
+
+    try {
+      final response = await request.send();
+      final res = await http.Response.fromStream(response);
+
+      print('URL dikirim: $uri');
+      print('STATUS CODE: ${res.statusCode}');
+      print('RESPONSE BODY: ${res.body}');
+
+      if (res.statusCode == 200) {
+        showCustomSnackbar(
+          context: context,
+          message: 'Pengajuan berhasil dikirim!',
+          backgroundColor: Colors.green,
+          icon: Icons.check_circle,
+        );
+
+        await Future.delayed(const Duration(seconds: 1));
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => BottomNavBar()),
+        );
+      } else if (res.statusCode == 409) {
+        final responseData = jsonDecode(res.body);
+
+        showCustomSnackbar(
+          context: context,
+          message: responseData['message'] ?? 'Pengajuan masih diproses.',
+          backgroundColor: Colors.orange,
+          icon: Icons.warning_amber_rounded,
+        );
+      } else if (res.statusCode == 422) {
+        final responseData = jsonDecode(res.body);
+
+        String errorMessage = 'Validasi gagal';
+
+        if (responseData['errors'] != null) {
+          errorMessage = responseData['errors'].values
+              .map((errList) => (errList as List).join(', '))
+              .join('\n');
+        } else if (responseData['message'] != null) {
+          errorMessage = responseData['message'];
+        }
+
+        showCustomSnackbar(
+          context: context,
+          message: errorMessage,
+          backgroundColor: Colors.red,
+          icon: Icons.error,
+        );
+      } else {
+        showCustomSnackbar(
+          context: context,
+          message: 'Gagal mengirim pengajuan. Status: ${res.statusCode}',
+          backgroundColor: Colors.red,
+          icon: Icons.error,
+        );
+      }
+    } catch (e) {
+      showCustomSnackbar(
+        context: context,
+        message: 'Terjadi kesalahan saat mengirim: $e',
+        backgroundColor: Colors.red,
+        icon: Icons.error,
+      );
+    }
+
+    if (!mounted) return;
+    setState(() => isLoading = false);
+    
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'FORM PENGAJUAN',
-         style: GoogleFonts.poppins(
+          suratData?['nama_surat'] ?? 'Loading...',
+          style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Color(0xFF0057A6),
@@ -79,38 +229,71 @@ class _FormPengajuanState extends State<FormPengajuan> {
       ),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
-            
-
         padding: const EdgeInsets.all(16),
-          
+
         child: Column(
           children: [
             buildInputField('Nama lengkap', namaController, readOnly: true),
             buildInputField('NIK', nikController, readOnly: true),
-            buildInputField('Tempat Lahir', tempatLahirController, readOnly: true),
-            buildInputField('Tanggal Lahir', tanggalLahirController, readOnly: true),
-            buildInputField('Golongan Darah', golDarahController, readOnly: true),
+            buildInputField(
+              'Tempat Lahir',
+              tempatLahirController,
+              readOnly: true,
+            ),
+            buildInputField(
+              'Tanggal Lahir',
+              tanggalLahirController,
+              readOnly: true,
+            ),
+            buildInputField(
+              'Golongan Darah',
+              golDarahController,
+              readOnly: true,
+            ),
             buildInputField('Jenis Kelamin', jkController, readOnly: true),
-            buildInputField('Kewarganegaraan', kewarganegaraanController, readOnly: true),
+            buildInputField(
+              'Kewarganegaraan',
+              kewarganegaraanController,
+              readOnly: true,
+            ),
             buildInputField('Agama', agamaController, readOnly: true),
             // buildInputField('Status Perkawinan', statusNikahController, readOnly: true),
-            buildInputField('Status Keluarga', statusKeluargaController, readOnly: true),
+            buildInputField(
+              'Status Keluarga',
+              statusKeluargaController,
+              readOnly: true,
+            ),
             buildInputField('Pekerjaan', pekerjaanController, readOnly: true),
             buildInputField('Pendidikan', pendidikanController, readOnly: true),
-            buildInputField('Keperluan', keperluanController),
+            if (suratData != null)
+              if (suratData != null)
+                buildInputField(
+                  suratData?['keterangan'] ?? '',
+                  keteranganController,
+                ),
             const SizedBox(height: 16),
-         buildUploadField('Foto KTP', _foto1, (file) {
-              setState(() => _foto1 = file);
-            }),
+            Column(
+              children: List.generate(persyaratan.length, (index) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: buildUploadField(
+                    persyaratan[index]['nama_berkas'],
+                    uploadedFiles[index],
+                    (file) {
+                      setState(() {
+                        uploadedFiles[index] = file;
+                      });
+                    },
+                  ),
+                );
+              }),
+            ),
+
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Pengajuan berhasil dikirim!')),
-                  );
-                },
+                onPressed: isLoading ? null : _submitForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0057A6),
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -118,14 +301,26 @@ class _FormPengajuanState extends State<FormPengajuan> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                child: const Text(
-                  'Kirim',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
+                child:
+                    isLoading
+                        ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                        : Text(
+                          'Kirim',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
               ),
             ),
           ],
@@ -140,7 +335,10 @@ class _FormPengajuanState extends State<FormPengajuan> {
     bool readOnly = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    final Color borderColor = readOnly ? const Color.fromARGB(255, 13, 103, 221) : const Color(0xFF0057A6);
+    final Color borderColor =
+        readOnly
+            ? const Color.fromARGB(255, 13, 103, 221)
+            : const Color(0xFF0057A6);
     final Color textColor = readOnly ? Colors.grey.shade700 : Colors.black;
 
     return Padding(
@@ -165,24 +363,18 @@ class _FormPengajuanState extends State<FormPengajuan> {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(
-              color: borderColor,
-              width: 1.5,
-            ),
+            borderSide: BorderSide(color: borderColor, width: 1.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(
-              color: borderColor,
-              width: 2,
-            ),
+            borderSide: BorderSide(color: borderColor, width: 2),
           ),
         ),
       ),
     );
   }
 
-Widget buildUploadField(
+  Widget buildUploadField(
     String label,
     File? imageFile,
     Function(File) onImagePicked,

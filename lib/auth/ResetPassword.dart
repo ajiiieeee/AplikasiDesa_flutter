@@ -6,15 +6,14 @@ import 'package:provider/provider.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 
 class ResetPasswordPage extends StatefulWidget {
-  final String email;
+  final String noHp;
   final String otp;
 
-  const ResetPasswordPage({super.key, required this.email, required this.otp});
+  const ResetPasswordPage({super.key, required this.noHp, required this.otp});
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
 }
-
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   bool isPasswordVisible = false;
   bool isConfirmPasswordVisible = false;
@@ -25,7 +24,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   void initState() {
     super.initState();
     controller = ResetPasswordController();
-    controller.setEmail(widget.email);
+    controller.setNoHp(widget.noHp);
     controller.setOtp(widget.otp);
   }
 

@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
       
 
       // home: BottomNavBar(),
-      home: const BottomNavBar(),
+      home: const Loginregis(),
     );
   }
 }

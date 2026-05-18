@@ -39,44 +39,36 @@ void showCustomSnackbarAtTop({
   required Color backgroundColor,
   IconData? icon,
 }) {
-  final overlay = Overlay.of(context);
+  if (!context.mounted) return;
+
+  final overlay = Overlay.maybeOf(context);
+
+  if (overlay == null) return;
+
   final overlayEntry = OverlayEntry(
     builder:
         (context) => Positioned(
-          top:
-              MediaQuery.of(context).viewPadding.top +
-              20, // sedikit di bawah status bar
+          top: MediaQuery.of(context).viewPadding.top + 10,
           left: 20,
           right: 20,
           child: Material(
             color: Colors.transparent,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: backgroundColor,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
               ),
               child: Row(
                 children: [
-                  if (icon != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 12.0),
-                      child: Icon(icon, color: Colors.white),
-                    ),
+                  if (icon != null) ...[
+                    Icon(icon, color: Colors.white),
+                    const SizedBox(width: 10),
+                  ],
                   Expanded(
                     child: Text(
                       message,
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
                 ],
@@ -88,7 +80,8 @@ void showCustomSnackbarAtTop({
 
   overlay.insert(overlayEntry);
 
-  // Hapus snackbar setelah 3 detik
-  Future.delayed(const Duration(seconds: 3)).then((_) => overlayEntry.remove());
+  Future.delayed(const Duration(seconds: 3), () {
+    overlayEntry.remove();
+  });
 }
 

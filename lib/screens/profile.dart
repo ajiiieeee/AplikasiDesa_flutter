@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../screens/detail_profile.dart';
 import '../screens/info_profile.dart';
+import '../config/globals.dart';
 import '../auth/LoginRegis.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../controllers/ProfileController.dart';
@@ -34,15 +35,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final nik = prefs.getString('nik') ?? 'Belum diatur';
     final nama = prefs.getString('nama_lengkap') ?? 'Belum diatur';
     final noHP = prefs.getString('no_hp') ?? 'Belum diatur';
-    final fotoProfil = prefs.getString('foto_profil') ?? '';
+    String fotoProfil = prefs.getString('foto_profil') ?? '';
 
-    // Logging ke console
+    // Jika kosong/null → pakai default
+    if (fotoProfil.isEmpty || fotoProfil == 'null') {
+      fotoProfil = '$serverURL/storage/foto_profil/default.jpg';
+    } else {
+      // Kalau masih ada /api/storage, ubah jadi /storage
+      fotoProfil = fotoProfil.replaceFirst('/api/storage/', '/storage/');
+
+      // Kalau path belum lengkap, tambahkan serverURL
+      if (!fotoProfil.startsWith('http')) {
+        final cleanPath =
+            fotoProfil.startsWith('/') ? fotoProfil.substring(1) : fotoProfil;
+
+        fotoProfil = '$serverURL/$cleanPath';
+      }
+
+      // Kalau ada slash dobel setelah domain, rapikan
+      fotoProfil = fotoProfil.replaceFirst('$serverURL//', '$serverURL/');
+    }
+
     print('===== Data Profil dari SharedPreferences =====');
     print('NIK: $nik');
     print('Nama: $nama');
     print('No HP: $noHP');
     print('Foto Profil: $fotoProfil');
     print('=============================================');
+
+    if (!mounted) return;
 
     setState(() {
       _nik = nik;
@@ -51,7 +72,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _fotoProfil = fotoProfil;
     });
   }
-
   Future<void> _refreshProfile() async {
     await getProfilFromApi(context); // ← panggil fungsi dari file lain
     await _loadProfileData();
@@ -196,12 +216,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: <Widget>[
                 CircleAvatar(
                   radius: 35,
+                  backgroundColor: Colors.grey.shade200,
                   backgroundImage:
                       _image != null
                           ? FileImage(_image!)
-                          : (_fotoProfil.isNotEmpty
-                              ? NetworkImage(_fotoProfil)
-                              : null),
+                          : NetworkImage(
+                                _fotoProfil.isNotEmpty
+                                    ? _fotoProfil
+                                    : '$serverURL/storage/foto_profil/default.jpg',
+                              )
+                              as ImageProvider,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

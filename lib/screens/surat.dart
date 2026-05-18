@@ -1,15 +1,10 @@
-import 'package:digitalv/screens/form_aktakelahiran.dart';
-import 'package:digitalv/screens/form_aktaperkawinan.dart';
-import 'package:digitalv/screens/form_kartukeluarga.dart';
-import 'package:digitalv/screens/form_kematian.dart';
-import 'package:digitalv/screens/form_ktp.dart';
-import 'package:digitalv/screens/form_pindahpenduduk.dart';
-import 'package:digitalv/screens/form_sktm.dart';
-import 'package:digitalv/screens/form_suratmiskin.dart';
-import 'package:flutter/material.dart';
-import '../screens/form_pengajuan.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
 
+import 'package:digitalv/config/globals.dart';
+import 'package:digitalv/screens/form_pengajuan.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
 class SuratScreen extends StatefulWidget {
   const SuratScreen({super.key});
@@ -19,21 +14,58 @@ class SuratScreen extends StatefulWidget {
 }
 
 class _SuratScreenState extends State<SuratScreen> {
-  final TextStyle titleStyle = TextStyle(
+  final TextStyle titleStyle = const TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.bold,
   );
-  final TextStyle descStyle = TextStyle(
+
+  final List<Color> buttonColors = [
+    Colors.blue,
+    Colors.green,
+    Colors.orange,
+    Colors.red,
+    Colors.purple,
+    Colors.teal,
+    Colors.indigo,
+    Colors.pink,
+  ];
+
+  final TextStyle descStyle = const TextStyle(
     fontSize: 12,
     color: Colors.grey,
     fontWeight: FontWeight.w400,
   );
-  final TextStyle btnTextStyle = TextStyle(
+
+  final TextStyle btnTextStyle = const TextStyle(
     fontSize: 13,
     fontWeight: FontWeight.bold,
   );
 
   final double spacingBetweenTitleAndDesc = 6;
+
+  List<dynamic> suratList = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSurat();
+  }
+
+  Future<void> fetchSurat() async {
+    try {
+      final response = await http.get(Uri.parse('$baseURL/surat'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          suratList = jsonDecode(response.body);
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,144 +73,56 @@ class _SuratScreenState extends State<SuratScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
-       title: Text(
+        title: Text(
           'LAYANAN SURAT',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF0057A6),
+            color: const Color(0xFF0057A6),
           ),
         ),
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.25),
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          childAspectRatio: 3 / 2.5,
-          children: [
-            buildCard(
-              title: 'Akta Kelahiran',
-              desc: 'Ajukan Akta Kelahiran Untuk Anak Anda',
-              btnText: 'Ajukan',
-              btnColor: Colors.blue.shade50,
-              btnTextColor: Colors.blue,
-              btnIcon: Icons.edit,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FormAktakelahiran()),
-                );
-              },
-            ),
-            buildCard(
-              title: 'Kartu Keluarga',
-              desc: 'Buat Atau Perbarui Kartu Keluarga',
-              btnText: 'Buat',
-              btnColor: Colors.green.shade50,
-              btnTextColor: Colors.green,
-              btnIcon: Icons.add_circle_outline,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FormKartukeluarga()),
-                );
-              },
-            ),
-            buildCard(
-              title: 'KTP',
-              desc: 'Urus e-KTP baru atau perpanjang masa berlaku',
-              btnText: 'Urus',
-              btnColor: Colors.orange.shade50,
-              btnTextColor: Colors.orange,
-              btnIcon: Icons.credit_card,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FormKtp()),
-                );
-              },
-            ),
-            buildCard(
-              title: 'SKTM',
-              desc: 'Ajukan SKTM Untuk Keperluan Administrasi',
-              btnText: 'Ajukan',
-              btnColor: Colors.deepOrange.shade50,
-              btnTextColor: Colors.deepOrange,
-              btnIcon: Icons.edit,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FormSktm()),
-                );
-              },
-            ),
-            buildCard(
-              title: 'Akta Perkawinan',
-              desc: 'Daftarkan atau cetak ulang akta perkawinan Anda',
-              btnText: 'Daftar',
-              btnColor: Colors.purple.shade50,
-              btnTextColor: Colors.purple,
-              btnIcon: Icons.note_add,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FormAktaPerkawinan()),
-                );
-              },
-            ),
-            buildCard(
-              title: 'Akta Kematian',
-              desc: 'Lapor dan urus akta kematian keluarga',
-              btnText: 'Laporkan',
-              btnColor: Colors.teal.shade50,
-              btnTextColor: Colors.teal,
-              btnIcon: Icons.check_circle,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FormKematian()),
-                );
-              },
-            ),
-            buildCard(
-              title: 'Pindah Penduduk',
-              desc: 'Urus perpindahan domisili Anda',
-              btnText: 'Urus',
-              btnColor: Colors.red.shade50,
-              btnTextColor: Colors.red,
-              btnIcon: Icons.credit_card,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FormPindahpenduduk()),
-                );
-              },
-            ),
-            buildCard(
-              title: 'Pernyataan Miskin',
-              desc: 'Ajukan surat untuk keperluan bantuan sosial',
-              btnText: 'Ajukan',
-              btnColor: Colors.yellow.shade50,
-              btnTextColor: Colors.orange,
-              btnIcon: Icons.edit,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FormSuratmiskin()),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: 3 / 2.5,
+
+                  children: List.generate(suratList.length, (index) {
+                    final surat = suratList[index];
+
+                    return buildCard(
+                      title: surat['nama_surat'] ?? '',
+                      desc: surat['slug'] ?? '',
+                      btnText: 'Ajukan',
+                      btnColor: buttonColors[index % buttonColors.length]
+                          .withOpacity(0.15),
+                      btnTextColor: buttonColors[index % buttonColors.length],
+                      btnIcon: Icons.edit,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => FormPengajuan(idSurat: surat['id_surat'])
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                ),
+              ),
     );
   }
 
@@ -192,19 +136,20 @@ class _SuratScreenState extends State<SuratScreen> {
     VoidCallback? onPressed,
   }) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0xFFE8E8E8)),
+        border: Border.all(color: const Color(0xFFE8E8E8)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
             blurRadius: 8,
           ),
         ],
       ),
+
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -212,17 +157,21 @@ class _SuratScreenState extends State<SuratScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(child: Text(title, style: titleStyle)),
-              Icon(Icons.chevron_right, color: Colors.grey),
+              Icon(Icons.chevron_right, color: btnTextColor),
             ],
           ),
+
           SizedBox(height: spacingBetweenTitleAndDesc),
+
           Text(desc, style: descStyle),
-          Spacer(),
+
+          const Spacer(),
+
           Align(
             alignment: Alignment.bottomRight,
             child: ElevatedButton.icon(
               onPressed: onPressed,
-              icon: Icon(btnIcon, size: 16),
+              icon: Icon(btnIcon, size: 16, color: btnTextColor),
               label: Text(btnText, style: btnTextStyle),
               style: ElevatedButton.styleFrom(
                 elevation: 0,

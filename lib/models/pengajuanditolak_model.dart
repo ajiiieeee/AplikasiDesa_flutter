@@ -1,5 +1,5 @@
 class StatusDitolakModel {
-  final String idPengajuan;
+  final int idPengajuan;
   final String namaSurat;
   final String status;
   final String keteranganDitolak;
@@ -15,7 +15,7 @@ class StatusDitolakModel {
 
   factory StatusDitolakModel.fromJson(Map<String, dynamic> json) {
     return StatusDitolakModel(
-      idPengajuan: json['id_pengajuan'],
+      idPengajuan: int.tryParse(json['id_pengajuan'].toString()) ?? 0,
       namaSurat: json['nama_surat'],
       status: json['status'],
       keteranganDitolak: json['keterangan_ditolak'],

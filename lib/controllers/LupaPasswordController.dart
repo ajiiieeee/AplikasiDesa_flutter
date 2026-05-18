@@ -5,14 +5,14 @@ import '../config/globals.dart';
 import '../auth/OtpVerifikasi.dart';
 
 class LupaPasswordController extends ChangeNotifier {
-  String _email = '';
+  String _noHp = '';
   bool _isLoading = false;
 
-  String get email => _email;
+  String get noHp => _noHp;
   bool get isLoading => _isLoading;
 
-  void setEmail(String value) {
-    _email = value;
+  void setNoHp(String value) {
+    _noHp = value;
     notifyListeners();
   }
 
@@ -25,9 +25,9 @@ class LupaPasswordController extends ChangeNotifier {
     })
     showSnackbar,
   }) async {
-    if (_email.isEmpty || !_email.contains('@')) {
+    if (_noHp.isEmpty || _noHp.length < 10) {
       showSnackbar(
-        message: 'Masukkan email yang valid',
+        message: 'Masukkan nomor HP yang valid',
         backgroundColor: Colors.red,
         icon: Icons.warning,
       );
@@ -42,15 +42,16 @@ class LupaPasswordController extends ChangeNotifier {
         Uri.parse('$baseURL/forgot-password'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
+          'Accept': 'application/json',
         },
-        body: json.encode({'email': _email}),
+        body: json.encode({'no_hp': _noHp}),
       );
 
       final data = json.decode(response.body);
 
       if (response.statusCode == 200 && data['status'] == 200) {
         showSnackbar(
-          message: data['message'],
+          message: data['message'] ?? 'Kode OTP berhasil dikirim',
           backgroundColor: Colors.green,
           icon: Icons.check_circle,
         );
@@ -59,7 +60,7 @@ class LupaPasswordController extends ChangeNotifier {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OtpVerificationPage(email: _email),
+              builder: (context) => OtpVerificationPage(noHp: _noHp),
             ),
           );
         });
@@ -81,5 +82,4 @@ class LupaPasswordController extends ChangeNotifier {
       notifyListeners();
     }
   }
-
 }

@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../config/globals.dart';
 import '../auth/ResetPassword.dart';
-import '../auth/OtpVerifikasi.dart'; // ⬅ import helper
 
 class OtpVerifikasiController extends ChangeNotifier {
-  String _email = '';
-  String get email => _email;
+  String _noHp = '';
+  String get noHp => _noHp;
 
   String _otpCode = '';
   String get otpCode => _otpCode;
@@ -15,8 +14,8 @@ class OtpVerifikasiController extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  void setEmail(String value) {
-    _email = value;
+  void setNoHp(String value) {
+    _noHp = value;
     notifyListeners();
   }
 
@@ -25,9 +24,9 @@ class OtpVerifikasiController extends ChangeNotifier {
     notifyListeners();
   }
 
- Future<void> verifyOtp(
+  Future<void> verifyOtp(
     BuildContext context, {
-    required String email,
+    required String noHp,
     required void Function({
       required String message,
       required Color backgroundColor,
@@ -50,13 +49,15 @@ class OtpVerifikasiController extends ChangeNotifier {
     try {
       final response = await http.post(
         Uri.parse('$baseURL/verify-otp'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'otp': _otpCode, 'email': email}),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({'otp': _otpCode, 'no_hp': noHp}),
       );
 
       final data = json.decode(response.body);
 
-      // ✅ Cek sukses
       if (response.statusCode == 200 && data['status'] == 200) {
         showSnackbar(
           message: data['message'] ?? "OTP valid",
@@ -69,7 +70,7 @@ class OtpVerifikasiController extends ChangeNotifier {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder:
-                    (context) => ResetPasswordPage(email: email, otp: _otpCode),
+                    (context) => ResetPasswordPage(noHp: noHp, otp: _otpCode),
               ),
             );
           }
@@ -81,7 +82,6 @@ class OtpVerifikasiController extends ChangeNotifier {
           icon: Icons.error,
         );
       }
-
     } catch (e) {
       showSnackbar(
         message: "Terjadi kesalahan: $e",
@@ -93,6 +93,4 @@ class OtpVerifikasiController extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-
 }

@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../auth/LoginRegis.dart';
 import '../config/globals.dart';
-import 'package:digitalv/widgets/snackbarcustom.dart';
 
 class ResetPasswordController extends ChangeNotifier {
-  String email = '';
+  String noHp = '';
   String otp = '';
   String newPassword = '';
   String confirmPassword = '';
@@ -14,8 +13,8 @@ class ResetPasswordController extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
-  void setEmail(String value) {
-    email = value;
+  void setNoHp(String value) {
+    noHp = value;
     notifyListeners();
   }
 
@@ -76,9 +75,12 @@ class ResetPasswordController extends ChangeNotifier {
     try {
       final response = await http.post(
         Uri.parse('$baseURL/reset-password'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: json.encode({
-          'email': email,
+          'no_hp': noHp,
           'otp': otp,
           'password': newPassword,
           'password_confirmation': confirmPassword,
@@ -95,10 +97,12 @@ class ResetPasswordController extends ChangeNotifier {
         );
 
         Future.delayed(const Duration(seconds: 2), () {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => Loginregis()),
-            (route) => false,
-          );
+          if (context.mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => Loginregis()),
+              (route) => false,
+            );
+          }
         });
       } else {
         showSnackbar(

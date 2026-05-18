@@ -112,7 +112,7 @@ class _DetailBeritaState extends State<DetailBerita> {
 
             const SizedBox(height: 8),
             Text(
-              berita!.tanggal,
+              berita!.createdAt,
               style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
             ),
             const Divider(height: 32,),

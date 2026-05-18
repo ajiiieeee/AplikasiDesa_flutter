@@ -7,9 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 
 class OtpVerificationPage extends StatelessWidget {
-  final String email;
-  const OtpVerificationPage({super.key, required this.email});
+  final String noHp;
 
+  const OtpVerificationPage({super.key, required this.noHp});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,6 @@ class OtpVerificationPage extends StatelessWidget {
               resizeToAvoidBottomInset: true,
               body: Stack(
                 children: [
-                  // Background SVG
                   Positioned.fill(
                     child: SvgPicture.asset(
                       'assets/images/bk_password.svg',
@@ -44,7 +43,6 @@ class OtpVerificationPage extends StatelessWidget {
                     ),
                   ),
 
-                  // Konten utama
                   Center(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(
@@ -54,7 +52,7 @@ class OtpVerificationPage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                           Text(
+                          Text(
                             'Verifikasi',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
@@ -63,25 +61,26 @@ class OtpVerificationPage extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+
                           const SizedBox(height: 12),
+
                           Text(
-                            'Masukkan kode OTP yang telah kami kirim ke email Anda',
-                             textAlign: TextAlign.center,
+                            'Masukkan kode OTP yang telah kami kirim ke WhatsApp Anda',
+                            textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
                           ),
+
                           const SizedBox(height: 40),
 
-                         // OTP input
                           PinCodeTextField(
                             appContext: context,
                             length: 6,
                             obscureText: false,
                             enabled: !controller.isLoading,
-
                             animationType: AnimationType.fade,
                             pinTheme: PinTheme(
                               shape: PinCodeFieldShape.box,
@@ -97,7 +96,6 @@ class OtpVerificationPage extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                               fontSize: 20,
                             ),
-
                             animationDuration: const Duration(
                               milliseconds: 300,
                             ),
@@ -109,7 +107,7 @@ class OtpVerificationPage extends StatelessWidget {
                               if (!controller.isLoading) {
                                 controller.verifyOtp(
                                   context,
-                                  email: email,
+                                  noHp: noHp,
                                   showSnackbar: ({
                                     required String message,
                                     required Color backgroundColor,
@@ -119,19 +117,18 @@ class OtpVerificationPage extends StatelessWidget {
                                       context: context,
                                       message: message,
                                       backgroundColor: backgroundColor,
-                                      icon: icon, // fallback icon
+                                      icon: icon,
                                     );
                                   },
                                 );
                               }
                             },
-
                             keyboardType: TextInputType.number,
                           ),
 
-                           const SizedBox(height: 15),
-                          // Tombol verifikasi
-                       SizedBox(
+                          const SizedBox(height: 15),
+
+                          SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
@@ -140,7 +137,7 @@ class OtpVerificationPage extends StatelessWidget {
                                       ? null
                                       : () => controller.verifyOtp(
                                         context,
-                                        email: email,
+                                        noHp: noHp,
                                         showSnackbar: ({
                                           required String message,
                                           required Color backgroundColor,
@@ -154,7 +151,6 @@ class OtpVerificationPage extends StatelessWidget {
                                           );
                                         },
                                       ),
-
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.lightBlueAccent,
                                 foregroundColor: Colors.white,
@@ -169,7 +165,7 @@ class OtpVerificationPage extends StatelessWidget {
                                         color: Colors.white,
                                         strokeWidth: 2,
                                       )
-                                      :  Text(
+                                      : Text(
                                         'Verifikasi Kode OTP',
                                         style: GoogleFonts.poppins(
                                           fontSize: 16,
@@ -178,20 +174,6 @@ class OtpVerificationPage extends StatelessWidget {
                                       ),
                             ),
                           ),
-
-
-
-                          // Tombol kembali
-                          // TextButton(
-                          //   onPressed: () => Navigator.pop(context),
-                          //   child: const Text(
-                          //     '← Kembali',
-                          //     style: TextStyle(
-                          //       color: Colors.white70,
-                          //       fontSize: 14,
-                          //     ),
-                          //   ),
-                          // ),
                         ],
                       ),
                     ),
