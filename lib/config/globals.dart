@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // Base URL utama
- const String serverURL = "http://127.0.0.1:8000";
+ const String serverURL = "http://192.168.1.22:8000";
 // const String serverURL = "http://192.168.1.22:8000";
 
 // Base URL API
