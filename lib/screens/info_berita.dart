@@ -16,6 +16,27 @@ class _InfoBeritaState extends State<InfoBerita> {
   List<dynamic> filteredBeritaList = [];
   TextEditingController searchController = TextEditingController();
 
+  String fixImageUrl(String url) {
+    return url
+        .replaceAll('http://127.0.0.1:8000', serverURL)
+        .replaceAll('http://localhost:8000', serverURL);
+  }
+
+  String getImageFromDeskripsi(String html) {
+    final regex = RegExp(
+      r'''<img[^>]+src=["']([^"']+)["']''',
+      caseSensitive: false,
+    );
+
+    final match = regex.firstMatch(html);
+
+    if (match != null) {
+      return fixImageUrl(match.group(1)!);
+    }
+
+    return '';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -127,6 +148,12 @@ class _InfoBeritaState extends State<InfoBerita> {
                         itemBuilder: (context, index) {
                           final berita = filteredBeritaList[index];
 
+                          final imageUrl = getImageFromDeskripsi(
+                            berita['deskripsi'] ?? '',
+                          );
+
+                          print('URL gambar berita: $imageUrl');
+
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -162,12 +189,33 @@ class _InfoBeritaState extends State<InfoBerita> {
                                         bottomLeft: Radius.circular(16),
                                       ),
                                       child:
-                                          berita['gambar'] != null
+                                      imageUrl.isNotEmpty
                                               ? Image.network(
-                                                berita['gambar'],
+                                                imageUrl,
                                                 width: 100,
                                                 height: 100,
                                                 fit: BoxFit.cover,
+                                                errorBuilder: (
+                                                  context,
+                                                  error,
+                                                  stackTrace,
+                                                ) {
+                                                  print(
+                                                    'Gagal load gambar: $imageUrl',
+                                                  );
+                                                  print(error);
+
+                                                  return Container(
+                                                    width: 100,
+                                                    height: 100,
+                                                    color: Colors.grey[300],
+                                                    child: Icon(
+                                                      Icons.broken_image,
+                                                      size: 40,
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                  );
+                                                },
                                               )
                                               : Container(
                                                 width: 100,
@@ -178,7 +226,7 @@ class _InfoBeritaState extends State<InfoBerita> {
                                                   size: 40,
                                                   color: Colors.grey[600],
                                                 ),
-                                              ),
+                                              )
                                     ),
                                     Expanded(
                                       child: Padding(
@@ -207,7 +255,7 @@ class _InfoBeritaState extends State<InfoBerita> {
                                                 ),
                                                 SizedBox(width: 4),
                                                 Text(
-                                                  berita['tanggal'] ??
+                                                  berita['created_at'] ??
                                                       'Tanggal tidak tersedia',
                                                   style: TextStyle(
                                                     fontSize: 13,

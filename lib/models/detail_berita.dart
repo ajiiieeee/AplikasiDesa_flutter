@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import '../config/globals.dart';
 
 class Berita {
   final String idberita;
@@ -29,5 +29,38 @@ class Berita {
       nik: json['nik'] ?? '',
       nama: json['nama'],
     );
+  }
+
+  String _fixUrl(String url) {
+    return url
+        .replaceAll('http://127.0.0.1:8000', serverURL)
+        .replaceAll('http://localhost:8000', serverURL);
+  }
+
+  String get gambarDariDeskripsi {
+    final regex = RegExp(
+      r'''<img[^>]+src=["']([^"']+)["']''',
+      caseSensitive: false,
+    );
+
+    final match = regex.firstMatch(deskripsi);
+
+    if (match != null) {
+      return _fixUrl(match.group(1)!);
+    }
+
+    return '';
+  }
+
+  String get gambarUtama {
+    if (gambarDariDeskripsi.isNotEmpty) {
+      return gambarDariDeskripsi;
+    }
+
+    if (gambar != null && gambar!.isNotEmpty) {
+      return _fixUrl(gambar!);
+    }
+
+    return '';
   }
 }

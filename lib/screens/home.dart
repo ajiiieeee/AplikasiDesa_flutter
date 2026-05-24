@@ -514,19 +514,37 @@ class _HomeScreenState extends State<HomeScreen> {
                                     borderRadius: BorderRadius.circular(10),
                                     child: Stack(
                                       children: [
-                                        item.gambar != null
-                                            ? Image.network(
-                                                item.gambar!,
-                                                height: 170,
-                                                width: 250,
-                                                fit: BoxFit.cover,
-                                              )
-                                            : Container(
+                                        item.gambarUtama.isNotEmpty
+                                          ? Image.network(
+                                            item.gambarUtama,
+                                            height: 170,
+                                            width: 250,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (
+                                              context,
+                                              error,
+                                              stackTrace,
+                                            ) {
+                                              return Container(
                                                 height: 170,
                                                 width: 250,
                                                 color: Colors.grey,
-                                                child: const Center(child: Text('No Image')),
-                                              ),
+                                                child: const Center(
+                                                  child: Text(
+                                                    'Gambar gagal dimuat',
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          )
+                                          : Container(
+                                            height: 170,
+                                            width: 250,
+                                            color: Colors.grey,
+                                            child: const Center(
+                                              child: Text('No Image'),
+                                            ),
+                                          ),
                                         Positioned(
                                           bottom: 0,
                                           left: 0,
