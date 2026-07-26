@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-// Base URL utama
- const String serverURL = "http://192.168.1.22:8000";
-// const String serverURL = "http://192.168.1.22:8000";
+// Base URL untuk debug Chrome
+const String serverURL = "http://localhost:8000";
 
 // Base URL API
 const String baseURL = "$serverURL/api";

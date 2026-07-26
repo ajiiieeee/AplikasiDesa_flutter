@@ -4,31 +4,104 @@ import '../screens/home.dart';
 import '../screens/surat.dart';
 import '../screens/status.dart';
 import '../screens/profile.dart';
+import '../screens/pengaduan.dart';
+// Kepala Dusun
+import '../screens/kadus/kadus_home.dart';
+import '../screens/kadus/kadus_surat_masuk.dart';
+import '../screens/kadus/kadus_form_pengajuan.dart';
+// Sekretaris Desa
+import '../screens/sekdes/sekdes_home.dart';
+import '../screens/sekdes/sekdes_persetujuan.dart';
+import '../screens/sekdes/sekdes_monitoring_pengaduan.dart';
+// Kepala Desa
+import '../screens/kades/kades_home.dart';
+import '../screens/kades/kades_persetujuan.dart';
+import '../screens/kades/kades_monitoring_pengaduan.dart';
 
 class BottomNavBar extends StatefulWidget {
-  const BottomNavBar({super.key});
+  final int initialIndex;
+  final String role;
+
+  const BottomNavBar({
+    super.key,
+    this.initialIndex = 0,
+    this.role = 'warga',
+  });
 
   @override
   State<BottomNavBar> createState() => _BottomNavBarState();
 }
 
 class _BottomNavBarState extends State<BottomNavBar> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
-  final List<Widget> _screens = [
-    HomeScreen(),
-    SuratScreen(),
-    StatusTabScreen(),
-    ProfileScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
 
-  final List<Widget> _items = const [
+  List<Widget> get _screens {
+    switch (widget.role) {
+      case 'kepala_dusun':
+        return [
+          const KadusHomeScreen(),
+          const KadusFormPengajuanScreen(),
+          const KadusSuratMasukScreen(),
+          const ProfileScreen(),
+        ];
+      case 'sekretaris_desa':
+        return [
+          const SekdesHomeScreen(),
+          const SekdesPersetujuanScreen(),
+          const SekdesMonitoringPengaduanScreen(),
+          const ProfileScreen(),
+        ];
+      case 'kepala_desa':
+        return [
+          const KadesHomeScreen(),
+          const KadesPersetujuanScreen(),
+          const KadesMonitoringPengaduanScreen(),
+          const ProfileScreen(),
+        ];
+      default: // warga (5 items: Dashboard, Jenis Surat, Tracking, Pengaduan, Profil)
+        return [
+          const HomeScreen(),
+          const SuratScreen(),
+          StatusTabScreen(),
+          const Pengaduan(),
+          const ProfileScreen(),
+        ];
+    }
+  }
 
-    Icon(Icons.home, size: 25, color: Colors.white),
-    Icon(Icons.mail, size: 25, color: Colors.white),
-    Icon(Icons.history, size: 25, color: Colors.white),
-    Icon(Icons.person, size: 25, color: Colors.white),
-  ];
+  List<Widget> get _items {
+    switch (widget.role) {
+      case 'kepala_dusun':
+        return const [
+          Icon(Icons.dashboard, size: 25, color: Colors.white),
+          Icon(Icons.edit_document, size: 25, color: Colors.white),
+          Icon(Icons.inbox, size: 25, color: Colors.white),
+          Icon(Icons.person, size: 25, color: Colors.white),
+        ];
+      case 'sekretaris_desa':
+      case 'kepala_desa':
+        return const [
+          Icon(Icons.dashboard, size: 25, color: Colors.white),
+          Icon(Icons.approval, size: 25, color: Colors.white),
+          Icon(Icons.forum, size: 25, color: Colors.white),
+          Icon(Icons.person, size: 25, color: Colors.white),
+        ];
+      default: // warga
+        return const [
+          Icon(Icons.home, size: 24, color: Colors.white),
+          Icon(Icons.mail, size: 24, color: Colors.white),
+          Icon(Icons.history, size: 24, color: Colors.white),
+          Icon(Icons.campaign, size: 24, color: Colors.white),
+          Icon(Icons.person, size: 24, color: Colors.white),
+        ];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,8 +110,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
       body: _screens[_currentIndex],
       bottomNavigationBar: CurvedNavigationBar(
         backgroundColor: Colors.transparent,
-        color: Color(0xFF0057A6),
-        buttonBackgroundColor: Color(0xFF0057A6),
+        color: const Color(0xFF0057A6),
+        buttonBackgroundColor: const Color(0xFF0057A6),
         height: 60,
         items: _items,
         index: _currentIndex,
@@ -51,4 +124,4 @@ class _BottomNavBarState extends State<BottomNavBar> {
       ),
     );
   }
-}
+}

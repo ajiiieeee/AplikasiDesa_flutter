@@ -6,6 +6,7 @@ import '../config/globals.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/pengajuanditolak_model.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
+import 'package:digitalv/widgets/timeline_widget.dart';
 
 class DitolakView extends StatefulWidget {
   const DitolakView({super.key});
@@ -129,6 +130,11 @@ class _DitolakStateView extends State<DitolakView> {
                               fontWeight: FontWeight.bold,
                               color: Color.fromARGB(255, 128, 128, 128),
                             ),
+                          ),
+                          const SizedBox(height: 8),
+                          SuratTimelineWidget(
+                            status: 'Ditolak',
+                            alasanDitolak: item.keteranganDitolak,
                           ),
                           const SizedBox(height: 8),
                            InkWell(

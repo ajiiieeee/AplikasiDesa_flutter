@@ -51,7 +51,7 @@ class _InfoProfileState extends State<InfoProfile> {
     String fotoProfil = prefs.getString('foto_profil') ?? '';
 
     if (fotoProfil.isEmpty || fotoProfil == 'null') {
-      fotoProfil = '$serverURL/storage/foto_profil/default.jpg';
+      fotoProfil = '';
     } else {
       // Jangan ganti ke baseURL, karena baseURL ada /api
       // Kalau masih ada /api/storage, ubah jadi /storage
@@ -165,15 +165,27 @@ class _InfoProfileState extends State<InfoProfile> {
                   CircleAvatar(
                     radius: 35,
                     backgroundColor: Colors.grey.shade200,
-                    backgroundImage:
+
+                    // Default dari assets
+                    backgroundImage: const AssetImage(
+                      'assets/images/default.jpg',
+                    ),
+
+                    // Kalau ada foto baru / foto server, tampilkan di atas default
+                    foregroundImage:
                         _image != null
                             ? FileImage(_image!)
-                            : NetworkImage(
-                                  _fotoProfil.isNotEmpty
-                                      ? _fotoProfil
-                                      : '$serverURL/storage/foto_profil/default.jpg',
-                                )
-                                as ImageProvider,
+                            : _fotoProfil.isNotEmpty
+                            ? NetworkImage(_fotoProfil)
+                            : null,
+
+                    // Kalau network image error, default asset tetap tampil
+                    onForegroundImageError:
+                        _fotoProfil.isNotEmpty
+                            ? (exception, stackTrace) {
+                              debugPrint('Gagal load foto profil: $exception');
+                            }
+                            : null,
                   ),
                   Positioned(
                     bottom: 0,

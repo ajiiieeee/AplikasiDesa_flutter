@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/globals.dart';
 import '../models/pengajuandiajukan_model.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
+import 'package:digitalv/widgets/timeline_widget.dart';
 
 class PengajuanView extends StatefulWidget {
   const PengajuanView({super.key});
@@ -128,6 +129,8 @@ class _PengajuanViewState extends State<PengajuanView> {
                               color: Color.fromARGB(255, 128, 128, 128),
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          SuratTimelineWidget(status: item.status),
                           const SizedBox(height: 10),
                           InkWell(
                             borderRadius: BorderRadius.circular(12),

@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
+import 'package:digitalv/widgets/timeline_widget.dart';
 
 class DisetujuiView extends StatefulWidget {
   const DisetujuiView({super.key});
@@ -135,6 +136,8 @@ class _DisetujuiViewState extends State<DisetujuiView> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          SuratTimelineWidget(status: item.status.isEmpty ? 'Selesai' : item.status),
                           const SizedBox(height: 8),
                           Row(
                             mainAxisSize: MainAxisSize.min,

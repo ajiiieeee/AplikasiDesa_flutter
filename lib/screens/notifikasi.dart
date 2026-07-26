@@ -7,6 +7,7 @@ import 'dart:convert';
 import '../config/globals.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:digitalv/widgets/snackbarcustom.dart';
+import 'package:digitalv/widgets/bottom_navbar.dart';
 
 
 class NotificationScreen extends StatefulWidget {
@@ -174,13 +175,20 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                                 notif['id_ref'].toString(),
                                               ),
                                     ),
-
+                              ),
+                            );
+                          } else if (notif['title'] == 'Notifikasi Pengajuan') {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => const BottomNavBar(initialIndex: 2),
                               ),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('ID Pengaduan tidak ditemukan'),
+                                content: Text('ID notifikasi tidak ditemukan'),
                               ),
                             );
                           }

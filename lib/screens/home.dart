@@ -8,7 +8,6 @@ import 'package:digitalv/screens/detail_berita.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:digitalv/models/detail_berita.dart';
-import 'package:digitalv/screens/chatbot_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/globals.dart';
@@ -33,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _refreshProfile();
     fetchLayanan();
+    _fetchWargaStats();
   }
 
   Future<void> fetchLayanan() async {
@@ -223,15 +223,29 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: CircleAvatar(
                           radius: 35,
                           backgroundColor: Colors.grey.shade200,
-                          backgroundImage:
+
+                          // Default dari assets
+                          backgroundImage: const AssetImage(
+                            'assets/images/default.jpg',
+                          ),
+
+                          // Kalau ada foto baru / foto server, tampilkan di atas default
+                          foregroundImage:
                               _image != null
                                   ? FileImage(_image!)
-                                  : NetworkImage(
-                                        _fotoProfil.isNotEmpty
-                                            ? _fotoProfil
-                                            : '$serverURL/storage/foto_profil/default.jpg',
-                                      )
-                                      as ImageProvider,
+                                  : _fotoProfil.isNotEmpty
+                                  ? NetworkImage(_fotoProfil)
+                                  : null,
+
+                          // Kalau network image error, default asset tetap tampil
+                          onForegroundImageError:
+                              _fotoProfil.isNotEmpty
+                                  ? (exception, stackTrace) {
+                                    debugPrint(
+                                      'Gagal load foto profil: $exception',
+                                    );
+                                  }
+                                  : null,
                         ),
                               ),
                             ),
@@ -242,9 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               Container(
                 width: double.infinity,
-                
                 padding: const EdgeInsets.all(20),
-                
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
@@ -255,7 +267,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                Row(
+                    _buildWargaStatsCard(),
+                    const SizedBox(height: 15),
+                    Row(
   crossAxisAlignment: CrossAxisAlignment.end,
   children: [
     Expanded(
@@ -313,32 +327,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
     const SizedBox(width: 10),
 
-    GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatbotScreen(),
-          ),
-        );
-      },
-      child: Column(
-        children: [
-          Image.asset(
-            'assets/images/devi.png',
-            width: 85,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "Tanya Devi",
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    ),
+    // GestureDetector(
+    //   onTap: () {
+    //     Navigator.push(
+    //       context,
+    //       MaterialPageRoute(
+    //         builder: (context) => ChatbotScreen(),
+    //       ),
+    //     );
+    //   },
+    //   child: Column(
+    //     children: [
+    //       Image.asset(
+    //         'assets/images/devi.png',
+    //         width: 85,
+    //       ),
+    //       const SizedBox(height: 4),
+    //       Text(
+    //         "Tanya Devi",
+    //         style: GoogleFonts.poppins(
+    //           fontSize: 11,
+    //           fontWeight: FontWeight.w500,
+    //         ),
+    //       ),
+    //     ],
+    //   ),
+    // ),
   ],
 ),
                     const SizedBox(height: 15),
@@ -606,6 +620,117 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  int _totalPengajuan = 0;
+  int _diprosesCount = 0;
+  int _selesaiCount = 0;
+  int _pengaduanCount = 0;
+  bool _isLoadingStats = true;
+
+  Future<void> _fetchWargaStats() async {
+    final prefs = await SharedPreferences.getInstance();
+    final nik = prefs.getString('nik') ?? '';
+    if (nik.isEmpty) return;
+
+    try {
+      final resDiajukan = await http.get(Uri.parse('$baseURL/statusdiajukan?nik=$nik'), headers: headers);
+      final resSelesai = await http.get(Uri.parse('$baseURL/statusselesai?nik=$nik'), headers: headers);
+      final resDitolak = await http.get(Uri.parse('$baseURL/statusditolak?nik=$nik'), headers: headers);
+
+      int diajukan = 0;
+      int selesai = 0;
+      int ditolak = 0;
+
+      if (resDiajukan.statusCode == 200) {
+        final List d = json.decode(resDiajukan.body);
+        diajukan = d.length;
+      }
+      if (resSelesai.statusCode == 200) {
+        final List s = json.decode(resSelesai.body);
+        selesai = s.length;
+      }
+      if (resDitolak.statusCode == 200) {
+        final List dt = json.decode(resDitolak.body);
+        ditolak = dt.length;
+      }
+
+      if (mounted) {
+        setState(() {
+          _diprosesCount = diajukan;
+          _selesaiCount = selesai;
+          _totalPengajuan = diajukan + selesai + ditolak;
+          _isLoadingStats = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingStats = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildWargaStatsCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Ringkasan Aktivitas',
+          style: GoogleFonts.poppins(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            _statItem('Total Surat', '$_totalPengajuan', Icons.description_outlined, const Color(0xFF0057A6)),
+            const SizedBox(width: 8),
+            _statItem('Diproses', '$_diprosesCount', Icons.hourglass_top, Colors.orange),
+            const SizedBox(width: 8),
+            _statItem('Selesai', '$_selesaiCount', Icons.check_circle_outline, Colors.green),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _statItem(String title, String count, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              _isLoadingStats ? '...' : count,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
     );

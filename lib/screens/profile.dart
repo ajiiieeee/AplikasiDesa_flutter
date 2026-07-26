@@ -39,7 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     // Jika kosong/null → pakai default
     if (fotoProfil.isEmpty || fotoProfil == 'null') {
-      fotoProfil = '$serverURL/storage/foto_profil/default.jpg';
+      fotoProfil = '';
     } else {
       // Kalau masih ada /api/storage, ubah jadi /storage
       fotoProfil = fotoProfil.replaceFirst('/api/storage/', '/storage/');
@@ -217,15 +217,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 CircleAvatar(
                   radius: 35,
                   backgroundColor: Colors.grey.shade200,
-                  backgroundImage:
+
+                  // Default dari assets
+                  backgroundImage: const AssetImage(
+                    'assets/images/default.jpg',
+                  ),
+
+                  // Kalau ada foto baru / foto server, tampilkan di atas default
+                  foregroundImage:
                       _image != null
                           ? FileImage(_image!)
-                          : NetworkImage(
-                                _fotoProfil.isNotEmpty
-                                    ? _fotoProfil
-                                    : '$serverURL/storage/foto_profil/default.jpg',
-                              )
-                              as ImageProvider,
+                          : _fotoProfil.isNotEmpty
+                          ? NetworkImage(_fotoProfil)
+                          : null,
+
+                  // Kalau network image error, default asset tetap tampil
+                  onForegroundImageError:
+                      _fotoProfil.isNotEmpty
+                          ? (exception, stackTrace) {
+                            debugPrint('Gagal load foto profil: $exception');
+                          }
+                          : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

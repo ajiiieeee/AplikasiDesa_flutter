@@ -32,21 +32,16 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+
+        if (!mounted) return;
+
         setState(() {
           pengaduan = data;
           isLoading = false;
-
-          // Debug print foto1 path dan URL
-          if (pengaduan != null &&
-              pengaduan!['foto1'] != null &&
-              pengaduan!['foto1'].toString().isNotEmpty) {
-            print('Foto path: ${pengaduan!['foto1']}');
-            print('Full URL: $baseURL/storage/${pengaduan!['foto1']}');
-          } else {
-            print('Foto1 kosong atau null');
-          }
         });
       } else {
+        if (!mounted) return;
+
         setState(() {
           errorMsg =
               'Gagal mengambil data. Status code: ${response.statusCode}';
@@ -54,6 +49,8 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         errorMsg = 'Terjadi kesalahan: $e';
         isLoading = false;
@@ -61,214 +58,387 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
     }
   }
 
+  String getFotoUrl(String fotoPath) {
+    if (fotoPath.startsWith('http')) {
+      return fotoPath;
+    }
+
+    final serverRoot = baseURL.replaceAll(RegExp(r'/api.*$'), '');
+
+    return '$serverRoot/storage/$fotoPath';
+  }
+
+  Widget buildUserAvatar() {
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade100,
+        shape: BoxShape.circle,
+      ),
+      child: const CircleAvatar(
+        radius: 18,
+        backgroundColor: Colors.white,
+        child: Icon(Icons.person, color: Colors.blue, size: 22),
+      ),
+    );
+  }
+
+  Widget buildAdminAvatar() {
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade100,
+        shape: BoxShape.circle,
+      ),
+      child: const CircleAvatar(
+        radius: 18,
+        backgroundColor: Colors.white,
+        child: Icon(Icons.support_agent_rounded, color: Colors.blue, size: 23),
+      ),
+    );
+  }
+
+  Widget buildUserBubble() {
+    final String ulasan = pengaduan?['ulasan'] ?? 'Tidak ada pesan';
+    final String? foto = pengaduan?['foto1']?.toString();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 6, bottom: 6),
+                  child: Text(
+                    'Anda',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade600, Colors.blue.shade400],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      topRight: Radius.circular(18),
+                      bottomLeft: Radius.circular(18),
+                      bottomRight: Radius.circular(4),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.18),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ulasan,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14.5,
+                          height: 1.4,
+                          color: Colors.white,
+                        ),
+                      ),
+
+                      if (foto != null && foto.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: Image.network(
+                            getFotoUrl(foto),
+                            width: MediaQuery.of(context).size.width * 0.65,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: MediaQuery.of(context).size.width * 0.65,
+                                height: 150,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.18),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.broken_image_rounded,
+                                    color: Colors.white,
+                                    size: 42,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          buildUserAvatar(),
+        ],
+      ),
+    );
+  }
+
+  Widget buildAdminBubble() {
+    final String feedback = pengaduan?['feedback'] ?? 'Belum ada tanggapan';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          buildAdminAvatar(),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 6, bottom: 6),
+                  child: Text(
+                    'Admin Desa',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      topRight: Radius.circular(18),
+                      bottomLeft: Radius.circular(4),
+                      bottomRight: Radius.circular(18),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.reply_rounded,
+                        color: Colors.blue.shade500,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          feedback,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14.5,
+                            height: 1.4,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildInfoCard() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.blue.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.info_outline_rounded,
+              color: Colors.blue.shade600,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Detail percakapan pengaduan masyarakat dengan Admin Desa.',
+              style: GoogleFonts.poppins(
+                fontSize: 13.5,
+                color: Colors.black87,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildLoading() {
+    return Center(
+      child: CircularProgressIndicator(color: Colors.blue.shade600),
+    );
+  }
+
+  Widget buildError(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 56,
+              color: Colors.red.shade400,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  isLoading = true;
+                  errorMsg = '';
+                });
+                fetchDetailPengaduan();
+              },
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Coba Lagi'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xffF3F8FF),
       appBar: AppBar(
-        title: const Text('Detail Pengaduan'),
-        backgroundColor: const Color(0xFF0057A6),
+        elevation: 0,
+        centerTitle: false,
         foregroundColor: Colors.white,
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            const CircleAvatar(
+              radius: 19,
+              backgroundColor: Colors.white,
+              child: Icon(
+                Icons.chat_bubble_rounded,
+                color: Colors.blue,
+                size: 21,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Detail Pengaduan',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Percakapan dengan Admin Desa',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade700, Colors.blue.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
-      backgroundColor: const Color(0xFFF5F5F5),
       body:
           isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? buildLoading()
               : errorMsg.isNotEmpty
-              ? Center(child: Text(errorMsg, style: GoogleFonts.poppins()))
+              ? buildError(errorMsg)
               : pengaduan == null
-              ? Center(
-                child: Text(
-                  'Data tidak ditemukan',
-                  style: GoogleFonts.poppins(),
-                ),
-              )
+              ? buildError('Data tidak ditemukan')
               : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                           
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.teal[50],
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.message,
-                                      size: 18,
-                                      color: Colors.teal,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Ulasan Anda:',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.teal[800],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  pengaduan!['ulasan'] ?? 'Tidak ada pesan',
-                                  style: GoogleFonts.poppins(fontSize: 15),
-                                ),
-                                if (pengaduan!['foto1'] != null &&
-                                    pengaduan!['foto1']
-                                        .toString()
-                                        .isNotEmpty) ...[
-                                  const SizedBox(height: 12),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      '${pengaduan!['foto1']}',
-                                      width:
-                                          MediaQuery.of(context).size.width *
-                                          0.7,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              const Icon(
-                                                Icons.broken_image,
-                                                size: 50,
-                                              ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                   
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 10),
-                            child: Text(
-                              'Admin Desa',
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[50],
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Transform(
-                                  alignment: Alignment.center,
-                                  transform: Matrix4.rotationY(
-                                    3.1416,
-                                  ), // rotasi 180 derajat horizontal
-                                  child: const Icon(
-                                    Icons.reply,
-                                    size: 18,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    pengaduan!['feedback'] ??
-                                        'Belum ada tanggapan',
-                                    style: GoogleFonts.poppins(fontSize: 15),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    /// ======== INFO TAMBAHAN ========
-                    // Row(
-                    //   children: [
-                    //     const Icon(Icons.category, color: Colors.grey),
-                    //     const SizedBox(width: 6),
-                    //     Expanded(
-                    //       child: Text(
-                    //         'Kategori: ${pengaduan!['kategori'] ?? '-'}',
-                    //         style: GoogleFonts.poppins(
-                    //           fontSize: 14,
-                    //           fontWeight: FontWeight.w500,
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
-                    // const SizedBox(height: 8),
-                    // Row(
-                    //   children: [
-                    //     const Icon(Icons.access_time, color: Colors.grey),
-                    //     const SizedBox(width: 6),
-                    //     Expanded(
-                    //       child: Text(
-                    //         'Waktu: ${pengaduan!['created_at'] ?? '-'}',
-                    //         style: GoogleFonts.poppins(
-                    //           fontSize: 14,
-                    //           fontWeight: FontWeight.w500,
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
+                    buildInfoCard(),
+                    buildUserBubble(),
+                    buildAdminBubble(),
                   ],
                 ),
               ),
     );
   }
-
 }

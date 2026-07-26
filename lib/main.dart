@@ -12,60 +12,26 @@ void main() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   String? token = prefs.getString('token');
-  runApp(MyApp(isLoggedIn: token != null));
+  String role = prefs.getString('role_name') ?? 'warga';
 
-
-  // Inisialisasi notifikasi
-  // AwesomeNotifications().initialize(null, [
-  //   NotificationChannel(
-  //     channelKey: 'basic_channel',
-  //     channelName: 'Surat Status',
-  //     channelDescription: 'Notifikasi perubahan status surat',
-  //     defaultColor: Colors.blue,
-  //     importance: NotificationImportance.High,
-  //     channelShowBadge: true,
-  //   ),
-  // ], debug: true);
-
-  // // Register background task
-  // Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
-
-  // runApp(MyApp());
+  runApp(MyApp(isLoggedIn: token != null && token.isNotEmpty, role: role));
 }
+
 class MyApp extends StatelessWidget {
   final bool isLoggedIn;
-  const MyApp({super.key, required this.isLoggedIn});
+  final String role;
+  const MyApp({super.key, required this.isLoggedIn, this.role = 'warga'});
 
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Digital Village Desa Rambipuji',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Poppins',
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0057A6)),
       ),
-      
-
-      // home: BottomNavBar(),
-      home: const Loginregis(),
+      home: isLoggedIn ? BottomNavBar(role: role) : const Loginregis(),
     );
   }
 }
