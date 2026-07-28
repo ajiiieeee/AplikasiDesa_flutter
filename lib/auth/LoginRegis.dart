@@ -5,9 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../shared/shared.dart';
-import 'dart:math';
 import '../config/globals.dart';
 import '../auth/LupaPassword.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -150,7 +148,10 @@ class _LoginregisState extends State<Loginregis> {
     try {
       final response = await http.post(
         Uri.parse('$baseURL/login'),
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Accept': 'application/json',
+        },
         body: jsonEncode({'nik': nikLogin, 'password': passwordLogin}),
       );
 
@@ -197,19 +198,21 @@ class _LoginregisState extends State<Loginregis> {
             builder: (context) => BottomNavBar(role: roleName),
           ),
         );
-      } else if ([401, 403, 404].contains(response.statusCode)) {
-        final errorMessage = responseData['message'] ?? 'Login gagal.';
+      } else {
+        String errorMessage = responseData['message'] ?? 'Login gagal.';
+        if (responseData['errors'] != null && responseData['errors'] is Map) {
+          final errors = responseData['errors'] as Map<String, dynamic>;
+          if (errors.isNotEmpty) {
+            final firstKey = errors.keys.first;
+            final firstErrorList = errors[firstKey];
+            if (firstErrorList is List && firstErrorList.isNotEmpty) {
+              errorMessage = firstErrorList.first.toString();
+            }
+          }
+        }
         showCustomSnackbarAtTop(
           context: context,
           message: errorMessage,
-          backgroundColor: Colors.red,
-          icon: Icons.error,
-        );
-      } else {
-        showCustomSnackbarAtTop(
-          context: context,
-          message:
-              'Terjadi kesalahan: ${responseData['message'] ?? 'Unknown error'}',
           backgroundColor: Colors.red,
           icon: Icons.error,
         );
@@ -217,7 +220,14 @@ class _LoginregisState extends State<Loginregis> {
     } on SocketException {
       showCustomSnackbarAtTop(
         context: context,
-        message: 'Tidak ada koneksi internet',
+        message: 'Gagal terhubung ke server backend. Pastikan server Laravel berjalan.',
+        backgroundColor: Colors.orange,
+        icon: Icons.wifi_off,
+      );
+    } on http.ClientException {
+      showCustomSnackbarAtTop(
+        context: context,
+        message: 'Gagal terhubung ke http://localhost:8000. Pastikan backend Laravel aktif & CORS diizinkan.',
         backgroundColor: Colors.orange,
         icon: Icons.wifi_off,
       );
@@ -229,16 +239,15 @@ class _LoginregisState extends State<Loginregis> {
         icon: Icons.timer_off,
       );
     } catch (e, stackTrace) {
-     print('❗ ERROR: $e');
-    print('🧾 STACKTRACE: $stackTrace');
-    showCustomSnackbarAtTop(
-      context: context,
-    message: 'Terjadi kesalahan tak terduga: $e',
-    backgroundColor: Colors.red,
-    icon: Icons.error,
-  );
-}
-    
+      print('❗ ERROR: $e');
+      print('🧾 STACKTRACE: $stackTrace');
+      showCustomSnackbarAtTop(
+        context: context,
+        message: 'Terjadi kesalahan tak terduga: $e',
+        backgroundColor: Colors.red,
+        icon: Icons.error,
+      );
+    }
   }
 
 
@@ -252,131 +261,6 @@ class _LoginregisState extends State<Loginregis> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('role_name', roleName);
     await prefs.setInt('level', level);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Gambar background yang mengisi seluruh layar
-          Positioned.fill(
-            child: SvgPicture.asset(
-              'assets/images/FIRST PAGE.svg',
-              fit: BoxFit.cover,
-            ),
-          ),
-
-          // Konten yang akan ditampilkan di atas gambar background
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/boy2.png',
-                    width: MediaQuery.of(context).size.width - 40,
-                  ),
-                  const SizedBox(height: 20), // Jarak antara gambar dan teks
-
-                  SizedBox(
-                    width: 215, // samain dengan tombol aktivasi
-                    child: Text(
-                      "Pertama kali menggunakan aplikasi?",
-                      style: GoogleFonts.poppins(
-                         color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                      ),
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-
-                  // Tombol aktivasi
-                  SizedBox(
-                    height: 39,
-                    // width: MediaQuery.of(context).size.width - 40,
-                    width: 215,
-
-                    child: ElevatedButton(
-                      onPressed: () {
-                        showRegisterModal(context);
-                      },
-
-                      child: Text(
-                        'Aktivasi Akun',
-                        style: GoogleFonts.poppins(
-                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        // backgroundColor: const Color.fromARGB(255, 212, 209, 181),
-                        backgroundColor: primaryColor,
-
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // text
-                  SizedBox(
-                    width:
-                        215, //agar posisi sama dengan login (mulai dari kiri sehingga sejajar)
-                    child: Text(
-                      "Sudah aktivasi akun?",
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-
-                  // Tombol Login
-                  SizedBox(
-                    height: 39,
-                    width: 215,
-
-                    // width: 215,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        showLoginModal(context);
-                      },
-                      child: Text(
-                        'Login',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0057A6),
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        // backgroundColor: const Color.fromARGB(255, 78, 163, 232),
-                        backgroundColor: whiteColor,
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(color: primaryColor, width: 3),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   // Modal aktivasi
@@ -720,6 +604,179 @@ class _LoginregisState extends State<Loginregis> {
           },
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF16A34A);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo Desa Rambipuji
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryGreen.withValues(alpha: 0.12),
+                        blurRadius: 20,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    'assets/logo/logo.png',
+                    width: 90,
+                    height: 90,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.account_balance,
+                      size: 60,
+                      color: primaryGreen,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Digital Village",
+                  style: GoogleFonts.poppins(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1F2937),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Pemerintah Desa Rambipuji",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: primaryGreen,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "Sistem Pelayanan Digital Resmi Warga Desa",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: const Color(0xFF6B7280),
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // Card Aktivasi
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 15,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Pertama kali menggunakan aplikasi?",
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF374151),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: ElevatedButton.icon(
+                          onPressed: () => showRegisterModal(context),
+                          icon: const Icon(Icons.person_add_rounded, size: 20),
+                          label: Text(
+                            'Aktivasi Akun Warga',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryGreen,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Sudah memiliki akun aktif?",
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF374151),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: OutlinedButton.icon(
+                          onPressed: () => showLoginModal(context),
+                          icon: const Icon(Icons.login_rounded, size: 20, color: primaryGreen),
+                          label: Text(
+                            'Masuk / Login',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: primaryGreen,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: primaryGreen, width: 2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Text(
+                  "© Digital Village Desa Rambipuji",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: const Color(0xFF9CA3AF),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:digitalv/config/globals.dart';
 import 'package:digitalv/screens/form_pengajuan.dart';
 import 'package:flutter/material.dart';
@@ -14,35 +13,6 @@ class SuratScreen extends StatefulWidget {
 }
 
 class _SuratScreenState extends State<SuratScreen> {
-  final TextStyle titleStyle = const TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.bold,
-  );
-
-  final List<Color> buttonColors = [
-    Colors.blue,
-    Colors.green,
-    Colors.orange,
-    Colors.red,
-    Colors.purple,
-    Colors.teal,
-    Colors.indigo,
-    Colors.pink,
-  ];
-
-  final TextStyle descStyle = const TextStyle(
-    fontSize: 12,
-    color: Colors.grey,
-    fontWeight: FontWeight.w400,
-  );
-
-  final TextStyle btnTextStyle = const TextStyle(
-    fontSize: 13,
-    fontWeight: FontWeight.bold,
-  );
-
-  final double spacingBetweenTitleAndDesc = 6;
-
   List<dynamic> suratList = [];
   bool isLoading = true;
 
@@ -63,128 +33,162 @@ class _SuratScreenState extends State<SuratScreen> {
         });
       }
     } catch (e) {
-      print(e);
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF2E7D32);
+    const bgGrey = Color(0xFFF5F7FA);
+
     return Scaffold(
+      backgroundColor: bgGrey,
       appBar: AppBar(
         backgroundColor: Colors.white,
+        elevation: 0.5,
         automaticallyImplyLeading: false,
-        title: Text(
-          'LAYANAN SURAT',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF0057A6),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'JENIS LAYANAN SURAT',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: primaryGreen,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
-        elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.25),
-        iconTheme: const IconThemeData(color: Colors.black),
       ),
-      backgroundColor: Colors.white,
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  childAspectRatio: 3 / 2.5,
-
-                  children: List.generate(suratList.length, (index) {
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: primaryGreen),
+            )
+          : suratList.isEmpty
+              ? Center(
+                  child: Text(
+                    'Belum ada layanan surat tersedia',
+                    style: GoogleFonts.poppins(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: suratList.length,
+                  itemBuilder: (context, index) {
                     final surat = suratList[index];
-
-                    return buildCard(
-                      title: surat['nama_surat'] ?? '',
-                      desc: surat['slug'] ?? '',
-                      btnText: 'Ajukan',
-                      btnColor: buttonColors[index % buttonColors.length]
-                          .withOpacity(0.15),
-                      btnTextColor: buttonColors[index % buttonColors.length],
-                      btnIcon: Icons.edit,
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => FormPengajuan(idSurat: surat['id_surat'])
-                          ),
-                        );
-                      },
-                    );
-                  }),
+                    return _buildSuratCard(surat, primaryGreen);
+                  },
                 ),
-              ),
     );
   }
 
-  Widget buildCard({
-    required String title,
-    required String desc,
-    required String btnText,
-    required Color btnColor,
-    required Color btnTextColor,
-    required IconData btnIcon,
-    VoidCallback? onPressed,
-  }) {
+  Widget _buildSuratCard(Map<String, dynamic> surat, Color primaryGreen) {
+    final String namaSurat = surat['nama_surat'] ?? 'Nama Surat';
+    final String deskripsi = surat['persyaratan'] ?? surat['slug'] ?? 'Persyaratan pengajuan surat desa.';
+    final int idSurat = surat['id_surat'] ?? 0;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE8E8E8)),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
             offset: const Offset(0, 4),
-            blurRadius: 8,
           ),
         ],
+        border: Border.all(color: const Color(0xFFECEFF1)),
       ),
-
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(child: Text(title, style: titleStyle)),
-              Icon(Icons.chevron_right, color: btnTextColor),
-            ],
-          ),
-
-          SizedBox(height: spacingBetweenTitleAndDesc),
-
-          Text(desc, style: descStyle),
-
-          const Spacer(),
-
-          Align(
-            alignment: Alignment.bottomRight,
-            child: ElevatedButton.icon(
-              onPressed: onPressed,
-              icon: Icon(btnIcon, size: 16, color: btnTextColor),
-              label: Text(btnText, style: btnTextStyle),
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: btnColor,
-                foregroundColor: btnTextColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  side: BorderSide(color: btnTextColor),
-                ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FormPengajuan(idSurat: idSurat.toString()),
               ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    Icons.description_rounded,
+                    color: primaryGreen,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        namaSurat,
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF263238),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        deskripsi,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: const Color(0xFF546E7A),
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Text(
+                            'Ajukan Surat',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: primaryGreen,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 16,
+                            color: primaryGreen,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

@@ -2,12 +2,8 @@ import 'package:digitalv/screens/info_profile.dart';
 import 'package:digitalv/screens/notifikasi.dart';
 import 'package:flutter/material.dart';
 import 'package:digitalv/screens/pengaduan.dart';
-import 'package:digitalv/screens/form_pengajuan.dart';
-import 'package:digitalv/screens/info_berita.dart';
-import 'package:digitalv/screens/detail_berita.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:digitalv/models/detail_berita.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/globals.dart';
@@ -23,96 +19,41 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   File? _image;
-  bool _isNavigating = false;
-  String namaUser = 'User'; // Default
+  String namaUser = 'User';
   String _fotoProfil = '';
+  
+  int _totalPengajuan = 0;
+  int _diprosesCount = 0;
+  int _selesaiCount = 0;
+  int _pengaduanCount = 0;
+  bool _isLoadingStats = true;
 
- @override
+  @override
   void initState() {
     super.initState();
     _refreshProfile();
-    fetchLayanan();
     _fetchWargaStats();
   }
 
-  Future<void> fetchLayanan() async {
-    try {
-      final response = await http.get(Uri.parse('$baseURL/surat'));
-
-      if (response.statusCode == 200) {
-        setState(() {
-          layanan = jsonDecode(response.body);
-          isLoadingLayanan = false;
-        });
-      }
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  // List layanan (menu utama)
-  List<dynamic> layanan = [];
-  bool isLoadingLayanan = true;
-
-
-  // Fungsi untuk ambil daftar berita dari API
-  Future<List<Berita>> fetchBeritaList() async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseURL/berita'),
-        headers: headers,
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Berita.fromJson(json)).toList();
-      } else {
-        print(
-          'Request failed\nStatus: ${response.statusCode}\nBody: ${response.body}',
-        );
-        throw Exception(
-          'Gagal memuat data berita. Status: ${response.statusCode}',
-        );
-      }
-    } catch (e) {
-      print('Exception saat mengambil data berita: $e');
-      throw Exception('Terjadi kesalahan saat memuat data berita');
-    }
-  }
-
-  // Untuk membuat warna lebih soft
-  Color tintColor(Color baseColor) {
-    return Color.lerp(baseColor, Colors.white, 0.7)!;
-  }
-
   Future<void> _refreshProfile() async {
-    await getProfilFromApi(
-      context,
-    ); 
+    await getProfilFromApi(context); 
     await _loadUserData(); 
   }
 
-  // Mengambil data nama dan foto dari SharedPreferences
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-
     final nama = prefs.getString('nama_lengkap') ?? 'User';
     final fotoProfil = prefs.getString('foto_profil') ?? '';
 
     String fotoProfilUrl = '';
-
     if (fotoProfil.isNotEmpty) {
       if (fotoProfil.startsWith('http')) {
         fotoProfilUrl = fotoProfil.replaceFirst('/api/storage/', '/storage/');
       } else {
-        final cleanPath =
-            fotoProfil.startsWith('/') ? fotoProfil.substring(1) : fotoProfil;
-
+        final cleanPath = fotoProfil.startsWith('/') ? fotoProfil.substring(1) : fotoProfil;
         fotoProfilUrl = '$serverURL/$cleanPath';
       }
     }
-
-    await prefs.setString('foto_profil', fotoProfilUrl);
 
     if (!mounted) return;
 
@@ -120,516 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
       namaUser = nama;
       _fotoProfil = fotoProfilUrl;
     });
-
-    print('===== Data Profil dari SharedPreferences =====');
-    print('Nama: $namaUser');
-    print('Foto Profil: $_fotoProfil');
   }
-
-  // Menyimpan data nama pengguna (misalnya setelah login)
-  void _saveUserData(String nama) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('nama', nama);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor:  Colors.white,
-      body: SingleChildScrollView(
-        child: SingleChildScrollView(
-          
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-            Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 40, 20, 45),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0057A6),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Selamat Datang,',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              '$namaUser 👋',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    // Notification Icon
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const NotificationScreen() ,
-                            ),
-                          );
-                        },
-                          child: Stack(
-                            children: [
-                              Icon(
-                                Icons.notifications_outlined,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ],
-                          ),
-                        
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    // Profile Photo
-                    Padding(
-                      padding: const EdgeInsets.only(top: 13),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => InfoProfile(),
-                            ),
-                          );
-                        },
-                        child: CircleAvatar(
-                          radius: 35,
-                          backgroundColor: Colors.grey.shade200,
-
-                          // Default dari assets
-                          backgroundImage: const AssetImage(
-                            'assets/images/default.jpg',
-                          ),
-
-                          // Kalau ada foto baru / foto server, tampilkan di atas default
-                          foregroundImage:
-                              _image != null
-                                  ? FileImage(_image!)
-                                  : _fotoProfil.isNotEmpty
-                                  ? NetworkImage(_fotoProfil)
-                                  : null,
-
-                          // Kalau network image error, default asset tetap tampil
-                          onForegroundImageError:
-                              _fotoProfil.isNotEmpty
-                                  ? (exception, stackTrace) {
-                                    debugPrint(
-                                      'Gagal load foto profil: $exception',
-                                    );
-                                  }
-                                  : null,
-                        ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(25),
-                    topRight: Radius.circular(25),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildWargaStatsCard(),
-                    const SizedBox(height: 15),
-                    Row(
-  crossAxisAlignment: CrossAxisAlignment.end,
-  children: [
-    Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1565C0),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Pengaduan!',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Lakukan pengaduan jika anda memiliki keluhan, saran, atau masukan. Silakan sampaikan melalui laman ini untuk kami tindak lanjuti.',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 11,
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 32,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Pengaduan(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.blue,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: const Text("Klik Disini"),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-
-    const SizedBox(width: 10),
-
-    // GestureDetector(
-    //   onTap: () {
-    //     Navigator.push(
-    //       context,
-    //       MaterialPageRoute(
-    //         builder: (context) => ChatbotScreen(),
-    //       ),
-    //     );
-    //   },
-    //   child: Column(
-    //     children: [
-    //       Image.asset(
-    //         'assets/images/devi.png',
-    //         width: 85,
-    //       ),
-    //       const SizedBox(height: 4),
-    //       Text(
-    //         "Tanya Devi",
-    //         style: GoogleFonts.poppins(
-    //           fontSize: 11,
-    //           fontWeight: FontWeight.w500,
-    //         ),
-    //       ),
-    //     ],
-    //   ),
-    // ),
-  ],
-),
-                    const SizedBox(height: 15),
-                     Text(
-                      'Kategori Layanan',
-                      style: GoogleFonts.poppins(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding:
-                          EdgeInsets
-                              .zero, // Menghilangkan padding default dari GridView
-                      itemCount: layanan.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
-                            childAspectRatio: 1,
-                          ),
-                     itemBuilder: (context, index) {
-                        final item = layanan[index];
-
-                        final List<Color> colors = [
-                          const Color(0xFF1976D2),
-                          const Color(0xFF388E3C),
-                          const Color(0xFFFF9307),
-                          const Color(0xFF6A1B9A),
-                          const Color(0xFFA70011),
-                        ];
-
-                        final Color baseColor = colors[index % colors.length];
-
-                        final backgroundColor = tintColor(baseColor);
-
-                        return GestureDetector(
-                          onTap: () async {
-                            if (_isNavigating) return;
-
-                            _isNavigating = true;
-
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) =>
-                                       FormPengajuan(
-                                      idSurat: item['id_surat'],
-                                    )
-                              ),
-                            );
-
-                            _isNavigating = false;
-                          },
-
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: backgroundColor,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Icon(
-                                  Icons.description,
-                                  color: baseColor,
-                                  size: 28,
-                                ),
-                              ),
-
-                              const SizedBox(height: 8),
-
-                              Text(
-                                item['nama_surat'],
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                   
-                  Padding(
-                    padding: const EdgeInsets.only(left: 0, right: 0, top: 15), // Hapus padding top
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                         Text(
-                          'Berita Terkini',
-                          style: GoogleFonts.poppins(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => InfoBerita(),
-                              ),
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero, 
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Row(
-                            children: const [
-                              Text(
-                                'Lihat Semua',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(width: 5),
-                              Icon(
-                                Icons.arrow_forward_ios,
-                                size: 15,
-                                color: Colors.grey,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                   const SizedBox(height: 20),
-                    SizedBox(
-                        height: 170,
-                        child: FutureBuilder<List<Berita>>(
-                          future: fetchBeritaList(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
-                            } else if (snapshot.hasError) {
-                              return const Center(child: Text('Gagal memuat berita'));
-                            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return const Center(child: Text('Tidak ada berita'));
-                            }
-
-                            final beritaList = snapshot.data!;
-
-                            return ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: beritaList.length,
-                              separatorBuilder: (_, __) => const SizedBox(width: 10),
-                              itemBuilder: (context, index) {
-                                final item = beritaList[index];
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => DetailBerita(beritaId: item.idberita),
-                                      ),
-                                    );
-                                  },
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Stack(
-                                      children: [
-                                        item.gambarUtama.isNotEmpty
-                                          ? Image.network(
-                                            item.gambarUtama,
-                                            height: 170,
-                                            width: 250,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (
-                                              context,
-                                              error,
-                                              stackTrace,
-                                            ) {
-                                              return Container(
-                                                height: 170,
-                                                width: 250,
-                                                color: Colors.grey,
-                                                child: const Center(
-                                                  child: Text(
-                                                    'Gambar gagal dimuat',
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          )
-                                          : Container(
-                                            height: 170,
-                                            width: 250,
-                                            color: Colors.grey,
-                                            child: const Center(
-                                              child: Text('No Image'),
-                                            ),
-                                          ),
-                                        Positioned(
-                                          bottom: 0,
-                                          left: 0,
-                                          right: 0,
-                                          height: 60,
-                                          child: Container(
-                                            decoration: const BoxDecoration(
-                                              gradient: LinearGradient(
-                                                begin: Alignment.bottomCenter,
-                                                end: Alignment.topCenter,
-                                                colors: [
-                                                  Colors.black87,
-                                                  Color.fromARGB(221, 64, 64, 64),
-                                                  Colors.transparent,
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          bottom: 10,
-                                          left: 10,
-                                          right: 10,
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                item.judul,
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                item.createdAt,
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  color: Colors.white70,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      )
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  int _totalPengajuan = 0;
-  int _diprosesCount = 0;
-  int _selesaiCount = 0;
-  int _pengaduanCount = 0;
-  bool _isLoadingStats = true;
 
   Future<void> _fetchWargaStats() async {
     final prefs = await SharedPreferences.getInstance();
@@ -640,10 +72,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final resDiajukan = await http.get(Uri.parse('$baseURL/statusdiajukan?nik=$nik'), headers: headers);
       final resSelesai = await http.get(Uri.parse('$baseURL/statusselesai?nik=$nik'), headers: headers);
       final resDitolak = await http.get(Uri.parse('$baseURL/statusditolak?nik=$nik'), headers: headers);
+      final resPengaduan = await http.get(Uri.parse('$baseURL/notifikasi?nik=$nik'), headers: headers);
 
       int diajukan = 0;
       int selesai = 0;
       int ditolak = 0;
+      int pengaduan = 0;
 
       if (resDiajukan.statusCode == 200) {
         final List d = json.decode(resDiajukan.body);
@@ -657,12 +91,17 @@ class _HomeScreenState extends State<HomeScreen> {
         final List dt = json.decode(resDitolak.body);
         ditolak = dt.length;
       }
+      if (resPengaduan.statusCode == 200) {
+        final List p = json.decode(resPengaduan.body);
+        pengaduan = p.length;
+      }
 
       if (mounted) {
         setState(() {
           _diprosesCount = diajukan;
           _selesaiCount = selesai;
           _totalPengajuan = diajukan + selesai + ditolak;
+          _pengaduanCount = pengaduan;
           _isLoadingStats = false;
         });
       }
@@ -675,50 +114,477 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildWargaStatsCard() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Ringkasan Aktivitas',
-          style: GoogleFonts.poppins(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    final List<String> days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    final List<String> months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    String day = days[now.weekday - 1];
+    String month = months[now.month - 1];
+    return '$day, ${now.day} $month ${now.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF16A34A);
+    const accentGreen = Color(0xFF22C55E);
+    const bgGrey = Color(0xFFF8FAFC);
+
+    return Scaffold(
+      backgroundColor: bgGrey,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _statItem('Total Surat', '$_totalPengajuan', Icons.description_outlined, const Color(0xFF0057A6)),
-            const SizedBox(width: 8),
-            _statItem('Diproses', '$_diprosesCount', Icons.hourglass_top, Colors.orange),
-            const SizedBox(width: 8),
-            _statItem('Selesai', '$_selesaiCount', Icons.check_circle_outline, Colors.green),
+            // A. HEADER BARU DENGAN LOGO DESA RAMBIPUJI
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
+              decoration: const BoxDecoration(
+                color: primaryGreen,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Row Logo & App Name + Action Icons
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(
+                          'assets/logo/logo.png',
+                          width: 34,
+                          height: 34,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.account_balance,
+                            size: 24,
+                            color: primaryGreen,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Digital Village',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            Text(
+                              'Sistem Pelayanan Digital Desa Rambipuji',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white.withValues(alpha: 0.85),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Notifikasi Icon
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NotificationScreen(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.notifications_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Foto Profil Bulat
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => InfoProfile(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: Colors.white24,
+                            backgroundImage: const AssetImage('assets/images/default.jpg'),
+                            foregroundImage: _image != null
+                                ? FileImage(_image!)
+                                : _fotoProfil.isNotEmpty
+                                    ? NetworkImage(_fotoProfil)
+                                    : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Divider(color: Colors.white24, height: 1),
+                  const SizedBox(height: 14),
+                  // Welcome Greeting
+                  Text(
+                    _getFormattedDate(),
+                    style: GoogleFonts.poppins(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Selamat Datang,',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '$namaUser 👋',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // B. KARTU STATISTIK RINGKASAN (2 Kartu Utama)
+                  Text(
+                    'Status Layanan Surat',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF263238),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      // Card 1: Surat Diproses
+                      Expanded(
+                        child: _buildMainStatCard(
+                          title: 'Surat Diproses',
+                          count: '$_diprosesCount',
+                          subtitle: 'Diajukan / Verifikasi',
+                          icon: Icons.hourglass_top_rounded,
+                          color: const Color(0xFFE65100),
+                          bgColor: const Color(0xFFFFF3E0),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Card 2: Surat Selesai
+                      Expanded(
+                        child: _buildMainStatCard(
+                          title: 'Surat Selesai',
+                          count: '$_selesaiCount',
+                          subtitle: 'Siap Diunduh',
+                          icon: Icons.check_circle_rounded,
+                          color: primaryGreen,
+                          bgColor: const Color(0xFFE8F5E9),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // C. MENU PENGADUAN (Card Besar)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(color: const Color(0xFFE0E0E0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F5E9),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.campaign_rounded,
+                                color: primaryGreen,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'PENGADUAN MASYARAKAT',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF263238),
+                                    ),
+                                  ),
+                                  Text(
+                                    'Layanan Pengaduan Desa',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Laporkan permasalahan desa seperti infrastruktur, pelayanan, keamanan, dan lainnya secara cepat dan transparan.',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: const Color(0xFF455A64),
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 44,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const Pengaduan(),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.add_comment_rounded, size: 18),
+                            label: Text(
+                              'Buat Pengaduan',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryGreen,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // D. INFORMASI SINGKAT / RINGKASAN AKTIVITAS
+                  Text(
+                    'Informasi Singkat Aktivitas',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF263238),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildSummaryCard(
+                        title: 'Total Surat',
+                        count: '$_totalPengajuan',
+                        icon: Icons.description_outlined,
+                        color: const Color(0xFF1976D2),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildSummaryCard(
+                        title: 'Surat Selesai',
+                        count: '$_selesaiCount',
+                        icon: Icons.task_alt_rounded,
+                        color: accentGreen,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildSummaryCard(
+                        title: 'Total Pengaduan',
+                        count: '$_pengaduanCount',
+                        icon: Icons.forum_outlined,
+                        color: const Color(0xFF8E24AA),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _statItem(String title, String count, IconData icon, Color color) {
+  Widget _buildMainStatCard({
+    required String title,
+    required String count,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required Color bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: const Color(0xFFECEFF1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              Text(
+                _isLoadingStats ? '...' : count,
+                style: GoogleFonts.poppins(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF263238),
+            ),
+          ),
+          Text(
+            subtitle,
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard({
+    required String title,
+    required String count,
+    required IconData icon,
+    required Color color,
+  }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.2)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: Border.all(color: const Color(0xFFCFD8DC).withOpacity(0.5)),
         ),
         child: Column(
           children: [
             Icon(icon, color: color, size: 22),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               _isLoadingStats ? '...' : count,
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: color,
+                color: const Color(0xFF263238),
               ),
             ),
             Text(
@@ -726,7 +592,7 @@ class _HomeScreenState extends State<HomeScreen> {
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 10,
-                color: Colors.grey[700],
+                color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -736,4 +602,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

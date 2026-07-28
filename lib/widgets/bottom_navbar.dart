@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../screens/home.dart';
 import '../screens/surat.dart';
 import '../screens/status.dart';
-import '../screens/profile.dart';
-import '../screens/pengaduan.dart';
 // Kepala Dusun
 import '../screens/kadus/kadus_home.dart';
 import '../screens/kadus/kadus_surat_masuk.dart';
@@ -46,82 +45,169 @@ class _BottomNavBarState extends State<BottomNavBar> {
       case 'kepala_dusun':
         return [
           const KadusHomeScreen(),
-          const KadusFormPengajuanScreen(),
           const KadusSuratMasukScreen(),
-          const ProfileScreen(),
+          const KadusFormPengajuanScreen(),
         ];
       case 'sekretaris_desa':
         return [
           const SekdesHomeScreen(),
           const SekdesPersetujuanScreen(),
           const SekdesMonitoringPengaduanScreen(),
-          const ProfileScreen(),
         ];
       case 'kepala_desa':
         return [
           const KadesHomeScreen(),
           const KadesPersetujuanScreen(),
           const KadesMonitoringPengaduanScreen(),
-          const ProfileScreen(),
         ];
-      default: // warga (5 items: Dashboard, Jenis Surat, Tracking, Pengaduan, Profil)
+      default: // warga
         return [
           const HomeScreen(),
           const SuratScreen(),
           StatusTabScreen(),
-          const Pengaduan(),
-          const ProfileScreen(),
-        ];
-    }
-  }
-
-  List<Widget> get _items {
-    switch (widget.role) {
-      case 'kepala_dusun':
-        return const [
-          Icon(Icons.dashboard, size: 25, color: Colors.white),
-          Icon(Icons.edit_document, size: 25, color: Colors.white),
-          Icon(Icons.inbox, size: 25, color: Colors.white),
-          Icon(Icons.person, size: 25, color: Colors.white),
-        ];
-      case 'sekretaris_desa':
-      case 'kepala_desa':
-        return const [
-          Icon(Icons.dashboard, size: 25, color: Colors.white),
-          Icon(Icons.approval, size: 25, color: Colors.white),
-          Icon(Icons.forum, size: 25, color: Colors.white),
-          Icon(Icons.person, size: 25, color: Colors.white),
-        ];
-      default: // warga
-        return const [
-          Icon(Icons.home, size: 24, color: Colors.white),
-          Icon(Icons.mail, size: 24, color: Colors.white),
-          Icon(Icons.history, size: 24, color: Colors.white),
-          Icon(Icons.campaign, size: 24, color: Colors.white),
-          Icon(Icons.person, size: 24, color: Colors.white),
         ];
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    bool isWarga = widget.role == 'warga';
+    bool isKadus = widget.role == 'kepala_dusun';
+    bool isSekdes = widget.role == 'sekretaris_desa';
+    bool isKades = widget.role == 'kepala_desa';
+
+    int safeIndex = _currentIndex;
+    if ((isWarga || isKadus || isSekdes || isKades) && safeIndex > 2) {
+      safeIndex = 0;
+    }
+
+    List<Map<String, dynamic>> navItems;
+    if (isWarga) {
+      navItems = [
+        {'icon': Icons.home_rounded, 'label': 'Beranda'},
+        {'icon': Icons.assignment_outlined, 'label': 'Jenis Surat'},
+        {'icon': Icons.analytics_outlined, 'label': 'Tracking'},
+      ];
+    } else if (isKadus) {
+      navItems = [
+        {'icon': Icons.home_rounded, 'label': 'Beranda'},
+        {'icon': Icons.inbox_rounded, 'label': 'Pengajuan Masuk'},
+        {'icon': Icons.edit_note_rounded, 'label': 'Ajukan Surat'},
+      ];
+    } else if (isSekdes) {
+      navItems = [
+        {'icon': Icons.home_rounded, 'label': 'Beranda'},
+        {'icon': Icons.inbox_rounded, 'label': 'Pengajuan Masuk'},
+        {'icon': Icons.campaign_rounded, 'label': 'Pengaduan'},
+      ];
+    } else {
+      // kepala_desa
+      navItems = [
+        {'icon': Icons.home_rounded, 'label': 'Beranda'},
+        {'icon': Icons.inbox_rounded, 'label': 'Pengajuan Masuk'},
+        {'icon': Icons.campaign_rounded, 'label': 'Pengaduan'},
+      ];
+    }
+
     return Scaffold(
-      extendBody: true,
-      body: _screens[_currentIndex],
-      bottomNavigationBar: CurvedNavigationBar(
-        backgroundColor: Colors.transparent,
-        color: const Color(0xFF0057A6),
-        buttonBackgroundColor: const Color(0xFF0057A6),
-        height: 60,
-        items: _items,
-        index: _currentIndex,
-        animationDuration: const Duration(milliseconds: 300),
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+      backgroundColor: const Color(0xFFF5F7FA),
+      body: _screens[safeIndex],
+      bottomNavigationBar: (isWarga || isKadus || isSekdes || isKades)
+          ? Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 15,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: navItems.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final item = entry.value;
+                      return _buildCustomNavItem(
+                        idx,
+                        item['icon'] as IconData,
+                        item['label'] as String,
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            )
+          : CurvedNavigationBar(
+              backgroundColor: Colors.transparent,
+              color: const Color(0xFF0057A6),
+              buttonBackgroundColor: const Color(0xFF0057A6),
+              height: 60,
+              items: const [
+                Icon(Icons.dashboard, size: 25, color: Colors.white),
+                Icon(Icons.approval, size: 25, color: Colors.white),
+                Icon(Icons.forum, size: 25, color: Colors.white),
+                Icon(Icons.person, size: 25, color: Colors.white),
+              ],
+              index: _currentIndex,
+              animationDuration: const Duration(milliseconds: 300),
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+            ),
+    );
+  }
+
+  Widget _buildCustomNavItem(int index, IconData icon, String label) {
+    final bool isSelected = _currentIndex == index;
+    const Color activeColor = Color(0xFF16A34A);
+    const Color inactiveColor = Color(0xFF9E9E9E);
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor.withOpacity(0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? activeColor : inactiveColor,
+              size: 24,
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  color: activeColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
-}
+}

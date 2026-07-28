@@ -6,56 +6,52 @@ import '../status/selesai.dart';
 import '../status/ditolak.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 class StatusTabScreen extends StatelessWidget {
+  StatusTabScreen({super.key});
+
   final MyTabController controller = Get.put(MyTabController());
 
   @override
   Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF2E7D32);
+    const bgGrey = Color(0xFFF5F7FA);
+
     return Scaffold(
+      backgroundColor: bgGrey,
       appBar: AppBar(
         backgroundColor: Colors.white,
+        elevation: 0.5,
         automaticallyImplyLeading: false,
-        title: Text("STATUS",
-             style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0057A6),
-            )),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            "TRACKING SURAT",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: primaryGreen,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
         bottom: TabBar(
           controller: controller.tabController,
-          indicatorColor: Color(0xFF0057A6), //warna garis bawah
-          tabs: [
-            Tab(
-              child: Text(
-                "Diajukan",
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF0057A6),
-                ),
-              ),
-            ),
-            Tab(
-              child: Text(
-                "Selesai",
-               style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF0057A6),
-              ),
-              ),
-            ),
-            Tab(
-              child: Text(
-              "Ditolak",
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF0057A6),
-              ),
-              ),
-            ),
+          indicatorColor: primaryGreen,
+          indicatorWeight: 3,
+          labelColor: primaryGreen,
+          unselectedLabelColor: const Color(0xFF78909C),
+          labelStyle: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          tabs: const [
+            Tab(text: "Sedang Diproses"),
+            Tab(text: "Selesai"),
+            Tab(text: "Ditolak"),
           ],
         ),
       ),

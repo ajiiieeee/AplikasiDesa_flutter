@@ -50,13 +50,15 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
       );
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
-        setState(() {
-          _listKK = body['data'] ?? [];
-          _isLoadingKK = false;
-        });
+        if (mounted) {
+          setState(() {
+            _listKK = body['data'] ?? [];
+            _isLoadingKK = false;
+          });
+        }
       }
     } catch (e) {
-      setState(() => _isLoadingKK = false);
+      if (mounted) setState(() => _isLoadingKK = false);
     }
   }
 
@@ -74,9 +76,11 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
       );
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
-        setState(() {
-          _listAnggota = body['data'] ?? [];
-        });
+        if (mounted) {
+          setState(() {
+            _listAnggota = body['data'] ?? [];
+          });
+        }
       }
     } catch (e) {
       print('Error fetching anggota: $e');
@@ -87,9 +91,11 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
     try {
       final response = await http.get(Uri.parse('$baseURL/surat'));
       if (response.statusCode == 200) {
-        setState(() {
-          _listSurat = json.decode(response.body);
-        });
+        if (mounted) {
+          setState(() {
+            _listSurat = json.decode(response.body);
+          });
+        }
       }
     } catch (e) {
       print('Error fetching surat: $e');
@@ -110,9 +116,9 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
     if (_selectedNik == null || _selectedIdSurat == null) {
       showCustomSnackbar(
         context: context,
-        message: 'Pilih Warga dan Jenis Surat terlebih dahulu',
+        message: 'Pilih Warga Pemohon dan Jenis Surat terlebih dahulu',
         backgroundColor: Colors.orange,
-        icon: Icons.warning,
+        icon: Icons.warning_amber_rounded,
       );
       return;
     }
@@ -137,13 +143,13 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
       final streamedRes = await request.send();
       final res = await http.Response.fromStream(streamedRes);
 
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
 
       if (res.statusCode == 201 || res.statusCode == 200) {
         if (!mounted) return;
         showCustomSnackbar(
           context: context,
-          message: 'Pengajuan atas nama warga berhasil dibuat!',
+          message: 'Pengajuan atas nama warga berhasil dibuat dan otomatis disetujui Kadus!',
           backgroundColor: Colors.green,
           icon: Icons.check_circle,
         );
@@ -170,7 +176,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
         );
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       if (!mounted) return;
       showCustomSnackbar(
         context: context,
@@ -183,20 +189,27 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF2E7D32);
+    const bgGrey = Color(0xFFF5F7FA);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgGrey,
       appBar: AppBar(
-        title: Text(
-          'AJUKAN SURAT (KADUS)',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF0057A6),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'AJUKAN SURAT (KADUS)',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: primaryGreen,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
-        backgroundColor: Colors.white,
-        elevation: 2,
-        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -205,20 +218,26 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Banner Informasi
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0057A6).withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(10),
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFA5D6A7)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline, color: Color(0xFF0057A6)),
+                    const Icon(Icons.info_outline_rounded, color: primaryGreen, size: 22),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Pengajuan ini dibuat atas nama warga dan akan langsung berstatus "Disetujui Kepala Dusun".',
-                        style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF0057A6)),
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: const Color(0xFF1B5E20),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
@@ -227,163 +246,246 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
 
               const SizedBox(height: 20),
 
-              // 1. Pilih Kartu Keluarga
-              Text('1. Pilih Kartu Keluarga (KK)', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
-              const SizedBox(height: 6),
-              _isLoadingKK
-                  ? const CircularProgressIndicator()
-                  : DropdownButtonFormField<String>(
-                      value: _selectedNoKK,
+              // STEP 1: PILIH PENDUDUK / KK
+              _buildStepHeader(step: '1', title: 'Pilih Penduduk Pemohon'),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                  border: Border.all(color: const Color(0xFFECEFF1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Pilih Kartu Keluarga (KK):', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+                    const SizedBox(height: 6),
+                    _isLoadingKK
+                        ? const Center(child: Padding(padding: EdgeInsets.all(10), child: CircularProgressIndicator(color: primaryGreen)))
+                        : DropdownButtonFormField<String>(
+                            value: _selectedNoKK,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: bgGrey,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            ),
+                            hint: Text('Pilih No. KK', style: GoogleFonts.poppins(fontSize: 13)),
+                            items: _listKK.map((kk) {
+                              return DropdownMenuItem<String>(
+                                value: kk['no_kk'].toString(),
+                                child: Text(
+                                  '${kk['no_kk']} - ${kk['kepala_keluarga']}',
+                                  style: GoogleFonts.poppins(fontSize: 13),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  _selectedNoKK = val;
+                                });
+                                _fetchAnggota(val);
+                              }
+                            },
+                          ),
+                    const SizedBox(height: 14),
+                    Text('Pilih Warga Pemohon:', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      value: _selectedNik,
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        filled: true,
+                        fillColor: bgGrey,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       ),
-                      hint: Text('Pilih No. KK', style: GoogleFonts.poppins(fontSize: 13)),
-                      items: _listKK.map((kk) {
+                      hint: Text(_selectedNoKK == null ? 'Pilih KK terlebih dahulu' : 'Pilih Anggota Keluarga', style: GoogleFonts.poppins(fontSize: 13)),
+                      items: _listAnggota.map((ang) {
                         return DropdownMenuItem<String>(
-                          value: kk['no_kk'].toString(),
+                          value: ang['nik'].toString(),
                           child: Text(
-                            '${kk['no_kk']} - ${kk['kepala_keluarga']}',
+                            '${ang['nama_lengkap']} (${ang['nik']})',
                             style: GoogleFonts.poppins(fontSize: 13),
-                            overflow: TextOverflow.ellipsis,
                           ),
                         );
                       }).toList(),
                       onChanged: (val) {
                         if (val != null) {
+                          final selectedObj = _listAnggota.firstWhere((a) => a['nik'].toString() == val);
                           setState(() {
-                            _selectedNoKK = val;
+                            _selectedNik = val;
+                            _selectedNamaWarga = selectedObj['nama_lengkap'];
                           });
-                          _fetchAnggota(val);
                         }
                       },
                     ),
-
-              const SizedBox(height: 16),
-
-              // 2. Pilih Anggota Keluarga (Warga Pemohon)
-              Text('2. Pilih Warga Pemohon', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
-              const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                value: _selectedNik,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ],
                 ),
-                hint: Text(_selectedNoKK == null ? 'Pilih KK terlebih dahulu' : 'Pilih Anggota Keluarga', style: GoogleFonts.poppins(fontSize: 13)),
-                items: _listAnggota.map((ang) {
-                  return DropdownMenuItem<String>(
-                    value: ang['nik'].toString(),
-                    child: Text(
-                      '${ang['nama_lengkap']} (${ang['nik']})',
-                      style: GoogleFonts.poppins(fontSize: 13),
+              ),
+
+              const SizedBox(height: 20),
+
+              // STEP 2: PILIH JENIS SURAT
+              _buildStepHeader(step: '2', title: 'Pilih Jenis Surat'),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  if (val != null) {
-                    final selectedObj = _listAnggota.firstWhere((a) => a['nik'].toString() == val);
-                    setState(() {
-                      _selectedNik = val;
-                      _selectedNamaWarga = selectedObj['nama_lengkap'];
-                    });
-                  }
-                },
-              ),
-
-              const SizedBox(height: 16),
-
-              // 3. Jenis Surat
-              Text('3. Jenis Surat', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
-              const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                value: _selectedIdSurat,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ],
+                  border: Border.all(color: const Color(0xFFECEFF1)),
                 ),
-                hint: Text('Pilih Jenis Surat', style: GoogleFonts.poppins(fontSize: 13)),
-                items: _listSurat.map((surat) {
-                  return DropdownMenuItem<String>(
-                    value: surat['id_surat'].toString(),
-                    child: Text(
-                      surat['nama_surat'].toString(),
-                      style: GoogleFonts.poppins(fontSize: 13),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (val) => setState(() => _selectedIdSurat = val),
-              ),
-
-              const SizedBox(height: 16),
-
-              // 4. Keperluan / Keterangan
-              Text('4. Keperluan Pengajuan', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
-              const SizedBox(height: 6),
-              TextFormField(
-                controller: _keperluanController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Tuliskan keperluan pengajuan surat ini...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Keperluan wajib diisi' : null,
-              ),
-
-              const SizedBox(height: 16),
-
-              // 5. Upload Foto Persyaratan
-              Text('5. Upload Persyaratan (Opsional max 3 foto)', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(3, (index) {
-                  return GestureDetector(
-                    onTap: () => _pickImage(index),
-                    child: Container(
-                      width: 100,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade400),
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.grey.shade100,
+                child: DropdownButtonFormField<String>(
+                  value: _selectedIdSurat,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: bgGrey,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
+                  hint: Text('Pilih Jenis Surat Layanan', style: GoogleFonts.poppins(fontSize: 13)),
+                  items: _listSurat.map((surat) {
+                    return DropdownMenuItem<String>(
+                      value: surat['id_surat'].toString(),
+                      child: Text(
+                        surat['nama_surat'].toString(),
+                        style: GoogleFonts.poppins(fontSize: 13),
                       ),
-                      child: _imageFiles[index] != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.file(_imageFiles[index]!, fit: BoxFit.cover),
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.add_a_photo, color: Colors.grey),
-                                const SizedBox(height: 4),
-                                Text('Foto ${index + 1}', style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)),
-                              ],
-                            ),
-                    ),
-                  );
-                }),
+                    );
+                  }).toList(),
+                  onChanged: (val) => setState(() => _selectedIdSurat = val),
+                ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
-              // Submit Button
+              // STEP 3: ISI KEPERLUAN
+              _buildStepHeader(step: '3', title: 'Isi Keperluan'),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                  border: Border.all(color: const Color(0xFFECEFF1)),
+                ),
+                child: TextFormField(
+                  controller: _keperluanController,
+                  maxLines: 3,
+                  style: GoogleFonts.poppins(fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Tuliskan keperluan pengajuan surat ini secara detail...',
+                    filled: true,
+                    fillColor: bgGrey,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
+                  validator: (val) => val == null || val.trim().isEmpty ? 'Keperluan wajib diisi' : null,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // STEP 4: UPLOAD LAMPIRAN
+              _buildStepHeader(step: '4', title: 'Upload Lampiran Persyaratan'),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                  border: Border.all(color: const Color(0xFFECEFF1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Upload Berkas (KTP, KK, Persyaratan - Max 3 foto):', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700])),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(3, (index) {
+                        return GestureDetector(
+                          onTap: () => _pickImage(index),
+                          child: Container(
+                            width: (MediaQuery.of(context).size.width - 80) / 3,
+                            height: 95,
+                            decoration: BoxDecoration(
+                              color: bgGrey,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFFCFD8DC)),
+                            ),
+                            child: _imageFiles[index] != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Image.file(_imageFiles[index]!, fit: BoxFit.cover),
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.add_a_photo_outlined, color: primaryGreen, size: 24),
+                                      const SizedBox(height: 4),
+                                      Text('Foto ${index + 1}', style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600])),
+                                    ],
+                                  ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // STEP 5: SUBMIT
               SizedBox(
                 width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
+                height: 48,
+                child: ElevatedButton.icon(
                   onPressed: _isLoading ? null : _submitPengajuan,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0057A6),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: _isLoading
+                  icon: const Icon(Icons.send_rounded, size: 18),
+                  label: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                          'Kirim Pengajuan (Disetujui Kadus)',
-                          style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                          'Submit Pengajuan (Otomatis Disetujui)',
+                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryGreen,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
                 ),
               ),
               const SizedBox(height: 40),
@@ -391,6 +493,37 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStepHeader({required String step, required String title}) {
+    const primaryGreen = Color(0xFF2E7D32);
+    return Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: const BoxDecoration(
+            color: primaryGreen,
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              step,
+              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF263238),
+          ),
+        ),
+      ],
     );
   }
 }

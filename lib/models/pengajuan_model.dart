@@ -8,6 +8,8 @@ class PengajuanModel {
   final String tanggalDiajukan;
   final String? keteranganDitolak;
   final List<String> fotos;
+  final String? nomorSurat;
+  final String? pdfUrl;
 
   PengajuanModel({
     required this.idPengajuan,
@@ -19,6 +21,8 @@ class PengajuanModel {
     required this.tanggalDiajukan,
     this.keteranganDitolak,
     required this.fotos,
+    this.nomorSurat,
+    this.pdfUrl,
   });
 
   factory PengajuanModel.fromJson(Map<String, dynamic> json) {
@@ -40,6 +44,8 @@ class PengajuanModel {
       tanggalDiajukan: json['tanggal_diajukan']?.toString() ?? json['created_at']?.toString() ?? '',
       keteranganDitolak: json['keterangan_ditolak']?.toString(),
       fotos: fotosList,
+      nomorSurat: json['nomor_surat']?.toString(),
+      pdfUrl: json['file_pdf']?.toString() ?? json['file_pdf_url']?.toString(),
     );
   }
 }

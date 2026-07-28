@@ -32,24 +32,28 @@ class SuratTimelineWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF2E7D32);
+    const secondaryGreen = Color(0xFF4CAF50);
+    const greyColor = Color(0xFFBDBDBD);
+
     final isDitolak = status == 'Ditolak';
     final completedStep = _getCompletedStepIndex(status);
 
-    final steps = [
+    final List<String> steps = [
       'Diajukan',
-      'Kadus',
-      'Admin',
-      'Sekdes',
-      'Kades / Selesai',
+      'Disetujui Kepala Dusun',
+      'Disetujui Admin',
+      'Disetujui Sekretaris Desa',
+      'Selesai',
     ];
 
     if (isDitolak) {
       return Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.red.shade50,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Colors.red.shade200),
         ),
         child: Column(
@@ -57,20 +61,20 @@ class SuratTimelineWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.cancel, color: Colors.red, size: 20),
+                const Icon(Icons.cancel_rounded, color: Colors.red, size: 22),
                 const SizedBox(width: 8),
                 Text(
                   'Pengajuan Ditolak',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     color: Colors.red.shade800,
-                    fontSize: 13,
+                    fontSize: 14,
                   ),
                 ),
               ],
             ),
             if (alasanDitolak != null && alasanDitolak!.isNotEmpty) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Text(
                 'Alasan Penolakan: $alasanDitolak',
                 style: GoogleFonts.poppins(
@@ -87,81 +91,109 @@ class SuratTimelineWidget extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        color: const Color(0xFFF9FBE7).withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFDCEDC8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Timeline Progress Surat',
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(height: 10),
           Row(
+            children: [
+              const Icon(Icons.timeline_rounded, color: primaryGreen, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Timeline Progress Surat',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: primaryGreen,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Column(
             children: List.generate(steps.length, (index) {
               final stepNum = index + 1;
               final isDone = stepNum <= completedStep;
               final isCurrent = stepNum == completedStep;
+              final isLast = index == steps.length - 1;
 
-              Color circleColor = isDone ? const Color(0xFF28A745) : Colors.grey.shade300;
-              if (isCurrent && status != 'Selesai') {
-                circleColor = const Color(0xFF0057A6);
-              }
-
-              return Expanded(
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        if (index > 0)
-                          Expanded(
-                            child: Container(
-                              height: 3,
-                              color: isDone ? const Color(0xFF28A745) : Colors.grey.shade300,
-                            ),
-                          ),
-                        Container(
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: circleColor,
-                          ),
-                          child: Icon(
-                            isDone ? Icons.check : Icons.circle,
-                            size: 12,
-                            color: isDone ? Colors.white : Colors.grey.shade600,
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isDone ? secondaryGreen : Colors.white,
+                          border: Border.all(
+                            color: isDone ? primaryGreen : greyColor,
+                            width: 2,
                           ),
                         ),
-                        if (index < steps.length - 1)
-                          Expanded(
-                            child: Container(
-                              height: 3,
-                              color: (stepNum < completedStep) ? const Color(0xFF28A745) : Colors.grey.shade300,
+                        child: Center(
+                          child: isDone
+                              ? const Icon(
+                                  Icons.check_rounded,
+                                  size: 14,
+                                  color: Colors.white,
+                                )
+                              : Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: greyColor,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      if (!isLast)
+                        Container(
+                          width: 2,
+                          height: 28,
+                          color: isDone && (index + 2 <= completedStep)
+                              ? secondaryGreen
+                              : greyColor.withOpacity(0.5),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            steps[index],
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: isDone ? FontWeight.bold : FontWeight.w500,
+                              color: isDone ? primaryGreen : const Color(0xFF78909C),
                             ),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      steps[index],
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 9,
-                        fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                        color: isDone ? Colors.black87 : Colors.grey[600],
+                          if (isCurrent)
+                            Text(
+                              'Tahap Saat Ini',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: secondaryGreen,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               );
             }),
           ),

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../../config/globals.dart';
 import '../../models/pengajuan_model.dart';
 import '../../widgets/snackbarcustom.dart';
+import '../../widgets/timeline_widget.dart';
 
 class SekdesPersetujuanScreen extends StatefulWidget {
   const SekdesPersetujuanScreen({super.key});
@@ -13,16 +14,33 @@ class SekdesPersetujuanScreen extends StatefulWidget {
   State<SekdesPersetujuanScreen> createState() => _SekdesPersetujuanScreenState();
 }
 
-class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> {
-  late Future<List<PengajuanModel>> _futurePersetujuan;
+class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  late Future<List<PengajuanModel>> _futureMenunggu;
+  late Future<List<PengajuanModel>> _futureDiproses;
 
   @override
   void initState() {
     super.initState();
-    _futurePersetujuan = _fetchPersetujuan();
+    _tabController = TabController(length: 2, vsync: this);
+    _refreshData();
   }
 
-  Future<List<PengajuanModel>> _fetchPersetujuan() async {
+  void _refreshData() {
+    setState(() {
+      _futureMenunggu = _fetchSuratMenunggu();
+      _futureDiproses = _fetchSuratDiproses();
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  // TAB 1: Surat Menunggu Persetujuan Sekdes (Status: Disetujui Admin)
+  Future<List<PengajuanModel>> _fetchSuratMenunggu() async {
     final response = await http.get(
       Uri.parse('$baseURL/sekdes/suratmasuk'),
       headers: headers,
@@ -31,9 +49,27 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> {
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
       final List data = body['data'] ?? [];
-      return data.map((item) => PengajuanModel.fromJson(item)).toList();
+      final list = data.map((item) => PengajuanModel.fromJson(item)).toList();
+      return list.where((item) => item.status == 'Disetujui Admin' || item.status.isEmpty).toList();
     } else {
-      throw Exception('Gagal memuat surat persetujuan Sekdes');
+      throw Exception('Gagal memuat data surat persetujuan Sekdes');
+    }
+  }
+
+  // TAB 2: Surat Diproses (Status: Disetujui Sekretaris Desa)
+  Future<List<PengajuanModel>> _fetchSuratDiproses() async {
+    final response = await http.get(
+      Uri.parse('$baseURL/sekdes/suratmasuk'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final body = json.decode(response.body);
+      final List data = body['data'] ?? [];
+      final list = data.map((item) => PengajuanModel.fromJson(item)).toList();
+      return list.where((item) => item.status == 'Disetujui Sekretaris Desa' || item.status == 'Selesai').toList();
+    } else {
+      throw Exception('Gagal memuat data surat diproses');
     }
   }
 
@@ -41,16 +77,17 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Konfirmasi Persetujuan Sekdes', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text('Apakah Anda yakin ingin menyetujui surat ini dan meneruskannya ke Kepala Desa?', style: GoogleFonts.poppins()),
+        title: Text('Konfirmasi Persetujuan Sekdes', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+        content: Text('Apakah Anda yakin ingin menyetujui surat ini? Status akan berubah menjadi "Disetujui Sekretaris Desa" dan diteruskan ke Kepala Desa untuk TTE.', style: GoogleFonts.poppins(fontSize: 13)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey)),
+            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey[700])),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Setujui', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.green)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF16A34A)),
+            child: Text('Setujui', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ],
       ),
@@ -68,13 +105,11 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> {
         if (!mounted) return;
         showCustomSnackbar(
           context: context,
-          message: 'Surat berhasil disetujui & diteruskan ke Kades',
+          message: 'Surat berhasil disetujui & diteruskan ke Kepala Desa',
           backgroundColor: Colors.green,
           icon: Icons.check_circle,
         );
-        setState(() {
-          _futurePersetujuan = _fetchPersetujuan();
-        });
+        _refreshData();
       } else {
         if (!mounted) return;
         showCustomSnackbar(
@@ -100,19 +135,19 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Tolak Pengajuan Surat', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text('Tolak Pengajuan Surat', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Masukkan alasan penolakan:', style: GoogleFonts.poppins(fontSize: 14)),
+            Text('Masukkan alasan penolakan (Wajib diisi):', style: GoogleFonts.poppins(fontSize: 13)),
             const SizedBox(height: 8),
             TextField(
               controller: reasonController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Alasan penolakan oleh Sekdes...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                hintText: 'Alasan penolakan oleh Sekretaris Desa...',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
           ],
@@ -120,9 +155,9 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey)),
+            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey[700])),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               if (reasonController.text.trim().isEmpty) {
                 showCustomSnackbar(
@@ -135,7 +170,8 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> {
               }
               Navigator.pop(context, true);
             },
-            child: Text('Tolak', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.red)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC62828)),
+            child: Text('Tolak', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ],
       ),
@@ -158,9 +194,7 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> {
           backgroundColor: Colors.red,
           icon: Icons.cancel,
         );
-        setState(() {
-          _futurePersetujuan = _fetchPersetujuan();
-        });
+        _refreshData();
       } else {
         if (!mounted) return;
         showCustomSnackbar(
@@ -181,174 +215,369 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> {
     }
   }
 
+  void _showDetailModal(PengajuanModel item) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.all(20),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Detail Verifikasi Sekdes',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF263238),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _detailRow('A. Data Pemohon', '${item.namaPemohon} (NIK: ${item.nik})'),
+                  _detailRow('B. Data Surat', item.namaSurat),
+                  _detailRow('Tanggal Pengajuan', item.tanggalDiajukan),
+                  _detailRow('Keperluan', item.keperluan),
+                  _detailRow('C. Verifikasi Admin', 'Telah disetujui & diverifikasi oleh Admin Desa'),
+                  const SizedBox(height: 14),
+                  Text(
+                    'E. Timeline Proses Surat:',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF263238)),
+                  ),
+                  const SizedBox(height: 8),
+                  SuratTimelineWidget(status: item.status.isEmpty ? 'Disetujui Admin' : item.status),
+                  const SizedBox(height: 14),
+                  if (item.fotos.isNotEmpty) ...[
+                    Text(
+                      'D. Lampiran Persyaratan:',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF263238)),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 110,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: item.fotos.length,
+                        itemBuilder: (context, fIndex) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                item.fotos[fIndex],
+                                width: 110,
+                                height: 110,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  width: 110,
+                                  height: 110,
+                                  color: Colors.grey[200],
+                                  child: const Icon(Icons.broken_image, color: Colors.grey),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF16A34A),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        'Tutup',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: Text(
+              label,
+              style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF263238),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF16A34A);
+    const bgGrey = Color(0xFFF5F7FA);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgGrey,
       appBar: AppBar(
-        title: Text(
-          'PERSETUJUAN SURAT (SEKDES)',
-          style: GoogleFonts.poppins(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF0057A6),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'PERSETUJUAN SURAT (SEKDES)',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: primaryGreen,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
-        backgroundColor: Colors.white,
-        elevation: 2,
-        automaticallyImplyLeading: false,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: primaryGreen,
+          indicatorWeight: 3,
+          labelColor: primaryGreen,
+          unselectedLabelColor: const Color(0xFF78909C),
+          labelStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
+          tabs: const [
+            Tab(text: "Menunggu Persetujuan"),
+            Tab(text: "Surat Diproses"),
+          ],
+        ),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          setState(() {
-            _futurePersetujuan = _fetchPersetujuan();
-          });
-        },
-        child: FutureBuilder<List<PengajuanModel>>(
-          future: _futurePersetujuan,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text("Gagal memuat data: ${snapshot.error}"));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // TAB 1: Menunggu Persetujuan
+          _buildSuratListTab(_futureMenunggu, isApprovalTab: true),
+          // TAB 2: Surat Diproses (Read Only)
+          _buildSuratListTab(_futureDiproses, isApprovalTab: false),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuratListTab(Future<List<PengajuanModel>> futureData, {required bool isApprovalTab}) {
+    const primaryGreen = Color(0xFF16A34A);
+
+    return RefreshIndicator(
+      color: primaryGreen,
+      onRefresh: () async => _refreshData(),
+      child: FutureBuilder<List<PengajuanModel>>(
+        future: futureData,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: primaryGreen));
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                "Gagal memuat data: ${snapshot.error}",
+                style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[700]),
+              ),
+            );
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isApprovalTab ? Icons.hourglass_empty_rounded : Icons.task_alt_rounded,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    isApprovalTab ? "Tidak Ada Surat Menunggu Persetujuan Sekdes" : "Belum Ada Surat Diproses",
+                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final items = snapshot.data!;
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: const Color(0xFFECEFF1)),
+                ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.assignment_turned_in, size: 64, color: Colors.grey[400]),
-                    const SizedBox(height: 12),
-                    Text(
-                      "Tidak Ada Surat Menunggu Persetujuan",
-                      style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.grey[600]),
+                    // Header Card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: const BoxDecoration(
+                        color: primaryGreen,
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.assignment_rounded, color: Colors.white, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              item.namaSurat.toUpperCase(),
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Content
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _rowInfo('Pemohon:', item.namaPemohon),
+                          _rowInfo('NIK:', item.nik),
+                          _rowInfo('Keperluan:', item.keperluan),
+                          _rowInfo('Tanggal:', item.tanggalDiajukan),
+                          _rowInfo('Status:', isApprovalTab ? 'Disetujui Admin' : 'Disetujui Sekretaris Desa (Menunggu TTE Kades)'),
+
+                          const SizedBox(height: 10),
+
+                          if (!isApprovalTab) ...[
+                            SuratTimelineWidget(status: item.status),
+                            const SizedBox(height: 10),
+                          ],
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                onPressed: () => _showDetailModal(item),
+                                icon: const Icon(Icons.visibility_outlined, size: 16, color: primaryGreen),
+                                label: Text(
+                                  'Detail',
+                                  style: GoogleFonts.poppins(color: primaryGreen, fontWeight: FontWeight.bold, fontSize: 12),
+                                ),
+                              ),
+                              if (isApprovalTab) ...[
+                                const SizedBox(width: 8),
+                                OutlinedButton.icon(
+                                  onPressed: () => _reject(item.idPengajuan),
+                                  icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 16),
+                                  label: Text('Tolak', style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12)),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Colors.red),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton.icon(
+                                  onPressed: () => _approve(item.idPengajuan),
+                                  icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 16),
+                                  label: Text('Setujui', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primaryGreen,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               );
-            }
-
-            final items = snapshot.data!;
-            return ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return Card(
-                  elevation: 3,
-                  margin: const EdgeInsets.only(bottom: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF0057A6),
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                        ),
-                        child: Text(
-                          item.namaSurat.toUpperCase(),
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _rowInfo('Pemohon:', item.namaPemohon),
-                            _rowInfo('NIK:', item.nik),
-                            _rowInfo('Keperluan:', item.keperluan),
-                            _rowInfo('Tanggal:', item.tanggalDiajukan),
-                            _rowInfo('Status:', 'Disetujui Admin Desa'),
-                            const SizedBox(height: 10),
-                            if (item.fotos.isNotEmpty) ...[
-                              Text('Berkas Lampiran:', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
-                              const SizedBox(height: 6),
-                              SizedBox(
-                                height: 60,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: item.fotos.length,
-                                  itemBuilder: (context, fIndex) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: Image.network(
-                                          item.fotos[fIndex],
-                                          width: 60,
-                                          height: 60,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => Container(
-                                            width: 60,
-                                            height: 60,
-                                            color: Colors.grey[300],
-                                            child: const Icon(Icons.broken_image, size: 20),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                            ],
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                OutlinedButton.icon(
-                                  onPressed: () => _reject(item.idPengajuan),
-                                  icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 18),
-                                  label: Text('Tolak', style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
-                                  style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: Colors.red),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                ElevatedButton.icon(
-                                  onPressed: () => _approve(item.idPengajuan),
-                                  icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
-                                  label: Text('Setujui & Teruskan', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF28A745),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        ),
+            },
+          );
+        },
       ),
     );
   }
 
   Widget _rowInfo(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 90,
-            child: Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+            child: Text(
+              label,
+              style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+            ),
           ),
           Expanded(
-            child: Text(value, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF263238)),
+            ),
           ),
         ],
       ),
