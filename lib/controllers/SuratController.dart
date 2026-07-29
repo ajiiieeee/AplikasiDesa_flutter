@@ -5,32 +5,30 @@ import '../config/globals.dart';
 
 Future<Map<String, dynamic>?> fetchUserData() async {
   final prefs = await SharedPreferences.getInstance();
-  final nik = prefs.getString('nik');
+  final token = prefs.getString('token');
 
-  if (nik == null) {
-    print('NIK tidak ditemukan di SharedPreferences');
+  if (token == null || token.isEmpty) {
     return null;
   }
 
   try {
     final response = await http.get(
-      Uri.parse('$baseURL/getdata?nik=$nik'),
-      headers: {'Content-Type': 'application/json'},
+      Uri.parse('$baseURL/getdata'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
     );
 
     if (response.statusCode == 200) {
       final responseBody = response.body;
       final data = json.decode(responseBody)['data'];
       return data;
-    } else {
-      print('Gagal ambil data user: Status code ${response.statusCode}');
-      print('Response body saat error: ${response.body}');
     }
-  } catch (e, stacktrace) {
-    print('Terjadi kesalahan: $e');
-    print('Stacktrace: $stacktrace');
+  } catch (e) {
+    // silent fail
   }
 
   return null;
 }
-

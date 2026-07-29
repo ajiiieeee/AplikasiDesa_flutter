@@ -43,21 +43,25 @@ class _DisetujuiViewState extends State<DisetujuiView> {
   Future<List<StatusSelesaiModel>> fetchDisetujui() async {
     final prefs = await SharedPreferences.getInstance();
     final nik = prefs.getString('nik') ?? '';
+    final token = prefs.getString('token') ?? '';
 
-    if (nik.isEmpty) {
-      throw Exception('NIK tidak ditemukan di SharedPreferences');
-    }
+    final authHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
 
     final response = await http.get(
       Uri.parse('$baseURL/statusselesai?nik=$nik'),
-      headers: headers,
+      headers: authHeaders,
     );
 
     if (response.statusCode == 200) {
-      List data = json.decode(response.body);
+      final body = json.decode(response.body);
+      final List data = body is List ? body : (body['data'] ?? []);
       return data.map((item) => StatusSelesaiModel.fromJson(item)).toList();
     } else {
-      throw Exception('Gagal mengambil data');
+      throw Exception('Gagal mengambil data (${response.statusCode})');
     }
   }
 
@@ -214,55 +218,61 @@ class _DisetujuiViewState extends State<DisetujuiView> {
                             width: double.infinity,
                             height: 44,
                             child: ElevatedButton.icon(
-                              onPressed: () async {
-                                final url = item.filePdf;
-                                if (!await requestStoragePermission()) {
-                                  showCustomSnackbar(
-                                    context: context,
-                                    message: 'Izin penyimpanan ditolak',
-                                    backgroundColor: Colors.red,
-                                    icon: Icons.error,
-                                  );
-                                  return;
-                                }
+                              onPressed: item.filePdf == null || item.filePdf!.isEmpty
+                                  ? null // tombol dinonaktifkan jika PDF belum ada
+                                  : () async {
+                                      final url = item.filePdf!;
+                                      if (!await requestStoragePermission()) {
+                                        showCustomSnackbar(
+                                          context: context,
+                                          message: 'Izin penyimpanan ditolak',
+                                          backgroundColor: Colors.red,
+                                          icon: Icons.error,
+                                        );
+                                        return;
+                                      }
 
-                                try {
-                                  final fileName = url.split('/').last;
-                                  final directory = Directory('/storage/emulated/0/Download');
+                                      try {
+                                        final fileName = url.split('/').last;
+                                        final directory = Directory('/storage/emulated/0/Download');
 
-                                  if (!await directory.exists()) {
-                                    await directory.create(recursive: true);
-                                  }
+                                        if (!await directory.exists()) {
+                                          await directory.create(recursive: true);
+                                        }
 
-                                  final filePath = '${directory.path}/$fileName';
-                                  Dio dio = Dio();
-                                  await dio.download(url, filePath);
+                                        final filePath = '${directory.path}/$fileName';
+                                        Dio dio = Dio();
+                                        await dio.download(url, filePath);
 
-                                  showCustomSnackbar(
-                                    context: context,
-                                    message: 'File berhasil diunduh di folder Download',
-                                    backgroundColor: Colors.green,
-                                    icon: Icons.check_circle,
-                                  );
-                                } catch (e) {
-                                  showCustomSnackbar(
-                                    context: context,
-                                    message: 'Gagal download file: $e',
-                                    backgroundColor: Colors.red,
-                                    icon: Icons.error,
-                                  );
-                                }
-                              },
+                                        showCustomSnackbar(
+                                          context: context,
+                                          message: 'File berhasil diunduh di folder Download',
+                                          backgroundColor: Colors.green,
+                                          icon: Icons.check_circle,
+                                        );
+                                      } catch (e) {
+                                        showCustomSnackbar(
+                                          context: context,
+                                          message: 'Gagal download file: $e',
+                                          backgroundColor: Colors.red,
+                                          icon: Icons.error,
+                                        );
+                                      }
+                                    },
                               icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
                               label: Text(
-                                "Unduh PDF Surat",
+                                item.filePdf == null || item.filePdf!.isEmpty
+                                    ? "PDF Belum Tersedia"
+                                    : "Unduh PDF Surat",
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryGreen,
+                                backgroundColor: item.filePdf == null || item.filePdf!.isEmpty
+                                    ? Colors.grey
+                                    : primaryGreen,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(

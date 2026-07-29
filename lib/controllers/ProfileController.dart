@@ -6,26 +6,23 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/globals.dart';
 import '../widgets/snackbarcustom.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:mime/mime.dart';
 
 Future<void> getProfilFromApi(BuildContext context) async {
   try {
     final prefs = await SharedPreferences.getInstance();
-    final nik = prefs.getString('nik') ?? '';
+    final token = prefs.getString('token');
 
-    if (nik.isEmpty) {
-      showCustomSnackbar(
-        context: context,
-        message: 'NIK tidak ditemukan di penyimpanan lokal',
-        backgroundColor: Colors.orange,
-        icon: Icons.error,
-      );
+    if (token == null || token.isEmpty) {
+      // Token belum tersedia, skip silently
       return;
     }
 
-    final url = Uri.parse('$baseURL/getprofil?nik=$nik');
-    final response = await http.get(url, headers: headers);
+    final url = Uri.parse('$baseURL/getprofil');
+    final response = await http.get(url, headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    });
 
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
@@ -51,38 +48,21 @@ Future<void> getProfilFromApi(BuildContext context) async {
       await prefs.setString('no_hp', data['no_hp'] ?? '');
       await prefs.setString('email', data['email'] ?? '');
       await prefs.setString('foto_profil', fotoProfilUrl);
-
-      print('Foto Profil Baru: $fotoProfilUrl');
-    } else {
-      final message =
-          json.decode(response.body)['error'] ?? 'Terjadi kesalahan';
-
-      showCustomSnackbar(
-        context: context,
-        message: message,
-        backgroundColor: Colors.red,
-        icon: Icons.error,
-      );
     }
+    // Jika gagal (401/404/lainnya) — diam saja, tidak tampilkan snackbar
   } catch (e) {
-    showCustomSnackbar(
-      context: context,
-      message: 'Gagal mengambil data profil: $e',
-      backgroundColor: Colors.red,
-      icon: Icons.error,
-    );
+    // Abaikan error jaringan di beranda
   }
 }
 
 Future<void> uploadFotoProfil(BuildContext context, File imageFile) async {
   final prefs = await SharedPreferences.getInstance();
-  final nik = prefs.getString('nik') ?? '';
+  final token = prefs.getString('token') ?? '';
 
   var request = http.MultipartRequest(
     'POST',
     Uri.parse('$baseURL/update-foto'),
   );
-  request.fields['nik'] = nik;
 
   // Pastikan key sesuai controller Laravel: 'foto_profil'
   request.files.add(
@@ -91,6 +71,9 @@ Future<void> uploadFotoProfil(BuildContext context, File imageFile) async {
 
   // Tambahkan header ini agar Laravel balikan JSON meskipun error
   request.headers['Accept'] = 'application/json';
+  if (token.isNotEmpty) {
+    request.headers['Authorization'] = 'Bearer $token';
+  }
 
   try {
     var response = await request.send();
@@ -149,7 +132,7 @@ Future<bool> updateEmailNoHp(
   required String noHp,
 }) async {
   final prefs = await SharedPreferences.getInstance();
-  final nik = prefs.getString('nik') ?? '';
+  final token = prefs.getString('token') ?? '';
   final url = Uri.parse('$baseURL/update-profil');
 
   try {
@@ -158,8 +141,9 @@ Future<bool> updateEmailNoHp(
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        if (token.isNotEmpty) 'Authorization': 'Bearer $token',
       },
-      body: jsonEncode({'nik': nik, 'email': email, 'no_hp': noHp}),
+      body: jsonEncode({'email': email, 'no_hp': noHp}),
     );
 
     final responseBody = response.body;

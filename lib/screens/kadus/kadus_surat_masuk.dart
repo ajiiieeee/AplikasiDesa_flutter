@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/globals.dart';
 import '../../models/pengajuan_model.dart';
 import '../../widgets/snackbarcustom.dart';
@@ -39,11 +40,22 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
     super.dispose();
   }
 
+  Future<Map<String, String>> _getAuthHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
   // TAB 1: Surat Masuk dengan status "Diajukan"
   Future<List<PengajuanModel>> _fetchSuratMasuk() async {
+    final authHeaders = await _getAuthHeaders();
     final response = await http.get(
       Uri.parse('$baseURL/kadus/suratmasuk'),
-      headers: headers,
+      headers: authHeaders,
     );
 
     if (response.statusCode == 200) {
@@ -58,9 +70,10 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
 
   // TAB 2: Surat yang sudah diteruskan oleh Kadus (Disetujui Kadus, Admin, Sekdes, Selesai)
   Future<List<PengajuanModel>> _fetchSuratMonitoring() async {
+    final authHeaders = await _getAuthHeaders();
     final response = await http.get(
       Uri.parse('$baseURL/kadus/suratmasuk'),
-      headers: headers,
+      headers: authHeaders,
     );
 
     if (response.statusCode == 200) {
@@ -96,9 +109,10 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
     if (confirm != true) return;
 
     try {
+      final authHeaders = await _getAuthHeaders();
       final response = await http.post(
         Uri.parse('$baseURL/kadus/suratmasuk/$idPengajuan/setuju'),
-        headers: headers,
+        headers: authHeaders,
       );
 
       if (response.statusCode == 200) {
@@ -180,9 +194,10 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
     if (confirm != true) return;
 
     try {
+      final authHeaders = await _getAuthHeaders();
       final response = await http.post(
         Uri.parse('$baseURL/kadus/suratmasuk/$idPengajuan/tolak'),
-        headers: headers,
+        headers: authHeaders,
         body: json.encode({'keterangan_ditolak': reasonController.text.trim()}),
       );
 

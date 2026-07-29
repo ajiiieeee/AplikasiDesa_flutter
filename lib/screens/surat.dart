@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class SuratScreen extends StatefulWidget {
   const SuratScreen({super.key});
 
@@ -24,13 +26,40 @@ class _SuratScreenState extends State<SuratScreen> {
 
   Future<void> fetchSurat() async {
     try {
-      final response = await http.get(Uri.parse('$baseURL/surat'));
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final response = await http.get(
+        Uri.parse('$baseURL/surat'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
 
       if (response.statusCode == 200) {
-        setState(() {
-          suratList = jsonDecode(response.body);
-          isLoading = false;
-        });
+        final responseData = jsonDecode(response.body);
+        List<dynamic> listData = [];
+
+        if (responseData is Map && responseData.containsKey('data')) {
+          listData = responseData['data'] ?? [];
+        } else if (responseData is List) {
+          listData = responseData;
+        }
+
+        if (mounted) {
+          setState(() {
+            suratList = listData;
+            isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -83,7 +112,7 @@ class _SuratScreenState extends State<SuratScreen> {
                   padding: const EdgeInsets.all(16),
                   itemCount: suratList.length,
                   itemBuilder: (context, index) {
-                    final surat = suratList[index];
+                    final surat = Map<String, dynamic>.from(suratList[index]);
                     return _buildSuratCard(surat, primaryGreen);
                   },
                 ),
@@ -92,8 +121,12 @@ class _SuratScreenState extends State<SuratScreen> {
 
   Widget _buildSuratCard(Map<String, dynamic> surat, Color primaryGreen) {
     final String namaSurat = surat['nama_surat'] ?? 'Nama Surat';
-    final String deskripsi = surat['persyaratan'] ?? surat['slug'] ?? 'Persyaratan pengajuan surat desa.';
-    final int idSurat = surat['id_surat'] ?? 0;
+    final String deskripsi = (surat['keterangan'] != null && surat['keterangan'].toString().isNotEmpty)
+        ? surat['keterangan'].toString()
+        : (surat['persyaratan'] ?? surat['slug'] ?? 'Persyaratan pengajuan surat desa.');
+    final int idSurat = (surat['id_surat'] is int)
+        ? surat['id_surat']
+        : int.tryParse(surat['id_surat'].toString()) ?? 0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),

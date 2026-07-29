@@ -21,12 +21,6 @@ class Loginregis extends StatefulWidget {
 class _LoginregisState extends State<Loginregis> {
   bool isVisible = false;
   bool isPasswordVisible = false;
-  final _formKey = GlobalKey<FormState>();
-  final _loginFormKey = GlobalKey<FormState>(); // Tambahkan ini
-  final _nikController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   final nikLoginController = TextEditingController();
   final loginPasswordController = TextEditingController();
 
@@ -35,101 +29,7 @@ class _LoginregisState extends State<Loginregis> {
     await prefs.setString('token', token);
   }
 
-  // Backend registrasi
-  Future<void> _register() async {
-    final String nik = _nikController.text.trim();
-    final String password = _passwordController.text.trim();
-    final String email = _emailController.text.trim();
-    final String phone = _phoneController.text.trim();
 
-    if (nik.isEmpty || password.isEmpty || email.isEmpty || phone.isEmpty) {
-      showCustomSnackbarAtTop(
-        context: context,
-        message: 'Semua field harus diisi',
-        backgroundColor: Colors.red,
-        icon: Icons.error,
-      );
-      return;
-    }
-
-    try {
-      final response = await http.post(
-        Uri.parse('$baseURL/register'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'nik': nik,
-          'password': password,
-          'email': email,
-          'no_hp': phone,
-        }),
-      );
-
-      final responseData = jsonDecode(response.body);
-
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
-      if (response.statusCode == 201) {
-        showCustomSnackbar(
-          context: context,
-          message: responseData['message'] ?? 'Akun berhasil diaktivasi.',
-          backgroundColor: Colors.green,
-          icon: Icons.check_circle,
-        );
-        _nikController.clear();
-        _passwordController.clear();
-        _emailController.clear();
-        _phoneController.clear();
-
-
-        Navigator.pop(context);
-      } else {
-        // Menampilkan pesan error dari response
-       String errorMessage = responseData['message'] ?? 'Terjadi kesalahan';
-
-        // Coba ambil error validasi detail
-        if (responseData['errors'] != null) {
-          final errors = responseData['errors'] as Map<String, dynamic>;
-          final firstKey = errors.keys.first;
-          final firstErrorList = errors[firstKey];
-
-          if (firstErrorList is List && firstErrorList.isNotEmpty) {
-            errorMessage = firstErrorList.first;
-          }
-        }
-
-        showCustomSnackbarAtTop(
-          context: context,
-          message: '$errorMessage',
-          backgroundColor: Colors.red,
-          icon: Icons.error,
-        );
-      }
-    } on SocketException {
-      showCustomSnackbarAtTop(
-        context: context,
-        message: 'Tidak ada koneksi internet',
-        backgroundColor: Colors.orange,
-        icon: Icons.wifi_off,
-      );
-    } on TimeoutException {
-      showCustomSnackbarAtTop(
-        context: context,
-        message: 'Koneksi timeout, coba lagi!',
-        backgroundColor: Colors.orange,
-        icon: Icons.timer_off,
-      );
-    } catch (e) {
-      showCustomSnackbarAtTop(
-        context: context,
-        message: 'Terjadi kesalahan: $e',
-        backgroundColor: Colors.red,
-        icon: Icons.error,
-      );
-    }
-  }
 
  Future<void> login(BuildContext context) async {
     final String nikLogin = nikLoginController.text.trim();
@@ -263,191 +163,7 @@ class _LoginregisState extends State<Loginregis> {
     await prefs.setInt('level', level);
   }
 
-  // Modal aktivasi
-  // Modal aktivasi
-  void showRegisterModal(BuildContext context) {
-    showModalBottomSheet(
-      isScrollControlled: true,
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        bool modalRegisterPasswordVisible = false;
 
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.6,
-              minChildSize: 0.4,
-              maxChildSize: 0.9,
-              builder: (context, scrollController) {
-                return Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(40),
-                      topRight: Radius.circular(40),
-                    ),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 25,
-                  ),
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 50,
-                              height: 5,
-                              margin: const EdgeInsets.only(bottom: 15),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-
-                          const Text(
-                            "Aktivasi akun",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Poppins',
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-
-                          const SizedBox(height: 25),
-
-                          // NIK
-                          TextFormField(
-                            controller: _nikController,
-                            decoration: const InputDecoration(
-                              icon: Icon(Icons.person),
-                              labelText: 'NIK',
-                              hintText: 'Masukkan NIK Anda',
-                              border: OutlineInputBorder(),
-                            ),
-                            style: const TextStyle(fontSize: 14),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Email
-                          TextFormField(
-                            controller: _emailController,
-                            decoration: const InputDecoration(
-                              icon: Icon(Icons.email),
-                              labelText: 'E-Mail',
-                              hintText: 'Masukkan E-Mail Anda',
-                              border: OutlineInputBorder(),
-                            ),
-                            style: const TextStyle(fontSize: 14),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Nomor HP
-                          TextFormField(
-                            controller: _phoneController,
-                            decoration: const InputDecoration(
-                              icon: Icon(Icons.phone),
-                              labelText: 'Nomor HP',
-                              hintText: 'Masukkan Nomor HP Anda',
-                              border: OutlineInputBorder(),
-                            ),
-                            style: const TextStyle(fontSize: 14),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Password
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: !modalRegisterPasswordVisible,
-                            decoration: InputDecoration(
-                              icon: const Icon(Icons.lock),
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  setModalState(() {
-                                    modalRegisterPasswordVisible =
-                                        !modalRegisterPasswordVisible;
-                                  });
-                                },
-                                icon: Icon(
-                                  modalRegisterPasswordVisible
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                ),
-                              ),
-                              labelText: 'Password',
-                              hintText: 'Masukkan Password Anda',
-                              border: const OutlineInputBorder(),
-                            ),
-                            style: const TextStyle(fontSize: 14),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Tombol Aktivasi
-                          Container(
-                            margin: const EdgeInsets.only(left: 40),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  height: 50,
-                                  width: 440,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      if (_formKey.currentState!.validate()) {
-                                        _register();
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: primaryColor,
-                                      shape: RoundedRectangleBorder(
-                                        side: const BorderSide(
-                                          color: Color(0xFF0057A6),
-                                          width: 3,
-                                        ),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Aktivasi',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 20),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
   // Modal untuk Login
   void showLoginModal(BuildContext context) {
     showModalBottomSheet(
@@ -676,7 +392,7 @@ class _LoginregisState extends State<Loginregis> {
                 ),
                 const SizedBox(height: 40),
 
-                // Card Aktivasi
+                // Card Ganti Password & Login
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -696,7 +412,7 @@ class _LoginregisState extends State<Loginregis> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Pertama kali menggunakan aplikasi?",
+                        "Lupa atau ingin mengganti password?",
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -708,10 +424,17 @@ class _LoginregisState extends State<Loginregis> {
                         width: double.infinity,
                         height: 46,
                         child: ElevatedButton.icon(
-                          onPressed: () => showRegisterModal(context),
-                          icon: const Icon(Icons.person_add_rounded, size: 20),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LupaPassword(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.lock_reset_rounded, size: 20),
                           label: Text(
-                            'Aktivasi Akun Warga',
+                            'Ganti Password',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,

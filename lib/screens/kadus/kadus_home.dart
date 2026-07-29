@@ -56,9 +56,16 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
 
   Future<void> _fetchDashboardData() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
       final response = await http.get(
         Uri.parse('$baseURL/kadus/dashboard'),
-        headers: headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {

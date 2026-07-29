@@ -27,21 +27,25 @@ class _PengajuanViewState extends State<PengajuanView> {
   Future<List<StatusDiajukanModel>> fetchPengajuan() async {
     final prefs = await SharedPreferences.getInstance();
     final nik = prefs.getString('nik') ?? '';
+    final token = prefs.getString('token') ?? '';
 
-    if (nik.isEmpty) {
-      throw Exception('NIK tidak ditemukan di SharedPreferences');
-    }
+    final authHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
 
     final response = await http.get(
       Uri.parse('$baseURL/statusdiajukan?nik=$nik'),
-      headers: headers,
+      headers: authHeaders,
     );
 
     if (response.statusCode == 200) {
-      final List data = json.decode(response.body);
+      final body = json.decode(response.body);
+      final List data = body is List ? body : (body['data'] ?? []);
       return data.map((item) => StatusDiajukanModel.fromJson(item)).toList();
     } else {
-      throw Exception('Gagal mengambil data');
+      throw Exception('Gagal mengambil data (${response.statusCode})');
     }
   }
 
@@ -233,9 +237,17 @@ class _PengajuanViewState extends State<PengajuanView> {
                                 );
 
                                 if (confirm == true) {
+                                  final prefs = await SharedPreferences.getInstance();
+                                  final token = prefs.getString('token') ?? '';
+                                  final authHeaders = {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+                                  };
+
                                   final response = await http.delete(
                                     Uri.parse('$baseURL/suratdelete/${item.idPengajuan}'),
-                                    headers: headers,
+                                    headers: authHeaders,
                                   );
 
                                   if (response.statusCode == 200) {

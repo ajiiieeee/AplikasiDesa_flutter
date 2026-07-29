@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../controllers/LupaPasswordController.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 
 class LupaPassword extends StatelessWidget {
@@ -10,196 +9,221 @@ class LupaPassword extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF16A34A);
+
     return ChangeNotifierProvider(
       create: (_) => LupaPasswordController(),
       child: Consumer<LupaPasswordController>(
-        builder:
-            (context, controller, _) => Scaffold(
-              resizeToAvoidBottomInset: true,
-              body: Stack(
-                children: [
-                  // Background SVG
-                  Positioned.fill(
-                    child: SvgPicture.asset(
-                      'assets/images/bk_password.svg',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-
-                  Positioned(
-                    top: 40,
-                    left: 15,
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.chevron_left,
-                        color: Colors.white,
-                        size: 32,
+        builder: (context, controller, _) => Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Color(0xFF1F2937),
+                  size: 20,
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ),
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Badge Icon Header
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCFCE7),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryGreen.withValues(alpha: 0.15),
+                            blurRadius: 20,
+                            spreadRadius: 4,
+                          ),
+                        ],
                       ),
-
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                      child: const Icon(
+                        Icons.phonelink_lock_rounded,
+                        size: 48,
+                        color: primaryGreen,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 24),
 
-                  // Konten utama
-                  Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 28,
-                        vertical: 50,
+                    Text(
+                      'Lupa Password',
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Masukkan nomor HP terdaftar Anda. Kami akan mengirimkan kode OTP melalui WhatsApp.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: const Color(0xFF6B7280),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Card Form Container
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Lupa Password?',
-                            textAlign: TextAlign.center,
+                            'Nomor HP / WhatsApp',
                             style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 28,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF374151),
                             ),
                           ),
-
-                          const SizedBox(height: 12),
-                          Text(
-                            'Masukkan nomor HP akun Anda, kami akan mengirimkan kode OTP melalui WhatsApp',
-                            textAlign: TextAlign.center,
+                          const SizedBox(height: 8),
+                          TextField(
+                            onChanged: controller.setNoHp,
+                            keyboardType: TextInputType.phone,
                             style: GoogleFonts.poppins(
-                              color: Colors.white,
                               fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1F2937),
                             ),
-                          ),
-                          const SizedBox(height: 40),
-
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: TextField(
-                              onChanged: controller.setNoHp,
-                              keyboardType: TextInputType.phone,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                            decoration: InputDecoration(
+                              hintText: 'Contoh: 081234567890',
+                              hintStyle: GoogleFonts.poppins(
+                                color: const Color(0xFF9CA3AF),
+                                fontSize: 14,
+                                fontWeight: FontWeight.normal,
                               ),
-                              decoration: const InputDecoration(
-                                hintText: 'Masukkan nomor HP',
-                                prefixIcon: Icon(Icons.phone_android),
-                                hintStyle: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black54,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(12),
-                                  ),
-                                  borderSide: BorderSide.none,
-                                ),
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 18,
-                                ),
+                              prefixIcon: const Icon(
+                                Icons.phone_android_rounded,
+                                color: primaryGreen,
+                                size: 22,
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFFF9FAFB),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                                horizontal: 16,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: const BorderSide(color: primaryGreen, width: 2),
                               ),
                             ),
                           ),
-
-                          // Beri jarak antar widget
                           const SizedBox(height: 24),
 
-                          // Tombol Kirim OTP
                           SizedBox(
                             width: double.infinity,
                             height: 50,
-                            child: ElevatedButton(
-                              onPressed:
-                                  controller.isLoading
-                                      ? null
-                                      : () {
-                                        if (controller.noHp.isEmpty ||
-                                            controller.noHp.length < 10) {
+                            child: ElevatedButton.icon(
+                              onPressed: controller.isLoading
+                                  ? null
+                                  : () {
+                                      if (controller.noHp.isEmpty ||
+                                          controller.noHp.length < 10) {
+                                        showCustomSnackbar(
+                                          context: context,
+                                          message: 'Masukkan nomor HP yang valid',
+                                          backgroundColor: Colors.red,
+                                          icon: Icons.error,
+                                        );
+                                        return;
+                                      }
+
+                                      controller.sendOtp(
+                                        context,
+                                        showSnackbar: ({
+                                          required String message,
+                                          required Color backgroundColor,
+                                          IconData? icon,
+                                        }) {
                                           showCustomSnackbar(
                                             context: context,
-                                            message:
-                                                'Masukkan nomor HP yang valid',
-                                            backgroundColor: Colors.red,
-                                            icon: Icons.error,
+                                            message: message,
+                                            backgroundColor: backgroundColor,
+                                            icon: icon,
                                           );
-                                          return;
-                                        }
-
-                                        controller.sendOtp(
-                                          context,
-                                          showSnackbar: ({
-                                            required String message,
-                                            required Color backgroundColor,
-                                            IconData? icon,
-                                          }) {
-                                            showCustomSnackbar(
-                                              context: context,
-                                              message: message,
-                                              backgroundColor: backgroundColor,
-                                              icon: icon,
-                                            );
-                                          },
-                                        );
-                                      },
+                                        },
+                                      );
+                                    },
+                              icon: controller.isLoading
+                                  ? const SizedBox.shrink()
+                                  : const Icon(Icons.send_rounded, size: 20),
+                              label: controller.isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
+                                        strokeWidth: 2.5,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Kirim Kode OTP (WhatsApp)',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.lightBlueAccent,
+                                backgroundColor: primaryGreen,
                                 foregroundColor: Colors.white,
+                                elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                               ),
-                              child:
-                                  controller.isLoading
-                                      ? const CircularProgressIndicator(
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
-                                      )
-                                      : Text(
-                                        'Kirim Kode OTP',
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
                             ),
                           ),
-
-                          const SizedBox(height: 20),
-                          // Tombol kembali
-                          // TextButton(
-                          //   onPressed: () {
-                          //     Navigator.pop(context);
-                          //   },
-                          //   child: const Text(
-                          //     '← Kembali ke Login',
-                          //     style: TextStyle(
-                          //       color: Colors.white70,
-                          //       fontSize: 14,
-                          //     ),
-                          //   ),
-                          // ),
                         ],
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
+          ),
+        ),
       ),
     );
   }

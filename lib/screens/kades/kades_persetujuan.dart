@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../config/globals.dart';
 import '../../models/pengajuan_model.dart';
@@ -41,10 +42,21 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
     super.dispose();
   }
 
+  Future<Map<String, String>> _getAuthHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
   Future<List<PengajuanModel>> _fetchSuratMenunggu() async {
+    final authHeaders = await _getAuthHeaders();
     final response = await http.get(
       Uri.parse('$baseURL/kades/suratmasuk'),
-      headers: headers,
+      headers: authHeaders,
     );
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
@@ -57,9 +69,10 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
   }
 
   Future<List<PengajuanModel>> _fetchSuratSelesai() async {
+    final authHeaders = await _getAuthHeaders();
     final response = await http.get(
       Uri.parse('$baseURL/kades/suratmasuk'),
-      headers: headers,
+      headers: authHeaders,
     );
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
@@ -111,9 +124,10 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
     }
 
     try {
+      final authHeaders = await _getAuthHeaders();
       final response = await http.post(
         Uri.parse('$baseURL/kades/suratmasuk/$idPengajuan/setuju'),
-        headers: headers,
+        headers: authHeaders,
       );
 
       if (mounted) Navigator.pop(context); // close loading
@@ -230,9 +244,10 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
     if (confirm != true) return;
 
     try {
+      final authHeaders = await _getAuthHeaders();
       final response = await http.post(
         Uri.parse('$baseURL/kades/suratmasuk/$idPengajuan/tolak'),
-        headers: headers,
+        headers: authHeaders,
         body: json.encode({'keterangan_ditolak': reasonController.text.trim()}),
       );
 

@@ -23,6 +23,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
 
   String? _selectedNoKK;
   String? _selectedNik;
+  // ignore: unused_field
   String? _selectedNamaWarga;
   String? _selectedIdSurat;
 
@@ -89,11 +90,21 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
 
   Future<void> _fetchSurat() async {
     try {
-      final response = await http.get(Uri.parse('$baseURL/surat'));
+      final response = await http.get(
+        Uri.parse('$baseURL/surat'),
+        headers: headers,
+      );
       if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        List listData = [];
+        if (body is Map && body.containsKey('data')) {
+          listData = body['data'] ?? [];
+        } else if (body is List) {
+          listData = body;
+        }
         if (mounted) {
           setState(() {
-            _listSurat = json.decode(response.body);
+            _listSurat = listData;
           });
         }
       }

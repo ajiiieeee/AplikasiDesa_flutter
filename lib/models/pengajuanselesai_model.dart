@@ -3,32 +3,23 @@ class StatusSelesaiModel {
   final String namaSurat;
   final String updatedAt;
   final String status;
-  final String filePdf;
+  final String? filePdf; // nullable: URL PDF dari backend
 
   StatusSelesaiModel({
     required this.idPengajuan,
     required this.namaSurat,
     required this.updatedAt,
     required this.status,
-    required this.filePdf,
+    this.filePdf,
   });
 
   factory StatusSelesaiModel.fromJson(Map<String, dynamic> json) {
     return StatusSelesaiModel(
-      idPengajuan: int.tryParse(json['id_pengajuan'].toString()) ?? 0,
-      namaSurat: json['nama_surat'],
-      updatedAt: json['updated_at'],
-      status: json['status'],
-      filePdf: json['file_pdf'],
+      idPengajuan: int.tryParse(json['id_pengajuan']?.toString() ?? '0') ?? 0,
+      namaSurat: json['nama_surat']?.toString() ?? 'Tidak diketahui',
+      updatedAt: json['updated_at']?.toString() ?? '-',
+      status: json['status']?.toString() ?? 'Selesai',
+      filePdf: json['file_pdf_url']?.toString(), // key yang benar dari backend
     );
   }
-
-  // Map<String, dynamic> toJson() {
-  //   return {
-  //     'nama_surat': namaSurat,
-  //     'updated_at': updatedAt,
-  //     'status': status,
-  //     'file_pdf': filePdf,
-  //   };
-  // }
 }

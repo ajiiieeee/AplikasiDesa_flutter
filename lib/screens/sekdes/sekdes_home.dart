@@ -59,9 +59,16 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
 
   Future<void> _fetchDashboardData() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
       final response = await http.get(
         Uri.parse('$baseURL/sekdes/dashboard'),
-        headers: headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -88,9 +95,16 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
 
   Future<void> _fetchSuratTerbaru() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
       final response = await http.get(
         Uri.parse('$baseURL/sekdes/suratmasuk'),
-        headers: headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {

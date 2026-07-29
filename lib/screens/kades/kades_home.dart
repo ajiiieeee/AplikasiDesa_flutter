@@ -59,9 +59,16 @@ class _KadesHomeScreenState extends State<KadesHomeScreen> {
 
   Future<void> _fetchDashboardData() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
       final response = await http.get(
         Uri.parse('$baseURL/kades/dashboard'),
-        headers: headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -88,9 +95,16 @@ class _KadesHomeScreenState extends State<KadesHomeScreen> {
 
   Future<void> _fetchSuratMenunggu() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
       final response = await http.get(
         Uri.parse('$baseURL/kades/suratmasuk'),
-        headers: headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {

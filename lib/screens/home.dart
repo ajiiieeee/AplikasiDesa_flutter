@@ -65,52 +65,81 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchWargaStats() async {
     final prefs = await SharedPreferences.getInstance();
-    final nik = prefs.getString('nik') ?? '';
-    if (nik.isEmpty) return;
+    final token = prefs.getString('token') ?? '';
+    if (token.isEmpty) return;
+
+    final authHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    int diajukan = 0;
+    int selesai = 0;
+    int ditolak = 0;
+    int pengaduan = 0;
 
     try {
-      final resDiajukan = await http.get(Uri.parse('$baseURL/statusdiajukan?nik=$nik'), headers: headers);
-      final resSelesai = await http.get(Uri.parse('$baseURL/statusselesai?nik=$nik'), headers: headers);
-      final resDitolak = await http.get(Uri.parse('$baseURL/statusditolak?nik=$nik'), headers: headers);
-      final resPengaduan = await http.get(Uri.parse('$baseURL/notifikasi?nik=$nik'), headers: headers);
-
-      int diajukan = 0;
-      int selesai = 0;
-      int ditolak = 0;
-      int pengaduan = 0;
-
+      final resDiajukan = await http.get(Uri.parse('$baseURL/statusdiajukan'), headers: authHeaders);
       if (resDiajukan.statusCode == 200) {
-        final List d = json.decode(resDiajukan.body);
-        diajukan = d.length;
+        final body = json.decode(resDiajukan.body);
+        if (body is List) {
+          diajukan = body.length;
+        } else if (body is Map && body['data'] is List) {
+          diajukan = (body['data'] as List).length;
+        }
       }
-      if (resSelesai.statusCode == 200) {
-        final List s = json.decode(resSelesai.body);
-        selesai = s.length;
-      }
-      if (resDitolak.statusCode == 200) {
-        final List dt = json.decode(resDitolak.body);
-        ditolak = dt.length;
-      }
-      if (resPengaduan.statusCode == 200) {
-        final List p = json.decode(resPengaduan.body);
-        pengaduan = p.length;
-      }
+    } catch (_) {}
 
-      if (mounted) {
-        setState(() {
-          _diprosesCount = diajukan;
-          _selesaiCount = selesai;
-          _totalPengajuan = diajukan + selesai + ditolak;
-          _pengaduanCount = pengaduan;
-          _isLoadingStats = false;
-        });
+    try {
+      final resSelesai = await http.get(Uri.parse('$baseURL/statusselesai'), headers: authHeaders);
+      if (resSelesai.statusCode == 200) {
+        final body = json.decode(resSelesai.body);
+        if (body is List) {
+          selesai = body.length;
+        } else if (body is Map && body['data'] is List) {
+          selesai = (body['data'] as List).length;
+        }
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoadingStats = false;
-        });
+    } catch (_) {}
+
+    try {
+      final resDitolak = await http.get(Uri.parse('$baseURL/statusditolak'), headers: authHeaders);
+      if (resDitolak.statusCode == 200) {
+        final body = json.decode(resDitolak.body);
+        if (body is List) {
+          ditolak = body.length;
+        } else if (body is Map && body['data'] is List) {
+          ditolak = (body['data'] as List).length;
+        }
       }
+    } catch (_) {}
+
+    try {
+      final resPengaduan = await http.get(Uri.parse('$baseURL/notifikasi'), headers: authHeaders);
+      if (resPengaduan.statusCode == 200) {
+        final body = json.decode(resPengaduan.body);
+        if (body is List) {
+          pengaduan = body.length;
+        } else if (body is Map && body['data'] != null) {
+          final data = body['data'];
+          if (data is List) {
+            pengaduan = data.length;
+          } else if (data is Map && data['pengaduan'] is List) {
+            pengaduan = (data['pengaduan'] as List).length;
+          }
+        }
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _diprosesCount = diajukan;
+        _selesaiCount = selesai;
+        _totalPengajuan = diajukan + selesai + ditolak;
+        _pengaduanCount = pengaduan;
+        _isLoadingStats = false;
+      });
     }
   }
 

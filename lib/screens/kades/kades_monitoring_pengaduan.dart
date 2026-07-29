@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/globals.dart';
 import '../../models/pengaduan_model.dart';
 
@@ -24,9 +25,16 @@ class _KadesMonitoringPengaduanScreenState
   }
 
   Future<List<PengaduanModel>> _fetchPengaduan() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
     final response = await http.get(
       Uri.parse('$baseURL/kades/pengaduan'),
-      headers: headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
     );
 
     if (response.statusCode == 200) {

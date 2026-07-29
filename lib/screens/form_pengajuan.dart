@@ -4,12 +4,11 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../auth/LoginRegis.dart';
 import '../config/globals.dart';
 import '../controllers/SuratController.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
-import 'package:digitalv/screens/status.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class FormPengajuan extends StatefulWidget {
@@ -49,30 +48,62 @@ class _FormPengajuan extends State<FormPengajuan> {
   }
 
   Future<void> fetchSurat() async {
-    final response = await http.get(Uri.parse('$baseURL/surat'));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
 
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-
-      final surat = data.firstWhere(
-        (item) => item['id_surat'] == widget.idSurat,
+      final response = await http.get(
+        Uri.parse('$baseURL/surat'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
       );
 
-      List<dynamic> tempPersyaratan = [];
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        List listData = [];
 
-      for (int i = 1; i <= 9; i++) {
-        final berkas = surat['berkas$i'];
+        if (responseData is Map && responseData.containsKey('data')) {
+          listData = responseData['data'] ?? [];
+        } else if (responseData is List) {
+          listData = responseData;
+        }
 
-        if (berkas != null && berkas != '') {
-          tempPersyaratan.add({'nama_berkas': berkas});
+        final surat = listData.firstWhere(
+          (item) => item['id_surat'].toString() == widget.idSurat.toString(),
+          orElse: () => null,
+        );
+
+        if (surat != null) {
+          List<dynamic> tempPersyaratan = [];
+
+          if (surat['syarat'] != null && surat['syarat'] is List) {
+            for (var berkas in surat['syarat']) {
+              if (berkas != null && berkas.toString().isNotEmpty && berkas.toString() != '-') {
+                tempPersyaratan.add({'nama_berkas': berkas.toString()});
+              }
+            }
+          } else {
+            for (int i = 1; i <= 9; i++) {
+              final berkas = surat['berkas$i'];
+              if (berkas != null && berkas != '' && berkas != '-') {
+                tempPersyaratan.add({'nama_berkas': berkas.toString()});
+              }
+            }
+          }
+
+          if (mounted) {
+            setState(() {
+              suratData = Map<String, dynamic>.from(surat);
+              persyaratan = tempPersyaratan;
+            });
+          }
         }
       }
-
-      setState(() {
-        suratData = surat;
-
-        persyaratan = tempPersyaratan;
-      });
+    } catch (e) {
+      print('Error fetchSurat: $e');
     }
   }
 
@@ -109,10 +140,16 @@ class _FormPengajuan extends State<FormPengajuan> {
 
     setState(() => isLoading = true);
 
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
     final uri = Uri.parse('$baseURL/pengajuan');
     final request = http.MultipartRequest('POST', uri);
 
-    request.headers.addAll({'Accept': 'application/json'});
+    request.headers.addAll({
+      'Accept': 'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+    });
 
     request.fields['id_surat'] = suratData?['id_surat']?.toString() ?? '';
     request.fields['nik'] = nikController.text.trim();
@@ -339,7 +376,6 @@ class _FormPengajuan extends State<FormPengajuan> {
         readOnly
             ? const Color.fromARGB(255, 13, 103, 221)
             : const Color(0xFF0057A6);
-    final Color textColor = readOnly ? Colors.grey.shade700 : Colors.black;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),

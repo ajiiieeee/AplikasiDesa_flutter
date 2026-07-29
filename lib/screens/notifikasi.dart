@@ -31,6 +31,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Future<void> fetchLatestNotifikasi() async {
     final prefs = await SharedPreferences.getInstance();
     final nik = prefs.getString('nik') ?? '';
+    final token = prefs.getString('token') ?? '';
 
     if (nik.isEmpty) {
       print('NIK tidak ditemukan di SharedPreferences');
@@ -38,10 +39,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
       return; // <-- penting agar keluar dari fungsi
     }
 
+    final authHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+
     try {
       final response = await http.get(
         Uri.parse('$baseURL/notifikasi?nik=$nik'),
-        headers: headers,
+        headers: authHeaders,
       );
 
       if (response.statusCode == 200) {

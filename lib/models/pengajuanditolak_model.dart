@@ -15,21 +15,11 @@ class StatusDitolakModel {
 
   factory StatusDitolakModel.fromJson(Map<String, dynamic> json) {
     return StatusDitolakModel(
-      idPengajuan: int.tryParse(json['id_pengajuan'].toString()) ?? 0,
-      namaSurat: json['nama_surat'],
-      status: json['status'],
-      keteranganDitolak: json['keterangan_ditolak'],
-      updatedAt: json['updated_at'],
+      idPengajuan: int.tryParse(json['id_pengajuan']?.toString() ?? '0') ?? 0,
+      namaSurat: json['nama_surat']?.toString() ?? 'Tidak diketahui',
+      status: json['status']?.toString() ?? 'Ditolak',
+      keteranganDitolak: json['keterangan_ditolak']?.toString() ?? 'Tidak ada keterangan',
+      updatedAt: json['updated_at']?.toString() ?? '-',
     );
   }
-
-  // Map<String, dynamic> toJson() {
-  //   return {
-  //     'id_pengajuan': idPengajuan,
-  //     'nama_surat': namaSurat,
-  //     'status': status,
-  //     'keterangan_ditolak': keteranganDitolak,
-  //     'updated_at': updatedAt,
-  //   };
-  // }
 }
