@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // Base URL untuk debug Chrome
-const String serverURL = "http://localhost:8000";
+const String serverURL = "https://desarambipuji-jember.com";
 
 // Base URL API
 const String baseURL = "$serverURL/api";

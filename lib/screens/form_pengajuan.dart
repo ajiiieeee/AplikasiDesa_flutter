@@ -1,7 +1,9 @@
 import 'package:digitalv/widgets/bottom_navbar.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/globals.dart';
@@ -10,6 +12,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// ── Model foto: simpan XFile + preview bytes ──────────────────────────────────
+class _FotoItem {
+  final XFile xfile;
+  Uint8List? bytes;
+  _FotoItem(this.xfile);
+}
 
 class FormPengajuan extends StatefulWidget {
   final String idSurat;
@@ -20,33 +28,43 @@ class FormPengajuan extends StatefulWidget {
 }
 
 class _FormPengajuan extends State<FormPengajuan> {
-  final TextEditingController namaController = TextEditingController();
-  final TextEditingController nikController = TextEditingController();
+  // ── Controllers data warga ─────────────────────────────────────────────────
+  final TextEditingController kecamatanController   = TextEditingController();
+  final TextEditingController kelurahanController   = TextEditingController();
+  final TextEditingController noKkController        = TextEditingController();
+  final TextEditingController nikController         = TextEditingController();
+  final TextEditingController namaController        = TextEditingController();
   final TextEditingController tempatLahirController = TextEditingController();
   final TextEditingController tanggalLahirController = TextEditingController();
-  final TextEditingController golDarahController = TextEditingController();
-  final TextEditingController jkController = TextEditingController();
-  final TextEditingController kewarganegaraanController = TextEditingController();
-  final TextEditingController agamaController = TextEditingController();
-  // final TextEditingController statusNikahController = TextEditingController(text: 'Belum Kawin');
-  final TextEditingController statusKeluargaController = TextEditingController();
-  final TextEditingController pekerjaanController = TextEditingController();
-  final TextEditingController pendidikanController = TextEditingController();
+  final TextEditingController statusKawinController = TextEditingController();
+  final TextEditingController jkController          = TextEditingController();
+  final TextEditingController alamatController      = TextEditingController();
+  final TextEditingController rtController          = TextEditingController();
+  final TextEditingController rwController          = TextEditingController();
+  final TextEditingController dusunController       = TextEditingController();
+
+  // ── Controller isian pengajuan ─────────────────────────────────────────────
   final TextEditingController keteranganController = TextEditingController();
+
   bool isLoading = false;
 
   Map<String, dynamic>? suratData;
   List<dynamic> persyaratan = [];
 
-  Map<int, File?> uploadedFiles = {};
+  // Berkas persyaratan — pakai XFile agar kompatibel web & mobile
+  Map<int, _FotoItem?> uploadedFiles = {};
+
+  // Foto bukti lampiran (multi-foto)
+  List<_FotoItem> buktiPhotos = [];
 
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // ← ini penting!
+    _loadUserData();
     fetchSurat();
   }
 
+  // ── Fetch daftar surat ────────────────────────────────────────────────────
   Future<void> fetchSurat() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -81,7 +99,9 @@ class _FormPengajuan extends State<FormPengajuan> {
 
           if (surat['syarat'] != null && surat['syarat'] is List) {
             for (var berkas in surat['syarat']) {
-              if (berkas != null && berkas.toString().isNotEmpty && berkas.toString() != '-') {
+              if (berkas != null &&
+                  berkas.toString().isNotEmpty &&
+                  berkas.toString() != '-') {
                 tempPersyaratan.add({'nama_berkas': berkas.toString()});
               }
             }
@@ -107,31 +127,61 @@ class _FormPengajuan extends State<FormPengajuan> {
     }
   }
 
+  // ── Load data warga dari API /getdata ─────────────────────────────────────
   Future<void> _loadUserData() async {
     final data = await fetchUserData();
     if (data != null) {
       setState(() {
-        namaController.text = data['nama'] ?? '';
-        nikController.text = data['nik'] ?? '';
-        tempatLahirController.text = data['tempatLahir'] ?? '';
-        tanggalLahirController.text = data['tanggalLahir'] ?? '';
-        golDarahController.text = data['golDarah'] ?? '';
-        jkController.text = data['jk'] ?? '';
-        kewarganegaraanController.text = data['kewarganegaraan'] ?? '';
-        agamaController.text = data['agama'] ?? '';
-        statusKeluargaController.text = data['statusKeluarga'] ?? '';
-        pekerjaanController.text = data['pekerjaan'] ?? '';
-        pendidikanController.text = data['pendidikan'] ?? '';
+        kecamatanController.text    = data['kecamatan']    ?? '';
+        kelurahanController.text    = data['kelurahan']    ?? '';
+        noKkController.text         = data['no_kk']        ?? data['nomor_kk'] ?? '';
+        nikController.text          = data['nik']          ?? data['nomor_ktp'] ?? '';
+        namaController.text         = data['nama']         ?? data['nama_lengkap'] ?? '';
+        tempatLahirController.text  = data['tempat_lahir'] ?? data['tempatLahir'] ?? '';
+        tanggalLahirController.text = data['tanggal_lahir'] ?? data['tanggalLahir'] ?? '';
+        statusKawinController.text  = data['sts_kawin']   ?? data['status_kawin'] ?? data['statusKawin'] ?? '';
+        jkController.text           = data['kelamin']      ?? data['jk'] ?? '';
+        alamatController.text       = data['alamat']       ?? '';
+        rtController.text           = data['rt']           ?? '';
+        rwController.text           = data['rw']           ?? '';
+        dusunController.text        = data['dusun']        ?? '';
       });
     }
   }
+
+  // ── Pick foto dan simpan bytes ────────────────────────────────────────────
+  Future<_FotoItem?> _pickFoto() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (picked == null) return null;
+
+    final item = _FotoItem(picked);
+    item.bytes = await picked.readAsBytes();
+    return item;
+  }
+
+  // ── Tambah foto bukti ─────────────────────────────────────────────────────
+  Future<void> _tambahFotoBukti() async {
+    final item = await _pickFoto();
+    if (item != null) {
+      setState(() => buktiPhotos.add(item));
+    }
+  }
+
+  void _hapusFotoBukti(int index) {
+    setState(() => buktiPhotos.removeAt(index));
+  }
+
+  // ── Submit form ───────────────────────────────────────────────────────────
   Future<void> _submitForm() async {
     final keperluan = keteranganController.text.trim();
 
     if (keperluan.isEmpty) {
       showCustomSnackbar(
         context: context,
-        message: 'Form keterangan harus diisi.',
+        message: 'Keterangan / keperluan surat harus diisi.',
         backgroundColor: Colors.orange,
         icon: Icons.warning_amber_rounded,
       );
@@ -151,34 +201,38 @@ class _FormPengajuan extends State<FormPengajuan> {
       if (token.isNotEmpty) 'Authorization': 'Bearer $token',
     });
 
-    request.fields['id_surat'] = suratData?['id_surat']?.toString() ?? '';
-    request.fields['nik'] = nikController.text.trim();
-    request.fields['keterangan'] = keperluan;
+    request.fields['id_surat']         = suratData?['id_surat']?.toString() ?? '';
+    request.fields['nik']              = nikController.text.trim();
+    request.fields['keterangan']       = keperluan;
     request.fields['tanggal_diajukan'] = DateTime.now().toIso8601String();
 
-    print('URL dikirim: $uri');
-    print('ID Surat dikirim: ${request.fields['id_surat']}');
-    print('NIK dikirim: ${request.fields['nik']}');
-    print('Keterangan dikirim: ${request.fields['keterangan']}');
-    print('Tanggal dikirim: ${request.fields['tanggal_diajukan']}');
-
+    // Berkas persyaratan
     for (int i = 0; i < uploadedFiles.length; i++) {
-      File? file = uploadedFiles[i];
-
-      if (file != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath('foto${i + 1}', file.path),
-        );
+      final item = uploadedFiles[i];
+      if (item != null) {
+        final bytes = item.bytes ?? await item.xfile.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes(
+          'foto${i + 1}',
+          bytes,
+          filename: item.xfile.name,
+        ));
       }
+    }
+
+    // Foto bukti tambahan
+    for (int i = 0; i < buktiPhotos.length; i++) {
+      final item = buktiPhotos[i];
+      final bytes = item.bytes ?? await item.xfile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
+        'bukti${i + 1}',
+        bytes,
+        filename: item.xfile.name,
+      ));
     }
 
     try {
       final response = await request.send();
       final res = await http.Response.fromStream(response);
-
-      print('URL dikirim: $uri');
-      print('STATUS CODE: ${res.statusCode}');
-      print('RESPONSE BODY: ${res.body}');
 
       if (res.statusCode == 200) {
         showCustomSnackbar(
@@ -189,7 +243,6 @@ class _FormPengajuan extends State<FormPengajuan> {
         );
 
         await Future.delayed(const Duration(seconds: 1));
-
         if (!mounted) return;
 
         Navigator.pushReplacement(
@@ -198,7 +251,6 @@ class _FormPengajuan extends State<FormPengajuan> {
         );
       } else if (res.statusCode == 409) {
         final responseData = jsonDecode(res.body);
-
         showCustomSnackbar(
           context: context,
           message: responseData['message'] ?? 'Pengajuan masih diproses.',
@@ -207,9 +259,7 @@ class _FormPengajuan extends State<FormPengajuan> {
         );
       } else if (res.statusCode == 422) {
         final responseData = jsonDecode(res.body);
-
         String errorMessage = 'Validasi gagal';
-
         if (responseData['errors'] != null) {
           errorMessage = responseData['errors'].values
               .map((errList) => (errList as List).join(', '))
@@ -217,7 +267,6 @@ class _FormPengajuan extends State<FormPengajuan> {
         } else if (responseData['message'] != null) {
           errorMessage = responseData['message'];
         }
-
         showCustomSnackbar(
           context: context,
           message: errorMessage,
@@ -235,7 +284,7 @@ class _FormPengajuan extends State<FormPengajuan> {
     } catch (e) {
       showCustomSnackbar(
         context: context,
-        message: 'Terjadi kesalahan saat mengirim: $e',
+        message: 'Terjadi kesalahan: $e',
         backgroundColor: Colors.red,
         icon: Icons.error,
       );
@@ -243,226 +292,523 @@ class _FormPengajuan extends State<FormPengajuan> {
 
     if (!mounted) return;
     setState(() => isLoading = false);
-    
   }
 
+  // ── Preview gambar (kompatibel web & mobile) ──────────────────────────────
+  Widget _imagePreview({
+    required _FotoItem item,
+    BoxFit fit = BoxFit.cover,
+    double? width,
+    double? height,
+  }) {
+    if (item.bytes != null) {
+      return Image.memory(
+        item.bytes!,
+        fit: fit,
+        width: width,
+        height: height,
+      );
+    }
+    // Fallback mobile
+    if (!kIsWeb) {
+      return Image.file(
+        File(item.xfile.path),
+        fit: fit,
+        width: width,
+        height: height,
+      );
+    }
+    return const Center(child: Icon(Icons.image, size: 40, color: Colors.grey));
+  }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  //  BUILD
+  // ══════════════════════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
+    const primary = Color(0xFF2E7D32);
+    const primaryLight = Color(0xFF16A34A);
+    const bgGreen = Color(0xFFE8F5E9);
+    const fillGreen = Color(0xFFF1F8F1);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           suratData?['nama_surat'] ?? 'Loading...',
           style: GoogleFonts.poppins(
-            fontSize: 20,
+            fontSize: 17,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF0057A6),
+            color: primary,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         backgroundColor: Colors.white,
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.25),
-        iconTheme: const IconThemeData(color: Colors.black),
+        shadowColor: Colors.black.withOpacity(0.15),
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F7FA),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            buildInputField('Nama lengkap', namaController, readOnly: true),
-            buildInputField('NIK', nikController, readOnly: true),
-            buildInputField(
-              'Tempat Lahir',
-              tempatLahirController,
-              readOnly: true,
+            // ── SECTION: Data Warga ────────────────────────────────────────
+            _sectionCard(
+              primary: primary,
+              bgGreen: bgGreen,
+              title: 'Data Warga',
+              icon: Icons.person_outline,
+              children: [
+                _buildRow([
+                  _field('Kecamatan', kecamatanController, primary: primary, fillGreen: fillGreen),
+                  _field('Kelurahan', kelurahanController, primary: primary, fillGreen: fillGreen),
+                ]),
+                _buildRow([
+                  _field('No. KK', noKkController, primary: primary, fillGreen: fillGreen),
+                  _field('NIK', nikController, primary: primary, fillGreen: fillGreen),
+                ]),
+                _field('Nama Lengkap', namaController, primary: primary, fillGreen: fillGreen, fullWidth: true),
+                _buildRow([
+                  _field('Tempat Lahir', tempatLahirController, primary: primary, fillGreen: fillGreen),
+                  _field('Tanggal Lahir', tanggalLahirController, primary: primary, fillGreen: fillGreen),
+                ]),
+                _buildRow([
+                  _field('Status Kawin', statusKawinController, primary: primary, fillGreen: fillGreen),
+                  _field('Jenis Kelamin', jkController, primary: primary, fillGreen: fillGreen),
+                ]),
+                _field('Alamat', alamatController, primary: primary, fillGreen: fillGreen, fullWidth: true),
+                _buildRow([
+                  _field('RT', rtController, primary: primary, fillGreen: fillGreen),
+                  _field('RW', rwController, primary: primary, fillGreen: fillGreen),
+                  _field('Dusun', dusunController, primary: primary, fillGreen: fillGreen),
+                ]),
+              ],
             ),
-            buildInputField(
-              'Tanggal Lahir',
-              tanggalLahirController,
-              readOnly: true,
-            ),
-            buildInputField(
-              'Golongan Darah',
-              golDarahController,
-              readOnly: true,
-            ),
-            buildInputField('Jenis Kelamin', jkController, readOnly: true),
-            buildInputField(
-              'Kewarganegaraan',
-              kewarganegaraanController,
-              readOnly: true,
-            ),
-            buildInputField('Agama', agamaController, readOnly: true),
-            // buildInputField('Status Perkawinan', statusNikahController, readOnly: true),
-            buildInputField(
-              'Status Keluarga',
-              statusKeluargaController,
-              readOnly: true,
-            ),
-            buildInputField('Pekerjaan', pekerjaanController, readOnly: true),
-            buildInputField('Pendidikan', pendidikanController, readOnly: true),
-            if (suratData != null)
-              if (suratData != null)
-                buildInputField(
-                  suratData?['keterangan'] ?? '',
-                  keteranganController,
-                ),
+
             const SizedBox(height: 16),
-            Column(
-              children: List.generate(persyaratan.length, (index) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: buildUploadField(
-                    persyaratan[index]['nama_berkas'],
-                    uploadedFiles[index],
-                    (file) {
-                      setState(() {
-                        uploadedFiles[index] = file;
-                      });
+
+            // ── SECTION: Keterangan Pengajuan ──────────────────────────────
+            _sectionCard(
+              primary: primary,
+              bgGreen: bgGreen,
+              title: 'Keterangan Pengajuan',
+              icon: Icons.description_outlined,
+              children: [
+                if (suratData != null)
+                  _fieldEditable(
+                    suratData?['keterangan'] ?? 'Keterangan / Keperluan',
+                    keteranganController,
+                    primary: primary,
+                    primaryLight: primaryLight,
+                    maxLines: 4,
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // ── SECTION: Berkas Persyaratan ───────────────────────────────
+            if (persyaratan.isNotEmpty)
+              _sectionCard(
+                primary: primary,
+                bgGreen: bgGreen,
+                title: 'Berkas Persyaratan',
+                icon: Icons.attach_file_rounded,
+                children: List.generate(persyaratan.length, (index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildUploadField(
+                      label: persyaratan[index]['nama_berkas'],
+                      item: uploadedFiles[index],
+                      primary: primary,
+                      onPicked: (item) => setState(() => uploadedFiles[index] = item),
+                    ),
+                  );
+                }),
+              ),
+
+            if (persyaratan.isNotEmpty) const SizedBox(height: 16),
+
+            // ── SECTION: Foto Bukti Lampiran ──────────────────────────────
+            _sectionCard(
+              primary: primary,
+              bgGreen: bgGreen,
+              title: 'Foto Bukti Lampiran',
+              icon: Icons.photo_library_outlined,
+              trailing: TextButton.icon(
+                onPressed: _tambahFotoBukti,
+                icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+                label: Text(
+                  'Tambah Foto',
+                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: primary,
+                  backgroundColor: bgGreen,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+              ),
+              children: [
+                if (buktiPhotos.isEmpty)
+                  // Placeholder kosong
+                  InkWell(
+                    onTap: _tambahFotoBukti,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: primary.withOpacity(0.3),
+                          style: BorderStyle.solid,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_photo_alternate_outlined,
+                              size: 36, color: primary.withOpacity(0.5)),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tap untuk menambahkan foto bukti',
+                            style: GoogleFonts.poppins(
+                              color: primary.withOpacity(0.6),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  // Grid foto
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 1,
+                    ),
+                    itemCount: buktiPhotos.length + 1,
+                    itemBuilder: (context, index) {
+                      // Tombol tambah di akhir grid
+                      if (index == buktiPhotos.length) {
+                        return InkWell(
+                          onTap: _tambahFotoBukti,
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: bgGreen,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: primary.withOpacity(0.4)),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add, size: 28, color: primary),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Tambah',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Thumbnail foto
+                      return Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: double.infinity,
+                              child: _imagePreview(
+                                item: buktiPhotos[index],
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => _hapusFotoBukti(index),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade600,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 4,
+                                    )
+                                  ],
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                child: const Icon(Icons.close, size: 14, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
                     },
                   ),
-                );
-              }),
+              ],
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+
+            // ── TOMBOL KIRIM ───────────────────────────────────────────────
             SizedBox(
               width: double.infinity,
+              height: 52,
               child: ElevatedButton(
                 onPressed: isLoading ? null : _submitForm,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0057A6),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: primary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  elevation: 3,
                 ),
-                child:
-                    isLoading
-                        ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                        : Text(
-                          'Kirim',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+                child: isLoading
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          strokeWidth: 2.5,
                         ),
+                      )
+                    : Text(
+                        'Kirim Pengajuan',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
               ),
             ),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget buildInputField(
+  // ══════════════════════════════════════════════════════════════════════════
+  //  HELPER WIDGETS
+  // ══════════════════════════════════════════════════════════════════════════
+
+  Widget _sectionCard({
+    required Color primary,
+    required Color bgGreen,
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+    Widget? trailing,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: primary.withOpacity(0.07),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: primary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: primary,
+                    ),
+                  ),
+                ),
+                if (trailing != null) trailing,
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRow(List<Widget> fields) {
+    return Row(
+      children: fields
+          .map((f) => Expanded(
+                child: Padding(padding: const EdgeInsets.only(right: 8), child: f),
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _field(
     String label,
     TextEditingController controller, {
-    bool readOnly = false,
-    TextInputType keyboardType = TextInputType.text,
+    required Color primary,
+    required Color fillGreen,
+    bool fullWidth = false,
   }) {
-    final Color borderColor =
-        readOnly
-            ? const Color.fromARGB(255, 13, 103, 221)
-            : const Color(0xFF0057A6);
-
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 10),
       child: TextFormField(
         controller: controller,
-        readOnly: readOnly,
-        keyboardType: keyboardType,
-        style: GoogleFonts.poppins(color: Colors.black, fontSize: 12),
+        readOnly: true,
+        style: GoogleFonts.poppins(color: Colors.black87, fontSize: 12),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(
-            color: borderColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+          labelStyle: GoogleFonts.poppins(
+            color: primary,
+            fontWeight: FontWeight.w600,
+            fontSize: 11,
           ),
           filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 14,
-            horizontal: 16,
-          ),
+          fillColor: fillGreen,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: borderColor, width: 1.5),
+            borderSide: BorderSide(color: primary.withOpacity(0.3), width: 1.2),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: borderColor, width: 2),
+            borderSide: BorderSide(color: primary, width: 1.5),
           ),
         ),
       ),
     );
   }
 
-  Widget buildUploadField(
+  Widget _fieldEditable(
     String label,
-    File? imageFile,
-    Function(File) onImagePicked,
-  ) {
+    TextEditingController controller, {
+    required Color primary,
+    required Color primaryLight,
+    int maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        style: GoogleFonts.poppins(color: Colors.black87, fontSize: 13),
+        decoration: InputDecoration(
+          labelText: label,
+          alignLabelWithHint: maxLines > 1,
+          labelStyle: GoogleFonts.poppins(
+            color: primary,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: primary, width: 1.5),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: primaryLight, width: 2),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUploadField({
+    required String label,
+    required _FotoItem? item,
+    required Color primary,
+    required Function(_FotoItem) onPicked,
+  }) {
     return InkWell(
       onTap: () async {
-        final pickedFile = await ImagePicker().pickImage(
-          source: ImageSource.gallery,
-        );
-        if (pickedFile != null) {
-          onImagePicked(File(pickedFile.path));
-        }
+        final picked = await _pickFoto();
+        if (picked != null) onPicked(picked);
       },
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         width: double.infinity,
-        height: 146,
+        height: 130,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFF0057A6), width: 1.5),
+          border: Border.all(color: primary, width: 1.5),
         ),
         child: Center(
-          child:
-              imageFile == null
-                  ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/images/upload.png',
-                        width: 50,
-                        height: 50,
+          child: item == null
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset('assets/images/upload.png', width: 44, height: 44),
+                    const SizedBox(height: 8),
+                    Text(
+                      label,
+                      style: GoogleFonts.poppins(
+                        color: primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        label,
-                        style: GoogleFonts.poppins(
-                          color: const Color(0xFF0057A6),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  )
-                  : ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.file(
-                      imageFile,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
+                      textAlign: TextAlign.center,
                     ),
+                  ],
+                )
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: _imagePreview(
+                    item: item,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
                   ),
+                ),
         ),
       ),
     );
