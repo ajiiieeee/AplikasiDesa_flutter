@@ -221,7 +221,11 @@ class _DisetujuiViewState extends State<DisetujuiView> {
                               onPressed: item.filePdf == null || item.filePdf!.isEmpty
                                   ? null // tombol dinonaktifkan jika PDF belum ada
                                   : () async {
-                                      final url = item.filePdf!;
+                                      String downloadUrl = item.filePdf!;
+                                      if (!downloadUrl.startsWith('http://') && !downloadUrl.startsWith('https://')) {
+                                        downloadUrl = '$serverURL/${downloadUrl.startsWith('/') ? downloadUrl.substring(1) : downloadUrl}';
+                                      }
+
                                       if (!await requestStoragePermission()) {
                                         showCustomSnackbar(
                                           context: context,
@@ -233,7 +237,7 @@ class _DisetujuiViewState extends State<DisetujuiView> {
                                       }
 
                                       try {
-                                        final fileName = url.split('/').last;
+                                        final fileName = downloadUrl.split('/').last;
                                         final directory = Directory('/storage/emulated/0/Download');
 
                                         if (!await directory.exists()) {
@@ -242,7 +246,7 @@ class _DisetujuiViewState extends State<DisetujuiView> {
 
                                         final filePath = '${directory.path}/$fileName';
                                         Dio dio = Dio();
-                                        await dio.download(url, filePath);
+                                        await dio.download(downloadUrl, filePath);
 
                                         showCustomSnackbar(
                                           context: context,

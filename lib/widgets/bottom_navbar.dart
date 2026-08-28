@@ -43,18 +43,21 @@ class _BottomNavBarState extends State<BottomNavBar> {
   List<Widget> get _screens {
     switch (widget.role) {
       case 'kepala_dusun':
+      case 'kadus':
         return [
           const KadusHomeScreen(),
           const KadusSuratMasukScreen(),
           const KadusFormPengajuanScreen(),
         ];
       case 'sekretaris_desa':
+      case 'sekdes':
         return [
           const SekdesHomeScreen(),
           const SekdesPersetujuanScreen(),
           const SekdesMonitoringPengaduanScreen(),
         ];
       case 'kepala_desa':
+      case 'kades':
         return [
           const KadesHomeScreen(),
           const KadesPersetujuanScreen(),
@@ -71,10 +74,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
-    bool isWarga = widget.role == 'warga';
-    bool isKadus = widget.role == 'kepala_dusun';
-    bool isSekdes = widget.role == 'sekretaris_desa';
-    bool isKades = widget.role == 'kepala_desa';
+    bool isKadus = widget.role == 'kepala_dusun' || widget.role == 'kadus';
+    bool isSekdes = widget.role == 'sekretaris_desa' || widget.role == 'sekdes';
+    bool isKades = widget.role == 'kepala_desa' || widget.role == 'kades';
+    bool isWarga = !isKadus && !isSekdes && !isKades;
 
     int safeIndex = _currentIndex;
     if ((isWarga || isKadus || isSekdes || isKades) && safeIndex > 2) {

@@ -19,7 +19,7 @@ class StatusSelesaiModel {
       namaSurat: json['nama_surat']?.toString() ?? 'Tidak diketahui',
       updatedAt: json['updated_at']?.toString() ?? '-',
       status: json['status']?.toString() ?? 'Selesai',
-      filePdf: json['file_pdf_url']?.toString(), // key yang benar dari backend
+      filePdf: json['file_pdf_url']?.toString() ?? json['file_pdf']?.toString(),
     );
   }
 }

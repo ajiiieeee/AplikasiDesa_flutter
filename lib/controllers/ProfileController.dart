@@ -255,10 +255,8 @@ Future<void> logout(BuildContext context) async {
     );
   }
 
-  // Hapus data lokal
-  await prefs.remove('token');
-  await prefs.remove('nama');
-  await prefs.remove('nik');
+  // Hapus data lokal secara menyeluruh
+  await prefs.clear();
 
   if (!context.mounted) return;
 

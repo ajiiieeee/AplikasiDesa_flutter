@@ -72,6 +72,17 @@ class _LoginregisState extends State<Loginregis> {
         final String roleName = data['role_name'] ?? 'warga';
         final int level = (data['level'] as num?)?.toInt() ?? 5;
 
+        // Admin Desa (level 1) dibatasi tidak bisa login dari aplikasi mobile (hanya web)
+        if (level == 1) {
+          showCustomSnackbarAtTop(
+            context: context,
+            message: 'Akun Admin Desa (Level 1) hanya dapat diakses melalui portal Website Desa.',
+            backgroundColor: Colors.orange,
+            icon: Icons.warning,
+          );
+          return;
+        }
+
         await _saveUserData(namaPengguna, nikPengguna);
         await _saveRoleData(roleName, level);
 

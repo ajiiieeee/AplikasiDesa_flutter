@@ -26,7 +26,6 @@ class _PengajuanViewState extends State<PengajuanView> {
 
   Future<List<StatusDiajukanModel>> fetchPengajuan() async {
     final prefs = await SharedPreferences.getInstance();
-    final nik = prefs.getString('nik') ?? '';
     final token = prefs.getString('token') ?? '';
 
     final authHeaders = {
@@ -36,7 +35,7 @@ class _PengajuanViewState extends State<PengajuanView> {
     };
 
     final response = await http.get(
-      Uri.parse('$baseURL/statusdiajukan?nik=$nik'),
+      Uri.parse('$baseURL/statusdiajukan'),
       headers: authHeaders,
     );
 
@@ -56,7 +55,7 @@ class _PengajuanViewState extends State<PengajuanView> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: FutureBuilder<List<StatusDiajukanModel>>(
-        future: fetchPengajuan(),
+        future: futurePengajuan,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(

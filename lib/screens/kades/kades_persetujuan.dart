@@ -398,7 +398,11 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
       );
       return;
     }
-    final uri = Uri.parse('$serverURL/$pdfUrl');
+    String fullUrl = pdfUrl;
+    if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
+      fullUrl = '$serverURL/${fullUrl.startsWith('/') ? fullUrl.substring(1) : fullUrl}';
+    }
+    final uri = Uri.parse(fullUrl);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {

@@ -234,7 +234,7 @@ class _FormPengajuan extends State<FormPengajuan> {
       final response = await request.send();
       final res = await http.Response.fromStream(response);
 
-      if (res.statusCode == 200) {
+      if (res.statusCode == 200 || res.statusCode == 201) {
         showCustomSnackbar(
           context: context,
           message: 'Pengajuan berhasil dikirim!',

@@ -45,7 +45,7 @@ class PengajuanModel {
       keteranganDitolak: json['keterangan_ditolak']?.toString(),
       fotos: fotosList,
       nomorSurat: json['nomor_surat']?.toString(),
-      pdfUrl: json['file_pdf']?.toString() ?? json['file_pdf_url']?.toString(),
+      pdfUrl: json['file_pdf_url']?.toString() ?? json['file_pdf']?.toString(),
     );
   }
 }
