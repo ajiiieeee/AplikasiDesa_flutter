@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/bottom_navbar.dart';
 import '../auth/LoginRegis.dart';
+import '../auth/auth.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,11 +40,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     await Future.delayed(const Duration(seconds: 2, milliseconds: 500));
     if (!mounted) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('token');
-    final String role = prefs.getString('role_name') ?? 'warga';
+    final loggedIn = await AuthService.isLoggedIn();
+    final role     = await AuthService.getRole();
 
-    if (token != null && token.isNotEmpty) {
+    if (!mounted) return;
+
+    if (loggedIn) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => BottomNavBar(role: role)),

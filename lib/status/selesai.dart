@@ -10,6 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 import 'package:digitalv/widgets/timeline_widget.dart';
+import '../services/secure_storage_service.dart';
 
 class DisetujuiView extends StatefulWidget {
   const DisetujuiView({super.key});
@@ -41,9 +42,8 @@ class _DisetujuiViewState extends State<DisetujuiView> {
   }
 
   Future<List<StatusSelesaiModel>> fetchDisetujui() async {
-    final prefs = await SharedPreferences.getInstance();
-    final nik = prefs.getString('nik') ?? '';
-    final token = prefs.getString('token') ?? '';
+    final nik = await SecureStorageService.instance.getNik() ?? '';
+    final token = await SecureStorageService.instance.getToken() ?? '';
 
     final authHeaders = {
       'Content-Type': 'application/json',

@@ -6,11 +6,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/globals.dart';
 import '../widgets/snackbarcustom.dart';
+import '../services/secure_storage_service.dart';
 
 Future<void> getProfilFromApi(BuildContext context) async {
   try {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    final token = await SecureStorageService.instance.getToken();
 
     if (token == null || token.isEmpty) {
       // Token belum tersedia, skip silently
@@ -43,33 +43,30 @@ Future<void> getProfilFromApi(BuildContext context) async {
         }
       }
 
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setString('no_kk', data['no_kk'] ?? '');
       await prefs.setString('nama_lengkap', data['nama_lengkap'] ?? '');
       await prefs.setString('no_hp', data['no_hp'] ?? '');
       await prefs.setString('email', data['email'] ?? '');
       await prefs.setString('foto_profil', fotoProfilUrl);
     }
-    // Jika gagal (401/404/lainnya) — diam saja, tidak tampilkan snackbar
   } catch (e) {
     // Abaikan error jaringan di beranda
   }
 }
 
 Future<void> uploadFotoProfil(BuildContext context, File imageFile) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token') ?? '';
+  final token = await SecureStorageService.instance.getToken() ?? '';
 
   var request = http.MultipartRequest(
     'POST',
     Uri.parse('$baseURL/update-foto'),
   );
 
-  // Pastikan key sesuai controller Laravel: 'foto_profil'
   request.files.add(
     await http.MultipartFile.fromPath('foto_profil', imageFile.path),
   );
 
-  // Tambahkan header ini agar Laravel balikan JSON meskipun error
   request.headers['Accept'] = 'application/json';
   if (token.isNotEmpty) {
     request.headers['Authorization'] = 'Bearer $token';
@@ -91,7 +88,6 @@ Future<void> uploadFotoProfil(BuildContext context, File imageFile) async {
         var data = json.decode(responseBody);
         String errorMessage = data['message'] ?? 'Gagal upload foto';
 
-        // Kalau ada validation errors, gabungkan jadi satu string
         if (data['errors'] != null && data['errors'] is Map) {
           final errors = data['errors'] as Map<String, dynamic>;
           errorMessage = errors.values
@@ -106,7 +102,6 @@ Future<void> uploadFotoProfil(BuildContext context, File imageFile) async {
           icon: Icons.error,
         );
       } catch (e) {
-        // Kalau gagal decode JSON (mungkin HTML), tampilkan pesan error generik saja
         showCustomSnackbar(
           context: context,
           message: 'Gagal upload foto: Server mengembalikan data tidak valid',
@@ -116,7 +111,6 @@ Future<void> uploadFotoProfil(BuildContext context, File imageFile) async {
       }
     }
   } catch (e) {
-    // Error network atau lainnya
     showCustomSnackbar(
       context: context,
       message: 'Error saat upload foto: ${e.toString()}',
@@ -131,8 +125,7 @@ Future<bool> updateEmailNoHp(
   required String email,
   required String noHp,
 }) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token') ?? '';
+  final token = await SecureStorageService.instance.getToken() ?? '';
   final url = Uri.parse('$baseURL/update-profil');
 
   try {
@@ -151,6 +144,7 @@ Future<bool> updateEmailNoHp(
     if (response.statusCode == 200) {
       var data = jsonDecode(responseBody);
 
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setString('email', email);
       await prefs.setString('no_hp', noHp);
 
@@ -204,10 +198,8 @@ Future<bool> updateEmailNoHp(
 
 
 Future<void> logout(BuildContext context) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+  final token = await SecureStorageService.instance.getToken();
 
-  // Cek jika ada token tersimpan
   if (token != null) {
     try {
       final response = await http.post(
@@ -217,9 +209,6 @@ Future<void> logout(BuildContext context) async {
           'Authorization': 'Bearer $token',
         },
       );
-
-      print('🧾 Logout response: ${response.statusCode} ${response.body}');
-      print('🔐 Token yang dikirim saat logout: $token');
 
       if (response.statusCode == 200) {
         showCustomSnackbar(
@@ -237,7 +226,6 @@ Future<void> logout(BuildContext context) async {
         );
       }
     } catch (e) {
-      print('❗ Error saat logout ke server: $e');
       showCustomSnackbar(
         context: context,
         message: 'Gagal menghubungi server.',
@@ -246,7 +234,6 @@ Future<void> logout(BuildContext context) async {
       );
     }
   } else {
-    print('⚠️ Tidak ada token yang tersimpan.');
     showCustomSnackbar(
       context: context,
       message: 'Tidak ditemukan token untuk logout.',
@@ -255,14 +242,16 @@ Future<void> logout(BuildContext context) async {
     );
   }
 
-  // Hapus data lokal secara menyeluruh
+  // Hapus data sensitif di SecureStorage dan data lokal di SharedPreferences
+  await SecureStorageService.instance.clearSession();
+  final prefs = await SharedPreferences.getInstance();
   await prefs.clear();
 
   if (!context.mounted) return;
 
   Navigator.pushAndRemoveUntil(
     context,
-    MaterialPageRoute(builder: (context) => Loginregis()),
+    MaterialPageRoute(builder: (context) => const Loginregis()),
     (route) => false,
   );
 }

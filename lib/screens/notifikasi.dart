@@ -8,6 +8,7 @@ import '../config/globals.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:digitalv/widgets/snackbarcustom.dart';
 import 'package:digitalv/widgets/bottom_navbar.dart';
+import '../services/secure_storage_service.dart';
 
 
 class NotificationScreen extends StatefulWidget {
@@ -29,14 +30,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> fetchLatestNotifikasi() async {
-    final prefs = await SharedPreferences.getInstance();
-    final nik = prefs.getString('nik') ?? '';
-    final token = prefs.getString('token') ?? '';
+    final nik = await SecureStorageService.instance.getNik() ?? '';
+    final token = await SecureStorageService.instance.getToken() ?? '';
 
     if (nik.isEmpty) {
-      print('NIK tidak ditemukan di SharedPreferences');
       setState(() => isLoading = false);
-      return; // <-- penting agar keluar dari fungsi
+      return;
     }
 
     final authHeaders = {

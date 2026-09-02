@@ -7,6 +7,7 @@ import '../config/globals.dart';
 import '../models/pengajuandiajukan_model.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 import 'package:digitalv/widgets/timeline_widget.dart';
+import '../services/secure_storage_service.dart';
 
 class PengajuanView extends StatefulWidget {
   const PengajuanView({super.key});
@@ -25,8 +26,7 @@ class _PengajuanViewState extends State<PengajuanView> {
   }
 
   Future<List<StatusDiajukanModel>> fetchPengajuan() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
+    final token = await SecureStorageService.instance.getToken() ?? '';
 
     final authHeaders = {
       'Content-Type': 'application/json',
@@ -236,8 +236,7 @@ class _PengajuanViewState extends State<PengajuanView> {
                                 );
 
                                 if (confirm == true) {
-                                  final prefs = await SharedPreferences.getInstance();
-                                  final token = prefs.getString('token') ?? '';
+                                  final token = await SecureStorageService.instance.getToken() ?? '';
                                   final authHeaders = {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',

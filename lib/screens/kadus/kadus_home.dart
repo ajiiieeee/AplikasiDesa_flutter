@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/globals.dart';
+import '../../widgets/bottom_navbar.dart';
 import '../info_profile.dart';
 import '../notifikasi.dart';
 
@@ -300,6 +301,14 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                                       icon: Icons.inbox_rounded,
                                       color: const Color(0xFF1565C0),
                                       bgColor: const Color(0xFFE3F2FD),
+                                      onTap: () {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const BottomNavBar(initialIndex: 1, role: 'kepala_dusun'),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -311,6 +320,14 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                                       icon: Icons.hourglass_top_rounded,
                                       color: const Color(0xFFE65100),
                                       bgColor: const Color(0xFFFFF3E0),
+                                      onTap: () {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const BottomNavBar(initialIndex: 1, role: 'kepala_dusun'),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ],
@@ -326,6 +343,14 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                                       icon: Icons.check_circle_rounded,
                                       color: primaryGreen,
                                       bgColor: const Color(0xFFE8F5E9),
+                                      onTap: () {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const BottomNavBar(initialIndex: 1, role: 'kepala_dusun'),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -337,6 +362,14 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                                       icon: Icons.cancel_rounded,
                                       color: const Color(0xFFC62828),
                                       bgColor: const Color(0xFFFFEBEE),
+                                      onTap: () {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const BottomNavBar(initialIndex: 1, role: 'kepala_dusun'),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ],
@@ -420,62 +453,66 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
     required IconData icon,
     required Color color,
     required Color bgColor,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: const Color(0xFFECEFF1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              Text(
-                count,
-                style: GoogleFonts.poppins(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              color: const Color(0xFF263238),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-          Text(
-            subtitle,
-            style: GoogleFonts.poppins(
-              fontSize: 10,
-              color: Colors.grey[600],
+          ],
+          border: Border.all(color: const Color(0xFFECEFF1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                Text(
+                  count,
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: const Color(0xFF263238),
+              ),
+            ),
+            Text(
+              subtitle,
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

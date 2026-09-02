@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/globals.dart';
 import '../controllers/ProfileController.dart';
+import '../services/secure_storage_service.dart';
 import 'dart:io';
 
 class HomeScreen extends StatefulWidget {
@@ -64,8 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchWargaStats() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
+    final token = await SecureStorageService.instance.getToken() ?? '';
     if (token.isEmpty) return;
 
     final authHeaders = {

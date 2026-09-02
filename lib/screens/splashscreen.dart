@@ -220,8 +220,8 @@ final List<Onboard> demoData = [
   ),
   Onboard(
     image: "assets/images/onboard3.png",
-    title: "Lebih Transparan & Informatif",
+    title: "Laporkan & Pantau Pengaduan",
     description:
-        "Ikuti berita dan info desa terbaru serta pantau proses layanan Anda secara real-time.",
+        "Sampaikan pengaduan masalah desa secara mudah dan pantau status penanganannya secara real-time.",
   ),
 ];

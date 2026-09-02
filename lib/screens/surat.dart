@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/secure_storage_service.dart';
 
 class SuratScreen extends StatefulWidget {
   const SuratScreen({super.key});
@@ -26,8 +27,7 @@ class _SuratScreenState extends State<SuratScreen> {
 
   Future<void> fetchSurat() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+      final token = await SecureStorageService.instance.getToken();
 
       final response = await http.get(
         Uri.parse('$baseURL/surat'),

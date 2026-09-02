@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:digitalv/screens/splash_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:digitalv/services/secure_storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  String? token = prefs.getString('token');
-  String role = prefs.getString('role_name') ?? 'warga';
+  String? token = await SecureStorageService.instance.getToken();
+  String role = await SecureStorageService.instance.getRole();
 
   runApp(MyApp(isLoggedIn: token != null && token.isNotEmpty, role: role));
 }

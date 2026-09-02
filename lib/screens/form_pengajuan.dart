@@ -10,7 +10,7 @@ import '../config/globals.dart';
 import '../controllers/SuratController.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/secure_storage_service.dart';
 
 // ── Model foto: simpan XFile + preview bytes ──────────────────────────────────
 class _FotoItem {
@@ -67,8 +67,7 @@ class _FormPengajuan extends State<FormPengajuan> {
   // ── Fetch daftar surat ────────────────────────────────────────────────────
   Future<void> fetchSurat() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+      final token = await SecureStorageService.instance.getToken();
 
       final response = await http.get(
         Uri.parse('$baseURL/surat'),
@@ -190,8 +189,7 @@ class _FormPengajuan extends State<FormPengajuan> {
 
     setState(() => isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
+    final token = await SecureStorageService.instance.getToken() ?? '';
 
     final uri = Uri.parse('$baseURL/pengajuan');
     final request = http.MultipartRequest('POST', uri);

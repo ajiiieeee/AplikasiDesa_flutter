@@ -9,7 +9,8 @@ import '../../widgets/snackbarcustom.dart';
 import '../../widgets/timeline_widget.dart';
 
 class KadusSuratMasukScreen extends StatefulWidget {
-  const KadusSuratMasukScreen({super.key});
+  final int initialTabIndex;
+  const KadusSuratMasukScreen({super.key, this.initialTabIndex = 0});
 
   @override
   State<KadusSuratMasukScreen> createState() => _KadusSuratMasukScreenState();
@@ -23,7 +24,7 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTabIndex);
     _refreshData();
   }
 
@@ -401,7 +402,7 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
           unselectedLabelStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
           tabs: const [
             Tab(text: "Surat Masuk"),
-            Tab(text: "Pengajuan Selesai"),
+            Tab(text: "Diproses & Selesai"),
           ],
         ),
       ),

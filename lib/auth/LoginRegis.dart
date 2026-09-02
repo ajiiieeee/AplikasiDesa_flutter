@@ -8,8 +8,10 @@ import 'dart:io';
 import '../shared/shared.dart';
 import '../config/globals.dart';
 import '../auth/LupaPassword.dart';
+import '../auth/register.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
+import '../services/secure_storage_service.dart';
 
 class Loginregis extends StatefulWidget {
   const Loginregis({super.key});
@@ -25,8 +27,8 @@ class _LoginregisState extends State<Loginregis> {
   final loginPasswordController = TextEditingController();
 
   Future<void> simpanStatusLogin(String token) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token);
+    // Token disimpan di SecureStorage (terenkripsi)
+    await SecureStorageService.instance.saveToken(token);
   }
 
 
@@ -163,15 +165,16 @@ class _LoginregisState extends State<Loginregis> {
 
 
   Future<void> _saveUserData(String nama, String nik) async {
+    // Nama disimpan di SharedPreferences (non-sensitif)
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('nama', nama);
-    await prefs.setString('nik', nik);
+    // NIK disimpan di SecureStorage (sensitif)
+    await SecureStorageService.instance.saveNik(nik);
   }
 
   Future<void> _saveRoleData(String roleName, int level) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('role_name', roleName);
-    await prefs.setInt('level', level);
+    // Role & level disimpan di SecureStorage (sensitif)
+    await SecureStorageService.instance.saveRole(roleName, level);
   }
 
 
@@ -489,6 +492,45 @@ class _LoginregisState extends State<Loginregis> {
                           ),
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: primaryGreen, width: 2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Belum punya akun?",
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF374151),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                            );
+                          },
+                          icon: const Icon(Icons.person_add_alt_1_rounded, size: 20, color: Color(0xFF0284C7)),
+                          label: Text(
+                            'Daftar / Aktivasi Akun',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0284C7),
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFF0284C7), width: 2),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),

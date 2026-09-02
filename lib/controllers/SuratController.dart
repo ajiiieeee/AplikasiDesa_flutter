@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../config/globals.dart';
+import '../services/secure_storage_service.dart';
 
 Future<Map<String, dynamic>?> fetchUserData() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+  final token = await SecureStorageService.instance.getToken();
 
   if (token == null || token.isEmpty) {
     return null;

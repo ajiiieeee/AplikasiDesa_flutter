@@ -10,6 +10,7 @@ import '../widgets/snackbarcustom.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http_parser/http_parser.dart';
+import '../services/secure_storage_service.dart';
 
 class Pengaduan extends StatefulWidget {
   const Pengaduan({super.key});
@@ -79,8 +80,7 @@ class _PengaduanState extends State<Pengaduan> {
 
     setState(() => isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    final nik   = prefs.getString('nik');
+    final nik = await SecureStorageService.instance.getNik();
 
     if (nik == null) {
       showCustomSnackbar(

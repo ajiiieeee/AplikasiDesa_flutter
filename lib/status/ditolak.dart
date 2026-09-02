@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/pengajuanditolak_model.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 import 'package:digitalv/widgets/timeline_widget.dart';
+import '../services/secure_storage_service.dart';
 
 class DitolakView extends StatefulWidget {
   const DitolakView({super.key});
@@ -25,9 +26,8 @@ class _DitolakStateView extends State<DitolakView> {
   }
 
   Future<List<StatusDitolakModel>> fetchDitolak() async {
-    final prefs = await SharedPreferences.getInstance();
-    final nik = prefs.getString('nik') ?? '';
-    final token = prefs.getString('token') ?? '';
+    final nik = await SecureStorageService.instance.getNik() ?? '';
+    final token = await SecureStorageService.instance.getToken() ?? '';
 
     final authHeaders = {
       'Content-Type': 'application/json',
@@ -255,8 +255,7 @@ class _DitolakStateView extends State<DitolakView> {
                                 );
 
                                 if (confirm == true) {
-                                  final prefs = await SharedPreferences.getInstance();
-                                  final token = prefs.getString('token') ?? '';
+                                  final token = await SecureStorageService.instance.getToken() ?? '';
                                   final authHeaders = {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
