@@ -2,6 +2,7 @@ import 'package:digitalv/screens/info_profile.dart';
 import 'package:digitalv/screens/notifikasi.dart';
 import 'package:flutter/material.dart';
 import 'package:digitalv/screens/pengaduan.dart';
+import 'package:digitalv/screens/riwayat_pengaduan.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -116,18 +117,13 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
 
     try {
-      final resPengaduan = await http.get(Uri.parse('$baseURL/notifikasi'), headers: authHeaders);
+      final resPengaduan = await http.get(Uri.parse('$baseURL/pengaduan'), headers: authHeaders);
       if (resPengaduan.statusCode == 200) {
         final body = json.decode(resPengaduan.body);
-        if (body is List) {
+        if (body is Map && body['data'] is List) {
+          pengaduan = (body['data'] as List).length;
+        } else if (body is List) {
           pengaduan = body.length;
-        } else if (body is Map && body['data'] != null) {
-          final data = body['data'];
-          if (data is List) {
-            pengaduan = data.length;
-          } else if (data is Map && data['pengaduan'] is List) {
-            pengaduan = (data['pengaduan'] as List).length;
-          }
         }
       }
     } catch (_) {}
@@ -437,35 +433,63 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 44,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const Pengaduan(),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 44,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const RiwayatPengaduanScreen(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.list_alt_rounded, size: 18),
+                                  label: Text(
+                                    'Riwayat',
+                                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: primaryGreen,
+                                    elevation: 0,
+                                    side: const BorderSide(color: primaryGreen),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  ),
                                 ),
-                              );
-                            },
-                            icon: const Icon(Icons.add_comment_rounded, size: 18),
-                            label: Text(
-                              'Buat Pengaduan',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryGreen,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: SizedBox(
+                                height: 44,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const Pengaduan(),
+                                      ),
+                                    ).then((_) => _fetchWargaStats());
+                                  },
+                                  icon: const Icon(Icons.add_comment_rounded, size: 18),
+                                  label: Text(
+                                    'Buat Baru',
+                                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primaryGreen,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),

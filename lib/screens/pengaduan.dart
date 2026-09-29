@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:digitalv/widgets/bottom_navbar.dart';
+import 'package:digitalv/screens/riwayat_pengaduan.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -8,7 +8,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../config/globals.dart';
 import '../widgets/snackbarcustom.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http_parser/http_parser.dart';
 import '../services/secure_storage_service.dart';
 
@@ -36,9 +35,10 @@ class _PengaduanState extends State<Pengaduan> {
 
   String? _selectedKategori;
   final List<String> _kategoriList = [
-    'Fasilitas Umum',
-    'Kebersihan',
+    'Infrastruktur',
+    'Pelayanan',
     'Keamanan',
+    'Lingkungan',
     'Lainnya',
   ];
 
@@ -80,12 +80,11 @@ class _PengaduanState extends State<Pengaduan> {
 
     setState(() => isLoading = true);
 
-    final nik = await SecureStorageService.instance.getNik();
-
-    if (nik == null) {
+    final token = await SecureStorageService.instance.getToken();
+    if (token == null || token.isEmpty) {
       showCustomSnackbar(
         context: context,
-        message: 'NIK tidak ditemukan. Silakan login ulang.',
+        message: 'Sesi habis. Silakan login ulang.',
         backgroundColor: Colors.red,
         icon: Icons.error,
       );
@@ -95,9 +94,9 @@ class _PengaduanState extends State<Pengaduan> {
 
     final uri     = Uri.parse('$baseURL/pengaduan');
     final request = http.MultipartRequest('POST', uri)
-      ..headers['Accept'] = 'application/json';
+      ..headers['Accept']        = 'application/json'
+      ..headers['Authorization'] = 'Bearer $token';
 
-    request.fields['nik']      = nik;
     request.fields['ulasan']   = ulasanController.text.trim();
     request.fields['kategori'] = _selectedKategori ?? '';
 
@@ -128,7 +127,7 @@ class _PengaduanState extends State<Pengaduan> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => BottomNavBar()),
+          MaterialPageRoute(builder: (_) => const RiwayatPengaduanScreen()),
         );
       } else {
         showCustomSnackbar(
@@ -167,6 +166,21 @@ class _PengaduanState extends State<Pengaduan> {
             color: _primary,
           ),
         ),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const RiwayatPengaduanScreen()),
+              );
+            },
+            icon: const Icon(Icons.list_alt_rounded, color: _primary, size: 18),
+            label: Text(
+              'Riwayat',
+              style: GoogleFonts.poppins(color: _primary, fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -365,17 +379,20 @@ class _PengaduanState extends State<Pengaduan> {
           items: _kategoriList.map((k) {
             IconData icon;
             switch (k) {
-              case 'Fasilitas Umum':
-                icon = Icons.home_repair_service;
+              case 'Infrastruktur':
+                icon = Icons.construction_rounded;
                 break;
-              case 'Kebersihan':
-                icon = Icons.cleaning_services;
+              case 'Pelayanan':
+                icon = Icons.support_agent_rounded;
                 break;
               case 'Keamanan':
-                icon = Icons.security;
+                icon = Icons.security_rounded;
+                break;
+              case 'Lingkungan':
+                icon = Icons.eco_rounded;
                 break;
               default:
-                icon = Icons.help_outline;
+                icon = Icons.help_outline_rounded;
             }
             return DropdownMenuItem(
               value: k,
