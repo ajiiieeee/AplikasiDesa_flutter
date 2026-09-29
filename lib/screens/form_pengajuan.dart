@@ -29,19 +29,14 @@ class FormPengajuan extends StatefulWidget {
 
 class _FormPengajuan extends State<FormPengajuan> {
   // ── Controllers data warga ─────────────────────────────────────────────────
-  final TextEditingController kecamatanController   = TextEditingController();
-  final TextEditingController kelurahanController   = TextEditingController();
   final TextEditingController noKkController        = TextEditingController();
   final TextEditingController nikController         = TextEditingController();
   final TextEditingController namaController        = TextEditingController();
-  final TextEditingController tempatLahirController = TextEditingController();
   final TextEditingController tanggalLahirController = TextEditingController();
-  final TextEditingController statusKawinController = TextEditingController();
   final TextEditingController jkController          = TextEditingController();
   final TextEditingController alamatController      = TextEditingController();
   final TextEditingController rtController          = TextEditingController();
   final TextEditingController rwController          = TextEditingController();
-  final TextEditingController dusunController       = TextEditingController();
 
   // ── Controller isian pengajuan ─────────────────────────────────────────────
   final TextEditingController keteranganController = TextEditingController();
@@ -131,19 +126,14 @@ class _FormPengajuan extends State<FormPengajuan> {
     final data = await fetchUserData();
     if (data != null) {
       setState(() {
-        kecamatanController.text    = data['kecamatan']    ?? '';
-        kelurahanController.text    = data['kelurahan']    ?? '';
-        noKkController.text         = data['no_kk']        ?? data['nomor_kk'] ?? '';
-        nikController.text          = data['nik']          ?? data['nomor_ktp'] ?? '';
-        namaController.text         = data['nama']         ?? data['nama_lengkap'] ?? '';
-        tempatLahirController.text  = data['tempat_lahir'] ?? data['tempatLahir'] ?? '';
-        tanggalLahirController.text = data['tanggal_lahir'] ?? data['tanggalLahir'] ?? '';
-        statusKawinController.text  = data['sts_kawin']   ?? data['status_kawin'] ?? data['statusKawin'] ?? '';
-        jkController.text           = data['kelamin']      ?? data['jk'] ?? '';
-        alamatController.text       = data['alamat']       ?? '';
-        rtController.text           = data['rt']           ?? '';
-        rwController.text           = data['rw']           ?? '';
-        dusunController.text        = data['dusun']        ?? '';
+        noKkController.text         = data['no_kk']         ?? '';
+        nikController.text          = data['nik']           ?? '';
+        namaController.text         = data['nama']          ?? '';
+        tanggalLahirController.text = data['tanggal_lahir'] ?? '';
+        jkController.text           = data['jk']            ?? '';
+        alamatController.text       = data['alamat']        ?? '';
+        rtController.text           = data['rt']            ?? '';
+        rwController.text           = data['rw']            ?? '';
       });
     }
   }
@@ -360,27 +350,18 @@ class _FormPengajuan extends State<FormPengajuan> {
               icon: Icons.person_outline,
               children: [
                 _buildRow([
-                  _field('Kecamatan', kecamatanController, primary: primary, fillGreen: fillGreen),
-                  _field('Kelurahan', kelurahanController, primary: primary, fillGreen: fillGreen),
-                ]),
-                _buildRow([
                   _field('No. KK', noKkController, primary: primary, fillGreen: fillGreen),
                   _field('NIK', nikController, primary: primary, fillGreen: fillGreen),
                 ]),
                 _field('Nama Lengkap', namaController, primary: primary, fillGreen: fillGreen, fullWidth: true),
                 _buildRow([
-                  _field('Tempat Lahir', tempatLahirController, primary: primary, fillGreen: fillGreen),
                   _field('Tanggal Lahir', tanggalLahirController, primary: primary, fillGreen: fillGreen),
-                ]),
-                _buildRow([
-                  _field('Status Kawin', statusKawinController, primary: primary, fillGreen: fillGreen),
                   _field('Jenis Kelamin', jkController, primary: primary, fillGreen: fillGreen),
                 ]),
                 _field('Alamat', alamatController, primary: primary, fillGreen: fillGreen, fullWidth: true),
                 _buildRow([
                   _field('RT', rtController, primary: primary, fillGreen: fillGreen),
                   _field('RW', rwController, primary: primary, fillGreen: fillGreen),
-                  _field('Dusun', dusunController, primary: primary, fillGreen: fillGreen),
                 ]),
               ],
             ),
