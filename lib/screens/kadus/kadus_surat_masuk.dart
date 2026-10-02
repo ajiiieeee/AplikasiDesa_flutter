@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/globals.dart';
 import '../../models/pengajuan_model.dart';
+import '../../services/secure_storage_service.dart';
 import '../../widgets/snackbarcustom.dart';
 import '../../widgets/timeline_widget.dart';
 
@@ -42,8 +42,7 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
   }
 
   Future<Map<String, String>> _getAuthHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
+    final token = await SecureStorageService.instance.getToken() ?? '';
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -53,37 +52,49 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
 
   // TAB 1: Surat Masuk dengan status "Diajukan"
   Future<List<PengajuanModel>> _fetchSuratMasuk() async {
-    final authHeaders = await _getAuthHeaders();
-    final response = await http.get(
-      Uri.parse('$baseURL/kadus/suratmasuk'),
-      headers: authHeaders,
-    );
+    try {
+      final authHeaders = await _getAuthHeaders();
+      final response = await http.get(
+        Uri.parse('$baseURL/kadus/suratmasuk'),
+        headers: authHeaders,
+      ).timeout(const Duration(seconds: 15));
 
-    if (response.statusCode == 200) {
-      final body = json.decode(response.body);
-      final List data = body['data'] ?? [];
-      final list = data.map((item) => PengajuanModel.fromJson(item)).toList();
-      return list.where((item) => item.status == 'Diajukan' || item.status.isEmpty).toList();
-    } else {
-      throw Exception('Gagal memuat data surat masuk');
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        final List data = body['data'] ?? [];
+        final list = data.map((item) => PengajuanModel.fromJson(item)).toList();
+        return list.where((item) => item.status == 'Diajukan' || item.status.isEmpty).toList();
+      } else if (response.statusCode == 401) {
+        throw Exception('Sesi habis, silakan login ulang (401)');
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Gagal memuat data surat masuk: $e');
     }
   }
 
   // TAB 2: Surat yang sudah diteruskan oleh Kadus (Disetujui Kadus, Admin, Sekdes, Selesai)
   Future<List<PengajuanModel>> _fetchSuratMonitoring() async {
-    final authHeaders = await _getAuthHeaders();
-    final response = await http.get(
-      Uri.parse('$baseURL/kadus/suratmasuk'),
-      headers: authHeaders,
-    );
+    try {
+      final authHeaders = await _getAuthHeaders();
+      final response = await http.get(
+        Uri.parse('$baseURL/kadus/suratmasuk'),
+        headers: authHeaders,
+      ).timeout(const Duration(seconds: 15));
 
-    if (response.statusCode == 200) {
-      final body = json.decode(response.body);
-      final List data = body['data'] ?? [];
-      final list = data.map((item) => PengajuanModel.fromJson(item)).toList();
-      return list.where((item) => item.status != 'Diajukan').toList();
-    } else {
-      throw Exception('Gagal memuat data monitoring');
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        final List data = body['data'] ?? [];
+        final list = data.map((item) => PengajuanModel.fromJson(item)).toList();
+        return list.where((item) => item.status != 'Diajukan').toList();
+      } else if (response.statusCode == 401) {
+        throw Exception('Sesi habis, silakan login ulang (401)');
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Gagal memuat data monitoring: $e');
     }
   }
 
