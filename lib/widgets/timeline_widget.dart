@@ -15,17 +15,18 @@ class SuratTimelineWidget extends StatelessWidget {
     switch (status) {
       case 'Diajukan':
         return 1;
+      case 'Disetujui RW':
       case 'Disetujui Kepala Dusun':
         return 2;
+      case 'Disetujui Sekdes':
       case 'Disetujui Admin':
-        return 3;
       case 'Disetujui Sekretaris Desa':
-        return 4;
+        return 3;
+      case 'Disetujui Kades':
       case 'Selesai':
-        return 5;
-      case 'Ditolak':
-        return -1;
+        return 4;
       default:
+        if (status.startsWith('Ditolak')) return -1;
         return 1;
     }
   }
@@ -36,15 +37,14 @@ class SuratTimelineWidget extends StatelessWidget {
     const secondaryGreen = Color(0xFF4CAF50);
     const greyColor = Color(0xFFBDBDBD);
 
-    final isDitolak = status == 'Ditolak';
+    final isDitolak = status.startsWith('Ditolak');
     final completedStep = _getCompletedStepIndex(status);
 
     final List<String> steps = [
-      'Diajukan',
-      'Disetujui Kepala Dusun',
-      'Disetujui Admin',
+      'Diajukan (Pengajuan Warga)',
+      'Disetujui Kepala Dusun / RW',
       'Disetujui Sekretaris Desa',
-      'Selesai',
+      'Surat Selesai (TTD Kades)',
     ];
 
     if (isDitolak) {

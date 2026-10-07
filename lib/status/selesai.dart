@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../config/globals.dart';
 import '../models/pengajuanselesai_model.dart';
 import 'dart:io';
@@ -72,7 +71,7 @@ class _DisetujuiViewState extends State<DisetujuiView> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: FutureBuilder<List<StatusSelesaiModel>>(
-        future: fetchDisetujui(),
+        future: futureSelesai,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(

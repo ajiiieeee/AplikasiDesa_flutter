@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../config/globals.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/pengajuanditolak_model.dart';
@@ -54,7 +53,7 @@ class _DitolakStateView extends State<DitolakView> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: FutureBuilder<List<StatusDitolakModel>>(
-        future: fetchDitolak(),
+        future: futureDitolak,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
