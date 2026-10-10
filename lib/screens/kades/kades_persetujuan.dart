@@ -180,13 +180,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
             ),
           );
           if (openPdf == true) {
-            final fullUrl = (pdfUrl.startsWith('http://') || pdfUrl.startsWith('https://'))
-                ? pdfUrl
-                : '$serverURL/${pdfUrl.startsWith('/') ? pdfUrl.substring(1) : pdfUrl}';
-            final uri = Uri.parse(fullUrl);
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            }
+            await _openPdf(pdfUrl);
           }
         }
       } else {
@@ -384,28 +378,66 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
   }
 
   Future<void> _openPdf(String? pdfUrl) async {
-    if (pdfUrl == null || pdfUrl.isEmpty) {
+    if (pdfUrl == null || pdfUrl.isEmpty || pdfUrl == '-' || pdfUrl == 'null') {
       if (!mounted) return;
       showCustomSnackbar(
         context: context,
-        message: 'URL PDF tidak tersedia',
+        message: 'File PDF belum tersedia',
         backgroundColor: Colors.orange,
         icon: Icons.warning,
       );
       return;
     }
-    String fullUrl = pdfUrl;
+
+    String fullUrl = pdfUrl.trim();
     if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
-      fullUrl = '$serverURL/${fullUrl.startsWith('/') ? fullUrl.substring(1) : fullUrl}';
+      final clean = fullUrl.startsWith('/') ? fullUrl.substring(1) : fullUrl;
+      fullUrl = '$serverURL/$clean';
     }
+
     final uri = Uri.parse(fullUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
+
+    try {
+      bool launched = false;
+      // 1. Coba externalApplication (PDF viewer bawaan / Google Drive PDF viewer / browser eksternal)
+      try {
+        launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {
+        launched = false;
+      }
+
+      // 2. Jika gagal, coba platformDefault
+      if (!launched) {
+        try {
+          launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+        } catch (_) {
+          launched = false;
+        }
+      }
+
+      // 3. Jika masih belum berhasil, buka di WebView internal (inAppBrowserView)
+      if (!launched) {
+        try {
+          launched = await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+        } catch (_) {
+          launched = false;
+        }
+      }
+
+      if (!launched) {
+        if (!mounted) return;
+        showCustomSnackbar(
+          context: context,
+          message: 'Tidak dapat membuka PDF di aplikasi. URL: $fullUrl',
+          backgroundColor: Colors.red,
+          icon: Icons.error,
+        );
+      }
+    } catch (e) {
       if (!mounted) return;
       showCustomSnackbar(
         context: context,
-        message: 'Tidak dapat membuka file PDF',
+        message: 'Gagal membuka PDF: $e',
         backgroundColor: Colors.red,
         icon: Icons.error,
       );
