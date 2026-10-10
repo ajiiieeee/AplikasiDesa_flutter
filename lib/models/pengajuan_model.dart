@@ -11,6 +11,8 @@ class PengajuanModel {
   final String? keteranganDitolak;
   final List<String> fotos;
   final String? nomorSurat;
+  final String? noRegistrasi;
+  final String? nomorSuratKeluar;
   final String? pdfUrl;
 
   PengajuanModel({
@@ -24,6 +26,8 @@ class PengajuanModel {
     this.keteranganDitolak,
     required this.fotos,
     this.nomorSurat,
+    this.noRegistrasi,
+    this.nomorSuratKeluar,
     this.pdfUrl,
   });
 
@@ -95,7 +99,19 @@ class PengajuanModel {
           '',
       keteranganDitolak: json['keterangan_ditolak']?.toString(),
       fotos: fotosList,
-      nomorSurat: json['nomor_surat']?.toString(),
+      nomorSurat: json['nomor_surat_keluar']?.toString() ??
+          json['no_registrasi']?.toString() ??
+          json['nomor_surat']?.toString(),
+      noRegistrasi: (json['no_registrasi'] != null &&
+              json['no_registrasi'] != '-' &&
+              json['no_registrasi'] != 'null')
+          ? json['no_registrasi'].toString()
+          : null,
+      nomorSuratKeluar: (json['nomor_surat_keluar'] != null &&
+              json['nomor_surat_keluar'] != '-' &&
+              json['nomor_surat_keluar'] != 'null')
+          ? json['nomor_surat_keluar'].toString()
+          : null,
       pdfUrl: _normalizeUrl(json['file_pdf_url'] ?? json['file_pdf']),
     );
   }

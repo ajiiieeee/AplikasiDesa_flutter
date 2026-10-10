@@ -194,10 +194,13 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
 
       if (res.statusCode == 201 || res.statusCode == 200) {
         if (!mounted) return;
+        final body = json.decode(res.body);
+        final noReg = body['no_registrasi']?.toString();
         showCustomSnackbar(
           context: context,
-          message:
-              'Pengajuan atas nama warga berhasil dibuat dan otomatis disetujui Kadus!',
+          message: noReg != null && noReg.isNotEmpty
+              ? 'Pengajuan berhasil dibuat! No. Reg: $noReg'
+              : 'Pengajuan atas nama warga berhasil dibuat dan otomatis disetujui Kadus!',
           backgroundColor: Colors.green,
           icon: Icons.check_circle,
         );

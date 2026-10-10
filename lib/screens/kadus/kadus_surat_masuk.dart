@@ -130,9 +130,13 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
 
       if (response.statusCode == 200) {
         if (!mounted) return;
+        final body = json.decode(response.body);
+        final noReg = body['no_registrasi']?.toString();
         showCustomSnackbar(
           context: context,
-          message: 'Pengajuan berhasil disetujui dan diteruskan ke Admin Desa.',
+          message: noReg != null && noReg.isNotEmpty
+              ? 'Pengajuan disetujui! No. Reg: $noReg'
+              : 'Pengajuan berhasil disetujui dan diteruskan ke Admin Desa.',
           backgroundColor: Colors.green,
           icon: Icons.check_circle,
         );
@@ -286,6 +290,8 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
                   _detailRow('Jenis Surat', item.namaSurat),
                   _detailRow('Nama Pemohon', item.namaPemohon),
                   _detailRow('NIK', item.nik),
+                  if (item.noRegistrasi != null)
+                    _detailRow('No. Registrasi', item.noRegistrasi!),
                   _detailRow('Tanggal Pengajuan', item.tanggalDiajukan),
                   _detailRow('Status Saat Ini', item.status),
                   _detailRow('Keperluan', item.keperluan),

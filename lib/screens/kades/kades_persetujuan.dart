@@ -142,11 +142,14 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         final pdfUrl = body['file_pdf_url']?.toString() ?? '';
+        final nomorSuratKeluar = body['nomor_surat_keluar']?.toString();
 
         if (!mounted) return;
         showCustomSnackbar(
           context: context,
-          message: 'Surat berhasil disahkan & PDF resmi diterbitkan!',
+          message: nomorSuratKeluar != null && nomorSuratKeluar.isNotEmpty
+              ? 'Surat disahkan! No: $nomorSuratKeluar'
+              : 'Surat berhasil disahkan & PDF resmi diterbitkan!',
           backgroundColor: Colors.green,
           icon: Icons.check_circle,
         );
@@ -157,8 +160,11 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
           final openPdf = await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
-              title: Text('PDF Berhasil Dibuat', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-              content: Text('Surat resmi telah diterbitkan. Apakah Anda ingin membuka file PDF?',
+              title: Text('PDF Berhasil Diterbitkan', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              content: Text(
+                  nomorSuratKeluar != null && nomorSuratKeluar.isNotEmpty
+                      ? 'Surat resmi telah diterbitkan dengan Nomor:\n$nomorSuratKeluar\n\nApakah Anda ingin membuka file PDF?'
+                      : 'Surat resmi telah diterbitkan. Apakah Anda ingin membuka file PDF?',
                   style: GoogleFonts.poppins(fontSize: 13)),
               actions: [
                 TextButton(
@@ -174,7 +180,10 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
             ),
           );
           if (openPdf == true) {
-            final uri = Uri.parse('$serverURL/$pdfUrl');
+            final fullUrl = (pdfUrl.startsWith('http://') || pdfUrl.startsWith('https://'))
+                ? pdfUrl
+                : '$serverURL/${pdfUrl.startsWith('/') ? pdfUrl.substring(1) : pdfUrl}';
+            final uri = Uri.parse(fullUrl);
             if (await canLaunchUrl(uri)) {
               await launchUrl(uri, mode: LaunchMode.externalApplication);
             }
@@ -320,9 +329,13 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                   const SizedBox(height: 16),
                   _detailRow('A. Nama Pemohon', '${item.namaPemohon} (NIK: ${item.nik})'),
                   _detailRow('B. Jenis Surat', item.namaSurat),
+                  if (item.noRegistrasi != null)
+                    _detailRow('No. Registrasi Kasun', item.noRegistrasi!),
+                  if (item.nomorSuratKeluar != null)
+                    _detailRow('No. Surat Keluar (TTE)', item.nomorSuratKeluar!),
                   _detailRow('Tanggal Pengajuan', item.tanggalDiajukan),
                   _detailRow('Keperluan', item.keperluan),
-                  _detailRow('C. Status Verifikasi', 'Telah disetujui Admin & Sekretaris Desa'),
+                  _detailRow('C. Status Verifikasi', item.status == 'Selesai' ? 'Selesai (Telah Ditandatangani TTE Kades)' : 'Telah disetujui Admin & Sekretaris Desa'),
                   const SizedBox(height: 14),
                   Text('E. Timeline Persetujuan:',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF263238))),

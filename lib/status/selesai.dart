@@ -183,6 +183,29 @@ class _DisetujuiViewState extends State<DisetujuiView> {
                               ),
                             ],
                           ),
+                          if (item.nomorSurat != null && item.nomorSurat!.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Nomor Surat:',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                Text(
+                                  item.nomorSurat!,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF1B5E20),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: 8),
                           Container(
                             padding: const EdgeInsets.all(10),

@@ -3,6 +3,7 @@ class StatusSelesaiModel {
   final String namaSurat;
   final String updatedAt;
   final String status;
+  final String? nomorSurat;
   final String? filePdf; // nullable: URL PDF dari backend
 
   StatusSelesaiModel({
@@ -10,6 +11,7 @@ class StatusSelesaiModel {
     required this.namaSurat,
     required this.updatedAt,
     required this.status,
+    this.nomorSurat,
     this.filePdf,
   });
 
@@ -19,6 +21,7 @@ class StatusSelesaiModel {
       namaSurat: json['nama_surat']?.toString() ?? 'Tidak diketahui',
       updatedAt: json['updated_at']?.toString() ?? '-',
       status: json['status']?.toString() ?? 'Selesai',
+      nomorSurat: json['nomor_surat_keluar']?.toString() ?? json['no_registrasi']?.toString(),
       filePdf: json['file_pdf_url']?.toString() ?? json['file_pdf']?.toString(),
     );
   }
