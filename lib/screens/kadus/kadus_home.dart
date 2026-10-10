@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/globals.dart';
+import '../../services/secure_storage_service.dart';
 import '../../widgets/bottom_navbar.dart';
 import '../info_profile.dart';
 import '../notifikasi.dart';
@@ -57,8 +58,9 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
 
   Future<void> _fetchDashboardData() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
+      final token = await SecureStorageService.instance.getToken() ??
+          (await SharedPreferences.getInstance()).getString('token') ??
+          '';
 
       final response = await http.get(
         Uri.parse('$baseURL/kadus/dashboard'),

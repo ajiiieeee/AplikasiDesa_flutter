@@ -5,8 +5,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/globals.dart';
 import '../../models/pengajuan_model.dart';
+import '../../services/secure_storage_service.dart';
 import '../../widgets/snackbarcustom.dart';
 import '../../widgets/timeline_widget.dart';
+import '../../widgets/lampiran_foto_widget.dart';
 
 class SekdesPersetujuanScreen extends StatefulWidget {
   const SekdesPersetujuanScreen({super.key});
@@ -41,8 +43,9 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
   }
 
   Future<Map<String, String>> _getAuthHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
+    final token = await SecureStorageService.instance.getToken() ??
+        (await SharedPreferences.getInstance()).getString('token') ??
+        '';
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -63,8 +66,10 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
       final List data = body['data'] ?? [];
       final list = data.map((item) => PengajuanModel.fromJson(item)).toList();
       return list.where((item) => item.status == 'Disetujui Admin' || item.status.isEmpty).toList();
+    } else if (response.statusCode == 401) {
+      throw Exception('Sesi telah berakhir, silakan login kembali');
     } else {
-      throw Exception('Gagal memuat data surat persetujuan Sekdes');
+      throw Exception('Gagal memuat data surat persetujuan Sekdes (${response.statusCode})');
     }
   }
 
@@ -81,8 +86,10 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
       final List data = body['data'] ?? [];
       final list = data.map((item) => PengajuanModel.fromJson(item)).toList();
       return list.where((item) => item.status == 'Disetujui Sekretaris Desa' || item.status == 'Selesai').toList();
+    } else if (response.statusCode == 401) {
+      throw Exception('Sesi telah berakhir, silakan login kembali');
     } else {
-      throw Exception('Gagal memuat data surat diproses');
+      throw Exception('Gagal memuat data surat diproses (${response.statusCode})');
     }
   }
 
@@ -283,40 +290,11 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
                   const SizedBox(height: 8),
                   SuratTimelineWidget(status: item.status.isEmpty ? 'Disetujui Admin' : item.status),
                   const SizedBox(height: 14),
-                  if (item.fotos.isNotEmpty) ...[
-                    Text(
-                      'D. Lampiran Persyaratan:',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF263238)),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 110,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: item.fotos.length,
-                        itemBuilder: (context, fIndex) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                item.fotos[fIndex],
-                                width: 110,
-                                height: 110,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  width: 110,
-                                  height: 110,
-                                  color: Colors.grey[200],
-                                  child: const Icon(Icons.broken_image, color: Colors.grey),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                  const SizedBox(height: 14),
+                  LampiranFotoWidget(
+                    fotos: item.fotos,
+                    title: 'D. Lampiran Berkas / Foto Pemohon',
+                  ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,

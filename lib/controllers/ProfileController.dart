@@ -44,10 +44,23 @@ Future<void> getProfilFromApi(BuildContext context) async {
       }
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('no_kk', data['no_kk'] ?? '');
-      await prefs.setString('nama_lengkap', data['nama_lengkap'] ?? '');
-      await prefs.setString('no_hp', data['no_hp'] ?? '');
-      await prefs.setString('email', data['email'] ?? '');
+      if (data['nik'] != null && data['nik'].toString().isNotEmpty) {
+        await prefs.setString('nik', data['nik'].toString());
+      }
+      await prefs.setString('no_kk', (data['no_kk'] ?? '').toString());
+      await prefs.setString('nama_lengkap', (data['nama_lengkap'] ?? '').toString());
+      await prefs.setString('dusun', (data['dusun'] ?? '').toString());
+      if (data['alamat'] != null && data['alamat'].toString().isNotEmpty) {
+        await prefs.setString('alamat', data['alamat'].toString());
+      }
+      if (data['rt'] != null && data['rt'].toString().isNotEmpty) {
+        await prefs.setString('rt', data['rt'].toString());
+      }
+      if (data['rw'] != null && data['rw'].toString().isNotEmpty) {
+        await prefs.setString('rw', data['rw'].toString());
+      }
+      await prefs.setString('no_hp', (data['no_hp'] ?? '').toString());
+      await prefs.setString('email', (data['email'] ?? '').toString());
       await prefs.setString('foto_profil', fotoProfilUrl);
     }
   } catch (e) {

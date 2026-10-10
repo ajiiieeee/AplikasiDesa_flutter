@@ -20,6 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _nama = '';
   String _nik = '';
+  String _dusun = '';
   String _noHp = '';
   String _fotoProfil = '';
 
@@ -34,6 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final nik = prefs.getString('nik') ?? 'Belum diatur';
     final nama = prefs.getString('nama_lengkap') ?? 'Belum diatur';
+    final dusun = prefs.getString('dusun') ?? 'Belum diatur';
     final noHP = prefs.getString('no_hp') ?? 'Belum diatur';
     String fotoProfil = prefs.getString('foto_profil') ?? '';
 
@@ -59,6 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     print('===== Data Profil dari SharedPreferences =====');
     print('NIK: $nik');
     print('Nama: $nama');
+    print('Dusun: $dusun');
     print('No HP: $noHP');
     print('Foto Profil: $fotoProfil');
     print('=============================================');
@@ -68,6 +71,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _nik = nik;
       _nama = nama;
+      _dusun = dusun;
       _noHp = noHP;
       _fotoProfil = fotoProfil;
     });
@@ -258,6 +262,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(width: 6),
                           Text(
                             _nik,
+                            style: GoogleFonts.poppins(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: <Widget>[
+                          const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                          const SizedBox(width: 6),
+                          Text(
+                            _dusun,
                             style: GoogleFonts.poppins(color: Colors.grey),
                           ),
                         ],

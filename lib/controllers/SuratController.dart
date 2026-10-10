@@ -23,10 +23,40 @@ Future<Map<String, dynamic>?> fetchUserData() async {
     if (response.statusCode == 200) {
       final responseBody = response.body;
       final data = json.decode(responseBody)['data'];
-      return data;
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+    } else {
+      print('⚠️ /getdata status ${response.statusCode}, mencoba fallback ke /getprofil...');
+    }
+
+    // Fallback: panggil /getprofil jika /getdata bermasalah
+    final fallbackRes = await http.get(
+      Uri.parse('$baseURL/getprofil'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (fallbackRes.statusCode == 200) {
+      final pData = json.decode(fallbackRes.body)['data'];
+      if (pData is Map<String, dynamic>) {
+        return {
+          'nama': pData['nama_lengkap'] ?? '',
+          'nama_lengkap': pData['nama_lengkap'] ?? '',
+          'nik': pData['nik'] ?? '',
+          'no_kk': pData['no_kk'] ?? '',
+          'dusun': pData['dusun'] ?? '',
+          'alamat': pData['alamat'] ?? '',
+          'rt': pData['rt'] ?? '',
+          'rw': pData['rw'] ?? '',
+        };
+      }
     }
   } catch (e) {
-    // silent fail
+    print('❌ Error fetchUserData: $e');
   }
 
   return null;

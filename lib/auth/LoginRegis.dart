@@ -27,8 +27,10 @@ class _LoginregisState extends State<Loginregis> {
   final loginPasswordController = TextEditingController();
 
   Future<void> simpanStatusLogin(String token) async {
-    // Token disimpan di SecureStorage (terenkripsi)
+    // Simpan ke SecureStorage dan SharedPreferences untuk kompatibilitas penuh
     await SecureStorageService.instance.saveToken(token);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
   }
 
 
@@ -85,7 +87,9 @@ class _LoginregisState extends State<Loginregis> {
           return;
         }
 
-        await _saveUserData(namaPengguna, nikPengguna);
+        final String dusunPengguna = data['dusun']?.toString() ?? '-';
+
+        await _saveUserData(namaPengguna, nikPengguna, dusun: dusunPengguna);
         await _saveRoleData(roleName, level);
 
         if (token != null) {
@@ -164,16 +168,22 @@ class _LoginregisState extends State<Loginregis> {
   }
 
 
-  Future<void> _saveUserData(String nama, String nik) async {
-    // Nama disimpan di SharedPreferences (non-sensitif)
+  Future<void> _saveUserData(String nama, String nik, {String dusun = '-'}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('nama', nama);
-    // NIK disimpan di SecureStorage (sensitif)
+    await prefs.setString('nama_lengkap', nama);
+    await prefs.setString('nik', nik);
+    if (dusun.isNotEmpty) {
+      await prefs.setString('dusun', dusun);
+    }
     await SecureStorageService.instance.saveNik(nik);
   }
 
   Future<void> _saveRoleData(String roleName, int level) async {
-    // Role & level disimpan di SecureStorage (sensitif)
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('role', roleName);
+    await prefs.setString('role_name', roleName);
+    await prefs.setInt('level', level);
     await SecureStorageService.instance.saveRole(roleName, level);
   }
 

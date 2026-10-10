@@ -5,8 +5,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/globals.dart';
 import '../../models/pengajuan_model.dart';
+import '../../services/secure_storage_service.dart';
 import '../info_profile.dart';
 import '../notifikasi.dart';
+import '../../widgets/lampiran_foto_widget.dart';
 
 class SekdesHomeScreen extends StatefulWidget {
   const SekdesHomeScreen({super.key});
@@ -59,8 +61,9 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
 
   Future<void> _fetchDashboardData() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
+      final token = await SecureStorageService.instance.getToken() ??
+          (await SharedPreferences.getInstance()).getString('token') ??
+          '';
 
       final response = await http.get(
         Uri.parse('$baseURL/sekdes/dashboard'),
@@ -95,8 +98,9 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
 
   Future<void> _fetchSuratTerbaru() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
+      final token = await SecureStorageService.instance.getToken() ??
+          (await SharedPreferences.getInstance()).getString('token') ??
+          '';
 
       final response = await http.get(
         Uri.parse('$baseURL/sekdes/suratmasuk'),
@@ -140,60 +144,71 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Detail Pengajuan Terbaru',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF263238),
-                ),
-              ),
-              const SizedBox(height: 16),
-              _detailRow('Jenis Surat', item.namaSurat),
-              _detailRow('Nama Pemohon', item.namaPemohon),
-              _detailRow('NIK', item.nik),
-              _detailRow('Tanggal Pengajuan', item.tanggalDiajukan),
-              _detailRow('Status', item.status),
-              _detailRow('Keperluan', item.keperluan),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF16A34A),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.all(20),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                   ),
-                  child: Text(
-                    'Tutup',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Detail Pengajuan Terbaru',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF263238),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  _detailRow('Jenis Surat', item.namaSurat),
+                  _detailRow('Nama Pemohon', item.namaPemohon),
+                  _detailRow('NIK', item.nik),
+                  _detailRow('Tanggal Pengajuan', item.tanggalDiajukan),
+                  _detailRow('Status', item.status),
+                  _detailRow('Keperluan', item.keperluan),
+                  const SizedBox(height: 12),
+                  LampiranFotoWidget(
+                    fotos: item.fotos,
+                    title: 'Foto Berkas / Lampiran Pemohon',
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF16A34A),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        'Tutup',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

@@ -18,6 +18,7 @@ class _DetailProfileState extends State<DetailProfile> {
   final TextEditingController nameController  = TextEditingController();
   final TextEditingController nikController   = TextEditingController();
   final TextEditingController kkController    = TextEditingController();
+  final TextEditingController dusunController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   bool isLoading = false;
@@ -34,6 +35,7 @@ class _DetailProfileState extends State<DetailProfile> {
       nameController.text  = prefs.getString('nama_lengkap') ?? '-';
       nikController.text   = prefs.getString('nik')          ?? '-';
       kkController.text    = prefs.getString('no_kk')        ?? '-';
+      dusunController.text = prefs.getString('dusun')        ?? '-';
       phoneController.text = prefs.getString('no_hp')        ?? '-';
       emailController.text = prefs.getString('email')        ?? '-';
     });
@@ -66,9 +68,10 @@ class _DetailProfileState extends State<DetailProfile> {
               title: 'Data Kependudukan',
               icon: Icons.badge_outlined,
               children: [
-                _buildTextField('NIK',              nikController,  readOnly: true),
-                _buildTextField('No. Kartu Keluarga', kkController, readOnly: true),
-                _buildTextField('Nama Lengkap',     nameController, readOnly: true),
+                _buildTextField('NIK',                nikController,   readOnly: true),
+                _buildTextField('No. Kartu Keluarga', kkController,    readOnly: true),
+                _buildTextField('Nama Lengkap',       nameController,  readOnly: true),
+                _buildTextField('Dusun',              dusunController, readOnly: true),
               ],
             ),
 

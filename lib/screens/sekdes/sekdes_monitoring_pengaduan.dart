@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/globals.dart';
 import '../../models/pengaduan_model.dart';
+import '../../services/secure_storage_service.dart';
 
 class SekdesMonitoringPengaduanScreen extends StatefulWidget {
   const SekdesMonitoringPengaduanScreen({super.key});
@@ -23,8 +24,9 @@ class _SekdesMonitoringPengaduanScreenState extends State<SekdesMonitoringPengad
   }
 
   Future<List<PengaduanModel>> _fetchPengaduan() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
+    final token = await SecureStorageService.instance.getToken() ??
+        (await SharedPreferences.getInstance()).getString('token') ??
+        '';
 
     final response = await http.get(
       Uri.parse('$baseURL/sekdes/pengaduan'),
@@ -39,8 +41,10 @@ class _SekdesMonitoringPengaduanScreenState extends State<SekdesMonitoringPengad
       final body = json.decode(response.body);
       final List data = body['data'] ?? [];
       return data.map((item) => PengaduanModel.fromJson(item)).toList();
+    } else if (response.statusCode == 401) {
+      throw Exception('Sesi telah berakhir, silakan login kembali');
     } else {
-      throw Exception('Gagal memuat data pengaduan masyarakat');
+      throw Exception('Gagal memuat data pengaduan masyarakat (${response.statusCode})');
     }
   }
 

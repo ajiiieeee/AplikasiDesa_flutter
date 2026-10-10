@@ -7,6 +7,7 @@ import '../../models/pengajuan_model.dart';
 import '../../services/secure_storage_service.dart';
 import '../../widgets/snackbarcustom.dart';
 import '../../widgets/timeline_widget.dart';
+import '../../widgets/lampiran_foto_widget.dart';
 
 class KadusSuratMasukScreen extends StatefulWidget {
   final int initialTabIndex;
@@ -289,44 +290,11 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
                   _detailRow('Status Saat Ini', item.status),
                   _detailRow('Keperluan', item.keperluan),
                   const SizedBox(height: 16),
-                  if (item.fotos.isNotEmpty) ...[
-                    Text(
-                      'Lampiran Berkas Persyaratan:',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: const Color(0xFF263238),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 120,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: item.fotos.length,
-                        itemBuilder: (context, fIndex) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                item.fotos[fIndex],
-                                width: 120,
-                                height: 120,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  width: 120,
-                                  height: 120,
-                                  color: Colors.grey[200],
-                                  child: const Icon(Icons.broken_image, color: Colors.grey),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                  const SizedBox(height: 12),
+                  LampiranFotoWidget(
+                    fotos: item.fotos,
+                    title: 'Foto Berkas / Lampiran Pemohon',
+                  ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,

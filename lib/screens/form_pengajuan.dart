@@ -10,6 +10,7 @@ import '../config/globals.dart';
 import '../controllers/SuratController.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/secure_storage_service.dart';
 
 // ── Model foto: simpan XFile + preview bytes ──────────────────────────────────
@@ -121,20 +122,73 @@ class _FormPengajuan extends State<FormPengajuan> {
     }
   }
 
-  // ── Load data warga dari API /getdata ─────────────────────────────────────
+  // ── Load data warga: instant dari local cache lalu enrich dari API ─────────
   Future<void> _loadUserData() async {
-    final data = await fetchUserData();
-    if (data != null) {
-      setState(() {
-        noKkController.text         = data['no_kk']         ?? '';
-        nikController.text          = data['nik']           ?? '';
-        namaController.text         = data['nama']          ?? '';
-        tanggalLahirController.text = data['tanggal_lahir'] ?? '';
-        jkController.text           = data['jk']            ?? '';
-        alamatController.text       = data['alamat']        ?? '';
-        rtController.text           = data['rt']            ?? '';
-        rwController.text           = data['rw']            ?? '';
-      });
+    // 1. Load instant dari SharedPreferences & SecureStorage agar form tidak pernah kosong
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedNik = prefs.getString('nik') ?? await SecureStorageService.instance.getNik() ?? '';
+      final cachedNama = prefs.getString('nama_lengkap') ?? prefs.getString('nama') ?? '';
+      final cachedNoKk = prefs.getString('no_kk') ?? '';
+      final cachedAlamat = prefs.getString('alamat') ?? '';
+      final cachedRt = prefs.getString('rt') ?? '';
+      final cachedRw = prefs.getString('rw') ?? '';
+      final cachedTglLahir = prefs.getString('tanggal_lahir') ?? '';
+      final cachedJk = prefs.getString('jk') ?? prefs.getString('jenis_kelamin') ?? '';
+
+      if (mounted) {
+        setState(() {
+          if (nikController.text.isEmpty && cachedNik.isNotEmpty) nikController.text = cachedNik;
+          if (namaController.text.isEmpty && cachedNama.isNotEmpty) namaController.text = cachedNama;
+          if (noKkController.text.isEmpty && cachedNoKk.isNotEmpty) noKkController.text = cachedNoKk;
+          if (alamatController.text.isEmpty && cachedAlamat.isNotEmpty) alamatController.text = cachedAlamat;
+          if (rtController.text.isEmpty && cachedRt.isNotEmpty) rtController.text = cachedRt;
+          if (rwController.text.isEmpty && cachedRw.isNotEmpty) rwController.text = cachedRw;
+          if (tanggalLahirController.text.isEmpty && cachedTglLahir.isNotEmpty) tanggalLahirController.text = cachedTglLahir;
+          if (jkController.text.isEmpty && cachedJk.isNotEmpty) jkController.text = cachedJk;
+        });
+      }
+    } catch (e) {
+      print('⚠️ Error loading local cache: $e');
+    }
+
+    // 2. Fetch data lengkap terbaru dari backend API (/getdata atau fallback /getprofil)
+    try {
+      final data = await fetchUserData();
+      if (data != null && mounted) {
+        final prefs = await SharedPreferences.getInstance();
+        setState(() {
+          final noKk = (data['no_kk'] ?? '').toString();
+          final nik = (data['nik'] ?? '').toString();
+          final nama = (data['nama'] ?? data['nama_lengkap'] ?? '').toString();
+          final tglLahir = (data['tanggal_lahir'] ?? data['tanggalLahir'] ?? '').toString();
+          final jk = (data['jk'] ?? data['jenis_kelamin'] ?? '').toString();
+          final alamat = (data['alamat'] ?? '').toString();
+          final rt = (data['rt'] ?? '').toString();
+          final rw = (data['rw'] ?? '').toString();
+
+          if (noKk.isNotEmpty) noKkController.text = noKk;
+          if (nik.isNotEmpty) nikController.text = nik;
+          if (nama.isNotEmpty) namaController.text = nama;
+          if (tglLahir.isNotEmpty) tanggalLahirController.text = tglLahir;
+          if (jk.isNotEmpty) jkController.text = jk;
+          if (alamat.isNotEmpty) alamatController.text = alamat;
+          if (rt.isNotEmpty) rtController.text = rt;
+          if (rw.isNotEmpty) rwController.text = rw;
+        });
+
+        // Simpan ke SharedPreferences untuk dipakai seterusnya
+        if (noKkController.text.isNotEmpty) await prefs.setString('no_kk', noKkController.text);
+        if (nikController.text.isNotEmpty) await prefs.setString('nik', nikController.text);
+        if (namaController.text.isNotEmpty) await prefs.setString('nama_lengkap', namaController.text);
+        if (alamatController.text.isNotEmpty) await prefs.setString('alamat', alamatController.text);
+        if (rtController.text.isNotEmpty) await prefs.setString('rt', rtController.text);
+        if (rwController.text.isNotEmpty) await prefs.setString('rw', rwController.text);
+        if (tanggalLahirController.text.isNotEmpty) await prefs.setString('tanggal_lahir', tanggalLahirController.text);
+        if (jkController.text.isNotEmpty) await prefs.setString('jk', jkController.text);
+      }
+    } catch (e) {
+      print('⚠️ Error fetching user data from API: $e');
     }
   }
 
@@ -194,28 +248,31 @@ class _FormPengajuan extends State<FormPengajuan> {
     request.fields['keterangan']       = keperluan;
     request.fields['tanggal_diajukan'] = DateTime.now().toIso8601String();
 
-    // Berkas persyaratan
-    for (int i = 0; i < uploadedFiles.length; i++) {
-      final item = uploadedFiles[i];
-      if (item != null) {
+    // Berkas persyaratan & foto bukti tambahan
+    int fotoIndex = 1;
+    for (final item in uploadedFiles.values) {
+      if (item != null && fotoIndex <= 8) {
         final bytes = item.bytes ?? await item.xfile.readAsBytes();
         request.files.add(http.MultipartFile.fromBytes(
-          'foto${i + 1}',
+          'foto$fotoIndex',
           bytes,
           filename: item.xfile.name,
         ));
+        fotoIndex++;
       }
     }
 
-    // Foto bukti tambahan
     for (int i = 0; i < buktiPhotos.length; i++) {
-      final item = buktiPhotos[i];
-      final bytes = item.bytes ?? await item.xfile.readAsBytes();
-      request.files.add(http.MultipartFile.fromBytes(
-        'bukti${i + 1}',
-        bytes,
-        filename: item.xfile.name,
-      ));
+      if (fotoIndex <= 8) {
+        final item = buktiPhotos[i];
+        final bytes = item.bytes ?? await item.xfile.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes(
+          'foto$fotoIndex',
+          bytes,
+          filename: item.xfile.name,
+        ));
+        fotoIndex++;
+      }
     }
 
     try {

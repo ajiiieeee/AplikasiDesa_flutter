@@ -29,6 +29,7 @@ class _InfoProfileState extends State<InfoProfile> {
   String _nik       = '';
   String _noKK      = '';
   String _nama      = '';
+  String _dusun     = '';
   String _noHP      = '';
   String _email     = '';
   String _fotoProfil = '';
@@ -50,6 +51,7 @@ class _InfoProfileState extends State<InfoProfile> {
     final nik   = prefs.getString('nik')          ?? '-';
     final noKK  = prefs.getString('no_kk')        ?? '-';
     final nama  = prefs.getString('nama_lengkap') ?? '-';
+    final dusun = prefs.getString('dusun')        ?? '-';
     final noHP  = prefs.getString('no_hp')        ?? '-';
     final email = prefs.getString('email')        ?? '-';
 
@@ -71,6 +73,7 @@ class _InfoProfileState extends State<InfoProfile> {
       _nik       = nik;
       _noKK      = noKK;
       _nama      = nama;
+      _dusun     = dusun;
       _noHP      = noHP;
       _email     = email;
       _fotoProfil = fotoProfil;
@@ -324,15 +327,17 @@ class _InfoProfileState extends State<InfoProfile> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          _infoRow(Icons.badge_outlined,      'NIK',            _nik),
+                          _infoRow(Icons.badge_outlined,        'NIK',            _nik),
                           _divider(),
-                          _infoRow(Icons.family_restroom,     'No. KK',         _noKK),
+                          _infoRow(Icons.family_restroom,       'No. KK',         _noKK),
                           _divider(),
-                          _infoRow(Icons.person_outline,      'Nama Lengkap',   _nama),
+                          _infoRow(Icons.person_outline,        'Nama Lengkap',   _nama),
                           _divider(),
-                          _infoRow(Icons.phone_outlined,      'No. Handphone',  _noHP),
+                          _infoRow(Icons.location_on_outlined,  'Dusun',          _dusun),
                           _divider(),
-                          _infoRow(Icons.email_outlined,      'E-Mail',         _email),
+                          _infoRow(Icons.phone_outlined,        'No. Handphone',  _noHP),
+                          _divider(),
+                          _infoRow(Icons.email_outlined,        'E-Mail',         _email),
                         ],
                       ),
                     ),
