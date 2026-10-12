@@ -294,7 +294,7 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
                     _detailRow('No. Registrasi', item.noRegistrasi!),
                   _detailRow('Tanggal Pengajuan', item.tanggalDiajukan),
                   _detailRow('Status Saat Ini', item.status),
-                  _detailRow('Keperluan', item.keperluan),
+                  _detailRow(item.isApprovedByAdmin ? 'Keterangan' : 'Keperluan', item.keteranganDisplay),
                   const SizedBox(height: 16),
                   const SizedBox(height: 12),
                   LampiranFotoWidget(
@@ -500,7 +500,7 @@ class _KadusSuratMasukScreenState extends State<KadusSuratMasukScreen> with Sing
                         children: [
                           _rowInfo('Pemohon:', item.namaPemohon),
                           _rowInfo('NIK:', item.nik),
-                          _rowInfo('Keperluan:', item.keperluan),
+                          _rowInfo(item.isApprovedByAdmin ? 'Keterangan:' : 'Keperluan:', item.keteranganDisplay),
                           _rowInfo('Tanggal:', item.tanggalDiajukan),
                           _rowInfo('Status:', item.status.isEmpty ? 'Diajukan' : item.status),
 

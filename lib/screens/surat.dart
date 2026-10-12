@@ -124,9 +124,8 @@ class _SuratScreenState extends State<SuratScreen> {
     final String deskripsi = (surat['keterangan'] != null && surat['keterangan'].toString().isNotEmpty)
         ? surat['keterangan'].toString()
         : (surat['persyaratan'] ?? surat['slug'] ?? 'Persyaratan pengajuan surat desa.');
-    final int idSurat = (surat['id_surat'] is int)
-        ? surat['id_surat']
-        : int.tryParse(surat['id_surat'].toString()) ?? 0;
+    // Dukung id_surat numerik (1,2,3) maupun format string (S2026-001)
+    final String idSurat = surat['id_surat']?.toString() ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -148,10 +147,11 @@ class _SuratScreenState extends State<SuratScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
           onTap: () {
+            if (idSurat.isEmpty) return; // jangan navigasi jika ID kosong
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => FormPengajuan(idSurat: idSurat.toString()),
+                builder: (context) => FormPengajuan(idSurat: idSurat),
               ),
             );
           },

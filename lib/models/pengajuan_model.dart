@@ -7,6 +7,7 @@ class PengajuanModel {
   final String nik;
   final String status;
   final String keperluan;
+  final String? keteranganAdmin;
   final String tanggalDiajukan;
   final String? keteranganDitolak;
   final List<String> fotos;
@@ -22,6 +23,7 @@ class PengajuanModel {
     required this.nik,
     required this.status,
     required this.keperluan,
+    this.keteranganAdmin,
     required this.tanggalDiajukan,
     this.keteranganDitolak,
     required this.fotos,
@@ -90,6 +92,7 @@ class PengajuanModel {
     final String? cleanNomorSuratKeluar = _cleanString(json['nomor_surat_keluar']);
     final String? cleanNoRegistrasi = _cleanString(json['no_registrasi']);
     final String? cleanNomorSurat = _cleanString(json['nomor_surat']);
+    final String? cleanKeteranganAdmin = _cleanString(json['keterangan_admin']);
 
     return PengajuanModel(
       idPengajuan: int.tryParse(json['id_pengajuan'].toString()) ?? 0,
@@ -105,6 +108,7 @@ class PengajuanModel {
       keperluan: json['keperluan']?.toString() ??
           json['keterangan']?.toString() ??
           '',
+      keteranganAdmin: cleanKeteranganAdmin,
       tanggalDiajukan: json['tanggal_diajukan']?.toString() ??
           json['created_at']?.toString() ??
           '',
@@ -115,5 +119,30 @@ class PengajuanModel {
       nomorSuratKeluar: cleanNomorSuratKeluar,
       pdfUrl: _normalizeUrl(json['file_pdf_url'] ?? json['file_pdf']),
     );
+  }
+
+  /// Memeriksa apakah surat sudah disetujui oleh admin atau telah berada di tahap Sekdes/Kades/Selesai.
+  bool get isApprovedByAdmin {
+    final s = status.trim().toLowerCase();
+    return s == 'disetujui admin' ||
+        s == 'disetujui sekretaris desa' ||
+        s == 'disetujui sekdes' ||
+        s == 'selesai';
+  }
+
+  /// Sumber keterangan konsisten sesuai ketentuan alur persetujuan:
+  /// - Sebelum disetujui admin: gunakan [keperluan].
+  /// - Begitu disetujui admin (dan pada role Sekdes, Kades, hingga Selesai):
+  ///   gunakan [keteranganAdmin].
+  /// - Jika [keteranganAdmin] null atau kosong setelah disetujui admin,
+  ///   tangani secara aman (kembalikan '-') tanpa otomatis kembali ke [keperluan].
+  String get keteranganDisplay {
+    if (isApprovedByAdmin) {
+      if (keteranganAdmin != null && keteranganAdmin!.isNotEmpty && keteranganAdmin != 'null') {
+        return keteranganAdmin!;
+      }
+      return '-';
+    }
+    return keperluan;
   }
 }

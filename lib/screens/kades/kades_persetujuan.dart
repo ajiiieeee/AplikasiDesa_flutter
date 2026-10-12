@@ -329,7 +329,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                   if (item.nomorSuratKeluar != null)
                     _detailRow('No. Surat Keluar (TTE)', item.nomorSuratKeluar!),
                   _detailRow('Tanggal Pengajuan', item.tanggalDiajukan),
-                  _detailRow('Keperluan', item.keperluan),
+                  _detailRow('Keterangan', item.keteranganDisplay),
                   _detailRow('C. Status Verifikasi', item.status == 'Selesai' ? 'Selesai (Telah Ditandatangani TTE Kades)' : 'Telah disetujui Admin & Sekretaris Desa'),
                   const SizedBox(height: 14),
                   Text('E. Timeline Persetujuan:',
@@ -558,7 +558,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                         children: [
                           _rowInfo('Pemohon:', item.namaPemohon),
                           _rowInfo('NIK:', item.nik),
-                          _rowInfo('Keperluan:', item.keperluan),
+                          _rowInfo('Keterangan:', item.keteranganDisplay),
                           _rowInfo('Tanggal:', item.tanggalDiajukan),
                           if (item.noRegistrasi != null && item.noRegistrasi!.isNotEmpty)
                             _rowInfo('No. Registrasi:', item.noRegistrasi!),
@@ -690,6 +690,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                           _rowInfo('Pemohon:', item.namaPemohon),
                           _rowInfo('NIK:', item.nik),
                           _rowInfo('Jenis Surat:', item.namaSurat),
+                          _rowInfo('Keterangan:', item.keteranganDisplay),
                           _rowInfo('Tgl. Pengajuan:', item.tanggalDiajukan),
                           if (item.nomorSuratKeluar != null && item.nomorSuratKeluar!.isNotEmpty)
                             _rowInfo('No. Surat Final:', item.nomorSuratKeluar!)

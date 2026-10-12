@@ -280,7 +280,7 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
                   _detailRow('A. Data Pemohon', '${item.namaPemohon} (NIK: ${item.nik})'),
                   _detailRow('B. Data Surat', item.namaSurat),
                   _detailRow('Tanggal Pengajuan', item.tanggalDiajukan),
-                  _detailRow('Keperluan', item.keperluan),
+                  _detailRow('Keterangan', item.keteranganDisplay),
                   _detailRow('C. Verifikasi Admin', 'Telah disetujui & diverifikasi oleh Admin Desa'),
                   const SizedBox(height: 14),
                   Text(
@@ -494,7 +494,7 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
                         children: [
                           _rowInfo('Pemohon:', item.namaPemohon),
                           _rowInfo('NIK:', item.nik),
-                          _rowInfo('Keperluan:', item.keperluan),
+                          _rowInfo('Keterangan:', item.keteranganDisplay),
                           _rowInfo('Tanggal:', item.tanggalDiajukan),
                           _rowInfo('Status:', isApprovalTab ? 'Disetujui Admin' : 'Disetujui Sekretaris Desa (Menunggu TTE Kades)'),
 

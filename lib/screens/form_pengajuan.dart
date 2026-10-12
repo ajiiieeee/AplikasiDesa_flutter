@@ -432,14 +432,15 @@ class _FormPengajuan extends State<FormPengajuan> {
               title: 'Keterangan Pengajuan',
               icon: Icons.description_outlined,
               children: [
-                if (suratData != null)
-                  _fieldEditable(
-                    suratData?['keterangan'] ?? 'Keterangan / Keperluan',
-                    keteranganController,
-                    primary: primary,
-                    primaryLight: primaryLight,
-                    maxLines: 4,
-                  ),
+                _fieldEditable(
+                  suratData?['keterangan'] != null && suratData!['keterangan'].toString().isNotEmpty
+                      ? suratData!['keterangan'].toString()
+                      : 'Keterangan / Keperluan Surat',
+                  keteranganController,
+                  primary: primary,
+                  primaryLight: primaryLight,
+                  maxLines: 4,
+                ),
               ],
             ),
 

@@ -183,7 +183,7 @@ class _KadesHomeScreenState extends State<KadesHomeScreen> {
                   _detailRow('NIK', item.nik),
                   _detailRow('Tanggal', item.tanggalDiajukan),
                   _detailRow('Status', item.status),
-                  _detailRow('Keperluan', item.keperluan),
+                  _detailRow(item.isApprovedByAdmin ? 'Keterangan' : 'Keperluan', item.keteranganDisplay),
                   const SizedBox(height: 12),
                   LampiranFotoWidget(
                     fotos: item.fotos,
