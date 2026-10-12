@@ -53,7 +53,7 @@ class LupaPassword extends StatelessWidget {
                         ],
                       ),
                       child: const Icon(
-                        Icons.phonelink_lock_rounded,
+                        Icons.mark_email_read_rounded,
                         size: 48,
                         color: primaryGreen,
                       ),
@@ -70,7 +70,7 @@ class LupaPassword extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Masukkan nomor HP terdaftar Anda. Kami akan mengirimkan kode OTP melalui WhatsApp.',
+                      'Masukkan alamat email terdaftar Anda. Kami akan mengirimkan kode OTP untuk reset password ke email Anda.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontSize: 13,
@@ -100,7 +100,7 @@ class LupaPassword extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Nomor HP / WhatsApp',
+                            'Alamat Email Terdaftar',
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -109,22 +109,22 @@ class LupaPassword extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           TextField(
-                            onChanged: controller.setNoHp,
-                            keyboardType: TextInputType.phone,
+                            onChanged: controller.setEmail,
+                            keyboardType: TextInputType.emailAddress,
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFF1F2937),
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Contoh: 081234567890',
+                              hintText: 'Contoh: warga@email.com',
                               hintStyle: GoogleFonts.poppins(
                                 color: const Color(0xFF9CA3AF),
                                 fontSize: 14,
                                 fontWeight: FontWeight.normal,
                               ),
                               prefixIcon: const Icon(
-                                Icons.phone_android_rounded,
+                                Icons.mail_outline_rounded,
                                 color: primaryGreen,
                                 size: 22,
                               ),
@@ -157,11 +157,11 @@ class LupaPassword extends StatelessWidget {
                               onPressed: controller.isLoading
                                   ? null
                                   : () {
-                                      if (controller.noHp.isEmpty ||
-                                          controller.noHp.length < 10) {
+                                      if (controller.email.isEmpty ||
+                                          !controller.email.contains('@')) {
                                         showCustomSnackbar(
                                           context: context,
-                                          message: 'Masukkan nomor HP yang valid',
+                                          message: 'Masukkan format email yang valid',
                                           backgroundColor: Colors.red,
                                           icon: Icons.error,
                                         );
@@ -199,7 +199,7 @@ class LupaPassword extends StatelessWidget {
                                       ),
                                     )
                                   : Text(
-                                      'Kirim Kode OTP (WhatsApp)',
+                                      'Kirim Kode OTP (Email)',
                                       style: GoogleFonts.poppins(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,

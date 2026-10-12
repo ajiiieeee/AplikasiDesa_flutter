@@ -5,8 +5,9 @@ import '../config/globals.dart';
 import '../auth/ResetPassword.dart';
 
 class OtpVerifikasiController extends ChangeNotifier {
-  String _noHp = '';
-  String get noHp => _noHp;
+  String _email = '';
+  String get email => _email;
+  String get noHp => _email;
 
   String _otpCode = '';
   String get otpCode => _otpCode;
@@ -14,19 +15,24 @@ class OtpVerifikasiController extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  void setNoHp(String value) {
-    _noHp = value;
+  void setEmail(String value) {
+    _email = value.trim();
     notifyListeners();
   }
 
+  void setNoHp(String value) {
+    setEmail(value);
+  }
+
   void setOtpCode(String value) {
-    _otpCode = value;
+    _otpCode = value.trim();
     notifyListeners();
   }
 
   Future<void> verifyOtp(
     BuildContext context, {
-    required String noHp,
+    String? email,
+    String? noHp,
     required void Function({
       required String message,
       required Color backgroundColor,
@@ -34,9 +40,12 @@ class OtpVerifikasiController extends ChangeNotifier {
     })
     showSnackbar,
   }) async {
-    if (_otpCode.isEmpty || _otpCode.length != 6) {
+    final cleanEmail = (email ?? noHp ?? _email).trim();
+    final cleanOtp = _otpCode.trim();
+
+    if (cleanOtp.isEmpty || cleanOtp.length != 6) {
       showSnackbar(
-        message: "Kode OTP harus 6 digit",
+        message: "Kode OTP harus 6 digit angka",
         backgroundColor: Colors.red,
         icon: Icons.error_outline,
       );
@@ -53,14 +62,24 @@ class OtpVerifikasiController extends ChangeNotifier {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode({'otp': _otpCode, 'no_hp': noHp}),
+        body: json.encode({'otp': cleanOtp, 'email': cleanEmail}),
       );
 
-      final data = json.decode(response.body);
+      dynamic data;
+      try {
+        data = json.decode(response.body);
+      } catch (_) {
+        data = null;
+      }
 
-      if (response.statusCode == 200 && data['status'] == 200) {
+      String message = 'Kode OTP tidak valid';
+      if (data is Map && data['message'] != null) {
+        message = data['message'].toString();
+      }
+
+      if (response.statusCode == 200 && data is Map && data['status'] == 200) {
         showSnackbar(
-          message: data['message'] ?? "OTP valid",
+          message: message.isNotEmpty ? message : "Kode OTP valid",
           backgroundColor: Colors.green,
           icon: Icons.check_circle,
         );
@@ -70,14 +89,14 @@ class OtpVerifikasiController extends ChangeNotifier {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder:
-                    (context) => ResetPasswordPage(noHp: noHp, otp: _otpCode),
+                    (context) => ResetPasswordPage(email: cleanEmail, otp: cleanOtp),
               ),
             );
           }
         });
       } else {
         showSnackbar(
-          message: data['message'] ?? "OTP tidak valid",
+          message: message,
           backgroundColor: Colors.red,
           icon: Icons.error,
         );

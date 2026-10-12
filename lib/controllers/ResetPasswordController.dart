@@ -5,21 +5,26 @@ import '../auth/LoginRegis.dart';
 import '../config/globals.dart';
 
 class ResetPasswordController extends ChangeNotifier {
-  String noHp = '';
+  String email = '';
   String otp = '';
   String newPassword = '';
   String confirmPassword = '';
   bool _isLoading = false;
 
   bool get isLoading => _isLoading;
+  String get noHp => email;
 
-  void setNoHp(String value) {
-    noHp = value;
+  void setEmail(String value) {
+    email = value.trim();
     notifyListeners();
   }
 
+  void setNoHp(String value) {
+    setEmail(value);
+  }
+
   void setOtp(String value) {
-    otp = value;
+    otp = value.trim();
     notifyListeners();
   }
 
@@ -46,7 +51,7 @@ class ResetPasswordController extends ChangeNotifier {
       showSnackbar(
         message: "Password tidak boleh kosong",
         backgroundColor: Colors.red,
-        icon: Icons.error,
+        icon: Icons.error_outline,
       );
       return;
     }
@@ -55,16 +60,28 @@ class ResetPasswordController extends ChangeNotifier {
       showSnackbar(
         message: "Password minimal 8 karakter",
         backgroundColor: Colors.red,
-        icon: Icons.error,
+        icon: Icons.error_outline,
+      );
+      return;
+    }
+
+    final hasUpper = newPassword.contains(RegExp(r'[A-Z]'));
+    final hasLower = newPassword.contains(RegExp(r'[a-z]'));
+    final hasDigit = newPassword.contains(RegExp(r'[0-9]'));
+    if (!hasUpper || !hasLower || !hasDigit) {
+      showSnackbar(
+        message: "Password harus mengandung huruf besar, huruf kecil, dan angka",
+        backgroundColor: Colors.red,
+        icon: Icons.error_outline,
       );
       return;
     }
 
     if (newPassword != confirmPassword) {
       showSnackbar(
-        message: "Password tidak cocok",
+        message: "Konfirmasi password tidak cocok",
         backgroundColor: Colors.red,
-        icon: Icons.error,
+        icon: Icons.error_outline,
       );
       return;
     }
@@ -80,18 +97,36 @@ class ResetPasswordController extends ChangeNotifier {
           'Accept': 'application/json',
         },
         body: json.encode({
-          'no_hp': noHp,
-          'otp': otp,
+          'email': email.trim(),
+          'otp': otp.trim(),
           'password': newPassword,
           'password_confirmation': confirmPassword,
         }),
       );
 
-      final data = json.decode(response.body);
+      dynamic data;
+      try {
+        data = json.decode(response.body);
+      } catch (_) {
+        data = null;
+      }
 
-      if (response.statusCode == 200 && data['status'] == 200) {
+      String message = 'Reset password gagal';
+      if (data is Map && data['message'] != null) {
+        message = data['message'].toString();
+      } else if (data is Map && data['errors'] != null) {
+        final errors = data['errors'];
+        if (errors is Map && errors.isNotEmpty) {
+          final firstVal = errors.values.first;
+          if (firstVal is List && firstVal.isNotEmpty) {
+            message = firstVal.first.toString();
+          }
+        }
+      }
+
+      if (response.statusCode == 200 && data is Map && data['status'] == 200) {
         showSnackbar(
-          message: data['message'] ?? 'Password berhasil direset',
+          message: message.isNotEmpty ? message : 'Password berhasil direset',
           backgroundColor: Colors.green,
           icon: Icons.check_circle,
         );
@@ -99,14 +134,14 @@ class ResetPasswordController extends ChangeNotifier {
         Future.delayed(const Duration(seconds: 2), () {
           if (context.mounted) {
             Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => Loginregis()),
+              MaterialPageRoute(builder: (context) => const Loginregis()),
               (route) => false,
             );
           }
         });
       } else {
         showSnackbar(
-          message: data['message'] ?? 'Reset password gagal',
+          message: message,
           backgroundColor: Colors.red,
           icon: Icons.error,
         );
@@ -115,7 +150,7 @@ class ResetPasswordController extends ChangeNotifier {
       showSnackbar(
         message: "Terjadi kesalahan: $e",
         backgroundColor: Colors.red,
-        icon: Icons.error,
+        icon: Icons.error_outline,
       );
     } finally {
       _isLoading = false;

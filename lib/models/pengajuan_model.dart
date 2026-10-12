@@ -49,6 +49,13 @@ class PengajuanModel {
     return s;
   }
 
+  static String? _cleanString(dynamic val) {
+    if (val == null) return null;
+    final str = val.toString().trim();
+    if (str.isEmpty || str == '-' || str == 'null') return null;
+    return str;
+  }
+
   factory PengajuanModel.fromJson(Map<String, dynamic> json) {
     List<String> fotosList = [];
 
@@ -80,6 +87,10 @@ class PengajuanModel {
       }
     }
 
+    final String? cleanNomorSuratKeluar = _cleanString(json['nomor_surat_keluar']);
+    final String? cleanNoRegistrasi = _cleanString(json['no_registrasi']);
+    final String? cleanNomorSurat = _cleanString(json['nomor_surat']);
+
     return PengajuanModel(
       idPengajuan: int.tryParse(json['id_pengajuan'].toString()) ?? 0,
       namaSurat: json['nama_surat']?.toString() ??
@@ -99,19 +110,9 @@ class PengajuanModel {
           '',
       keteranganDitolak: json['keterangan_ditolak']?.toString(),
       fotos: fotosList,
-      nomorSurat: json['nomor_surat_keluar']?.toString() ??
-          json['no_registrasi']?.toString() ??
-          json['nomor_surat']?.toString(),
-      noRegistrasi: (json['no_registrasi'] != null &&
-              json['no_registrasi'] != '-' &&
-              json['no_registrasi'] != 'null')
-          ? json['no_registrasi'].toString()
-          : null,
-      nomorSuratKeluar: (json['nomor_surat_keluar'] != null &&
-              json['nomor_surat_keluar'] != '-' &&
-              json['nomor_surat_keluar'] != 'null')
-          ? json['nomor_surat_keluar'].toString()
-          : null,
+      nomorSurat: cleanNomorSuratKeluar ?? cleanNoRegistrasi ?? cleanNomorSurat,
+      noRegistrasi: cleanNoRegistrasi,
+      nomorSuratKeluar: cleanNomorSuratKeluar,
       pdfUrl: _normalizeUrl(json['file_pdf_url'] ?? json['file_pdf']),
     );
   }

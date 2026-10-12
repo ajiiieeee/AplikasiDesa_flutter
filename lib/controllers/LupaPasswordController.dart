@@ -5,15 +5,20 @@ import '../config/globals.dart';
 import '../auth/OtpVerifikasi.dart';
 
 class LupaPasswordController extends ChangeNotifier {
-  String _noHp = '';
+  String _email = '';
   bool _isLoading = false;
 
-  String get noHp => _noHp;
+  String get email => _email;
+  String get noHp => _email;
   bool get isLoading => _isLoading;
 
-  void setNoHp(String value) {
-    _noHp = value;
+  void setEmail(String value) {
+    _email = value.trim();
     notifyListeners();
+  }
+
+  void setNoHp(String value) {
+    setEmail(value);
   }
 
   Future<void> sendOtp(
@@ -25,11 +30,13 @@ class LupaPasswordController extends ChangeNotifier {
     })
     showSnackbar,
   }) async {
-    if (_noHp.isEmpty || _noHp.length < 10) {
+    final cleanEmail = _email.trim();
+
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@') || !cleanEmail.contains('.')) {
       showSnackbar(
-        message: 'Masukkan nomor HP yang valid',
+        message: 'Masukkan format alamat email yang valid',
         backgroundColor: Colors.red,
-        icon: Icons.warning,
+        icon: Icons.warning_amber_rounded,
       );
       return;
     }
@@ -44,38 +51,58 @@ class LupaPasswordController extends ChangeNotifier {
           'Content-Type': 'application/json; charset=UTF-8',
           'Accept': 'application/json',
         },
-        body: json.encode({'no_hp': _noHp}),
+        body: json.encode({'email': cleanEmail}),
       );
 
-      final data = json.decode(response.body);
+      dynamic data;
+      try {
+        data = json.decode(response.body);
+      } catch (_) {
+        data = null;
+      }
 
-      if (response.statusCode == 200 && data['status'] == 200) {
+      String message = 'Gagal mengirim kode OTP.';
+      if (data is Map && data['message'] != null) {
+        message = data['message'].toString();
+      } else if (data is Map && data['errors'] != null) {
+        final errors = data['errors'];
+        if (errors is Map && errors.isNotEmpty) {
+          final firstVal = errors.values.first;
+          if (firstVal is List && firstVal.isNotEmpty) {
+            message = firstVal.first.toString();
+          }
+        }
+      }
+
+      if (response.statusCode == 200 && data is Map && data['status'] == 200) {
         showSnackbar(
-          message: data['message'] ?? 'Kode OTP berhasil dikirim',
+          message: message.isNotEmpty ? message : 'Kode OTP berhasil dikirim ke email',
           backgroundColor: Colors.green,
-          icon: Icons.check_circle,
+          icon: Icons.mark_email_read_rounded,
         );
 
         Future.delayed(const Duration(milliseconds: 300), () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OtpVerificationPage(noHp: _noHp),
-            ),
-          );
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OtpVerificationPage(email: cleanEmail),
+              ),
+            );
+          }
         });
       } else {
         showSnackbar(
-          message: data['message'] ?? 'Gagal mengirim OTP',
+          message: message,
           backgroundColor: Colors.red,
-          icon: Icons.error,
+          icon: Icons.error_rounded,
         );
       }
     } catch (e) {
       showSnackbar(
-        message: 'Terjadi kesalahan: $e',
+        message: 'Terjadi kesalahan koneksi: $e',
         backgroundColor: Colors.red,
-        icon: Icons.error_outline,
+        icon: Icons.wifi_off_rounded,
       );
     } finally {
       _isLoading = false;

@@ -172,13 +172,13 @@ Aplikasi mobile mendukung login untuk role **Warga (Level 5)**, **Kepala Dusun (
    - **Admin Desa (Level 1)**: Ditolak oleh sistem mobile dengan pesan: *"Akun Admin Desa hanya dapat diakses melalui portal Website Desa."*
    - **Role Lain (Warga / Kadus / Sekdes / Kades)**: Berhasil login dan masuk ke tampilan Dashboard sesuai role masing-masing.
 
-### Lupa Password via WhatsApp OTP:
+### Lupa Password via Email OTP:
 1. Tekan tombol **"Lupa Password?"** pada halaman login.
-2. Masukkan **Nomor HP / WhatsApp** yang terdaftar di akun.
-3. Tekan tombol **"Kirim Kode OTP"**.
-4. Kode OTP 6 digit akan dikirimkan secara otomatis via WhatsApp melalui Fonnte Gateway (Berlaku selama 10 menit).
+2. Masukkan **Alamat Email** yang terdaftar di akun.
+3. Tekan tombol **"Kirim Kode OTP (Email)"**.
+4. Kode OTP 6 digit akan dikirimkan secara otomatis ke alamat email pengguna (Berlaku selama 10 menit).
 5. Masukkan Kode OTP pada halaman **Verifikasi OTP**.
-6. Masukkan Password Baru dan Konfirmasi Password Baru, lalu tekan **"Reset Password"**.
+6. Masukkan Password Baru dan Konfirmasi Password Baru, lalu tekan **"Simpan Password Baru"**.
 
 ## 3.5 Dashboard Warga & Menu Utama
 Tampilan Dashboard Warga (*HomeScreen*) dirancang modern dan bersih dengan komponen utama:
@@ -521,8 +521,8 @@ WARGA / MASYARAKAT
 | No | Masalah / Kendala | Kemungkinan Penyebab | Solusi / Cara Penanganan |
 |---|---|---|---|
 | 1 | **Gagal Aktivasi Akun Warga** | NIK tidak terdaftar di sistem desa atau NIK sudah pernah diaktivasi sebelumnya. | Pastikan NIK terdaftar di KTP/KK Desa Rambipuji. Jika belum terdaftar, hubungi Kantor Desa. Jika NIK sudah aktif, gunakan menu Login. |
-| 2 | **Tidak Bisa Login (Password Salah)** | Input password salah atau lupa kombinasi huruf besar/kecil/angka. | Gunakan fitur **"Lupa Password?"** untuk melakukan reset password menggunakan Kode OTP WhatsApp. |
-| 3 | **OTP WhatsApp Tidak Diterima** | Nomor HP yang dimasukkan tidak terdaftar di akun atau jaringan WhatsApp gangguan. | Pastikan nomor HP aktif di WhatsApp. Periksa format nomor HP (misal: 081234...). Tunggu 1-2 menit sebelum mencoba kirim ulang OTP. |
+| 2 | **Tidak Bisa Login (Password Salah)** | Input password salah atau lupa kombinasi huruf besar/kecil/angka. | Gunakan fitur **"Lupa Password?"** untuk melakukan reset password menggunakan Kode OTP yang dikirim ke Email. |
+| 3 | **OTP Email Tidak Diterima** | Alamat email yang dimasukkan tidak terdaftar di akun atau masuk ke folder spam. | Pastikan email aktif dan periksa folder Kotak Masuk (Inbox) serta Spam. Tunggu 1-2 menit sebelum mencoba kirim ulang OTP. |
 | 4 | **Admin Desa Gagal Login di Mobile** | Akun Admin Desa (Level 1) secara sistem dibatasi hanya untuk Portal Web. | Login ke portal website desa melalui komputer/laptop browser di URL domain desa. |
 | 5 | **Gagal Mengunggah Berkas / Foto** | Ukuran file foto terlalu besar (>10MB) atau format file bukan JPG/PNG. | Gunakan foto berformat JPG, JPEG, atau PNG dengan ukuran maksimal 5MB. Pastikan izin kamera/galeri HP diaktifkan. |
 | 6 | **Pengajuan Surat Berstatus "Ditolak"** | Berkas persyaratan kurang lengkap, foto buram, atau keperluan tidak sesuai. | Buka tab **Status > Ditolak** pada aplikasi mobile, baca **Alasan Penolakan** dari petugas, lalu ajukan ulang surat dengan perbaikan berkas. |
@@ -543,7 +543,7 @@ WARGA / MASYARAKAT
 > *Jawab*: Ya, sah. Surat PDF yang diterbitkan oleh sistem telah dilengkapi dengan Nomor Surat Resmi Desa dan Tanda Tangan Elektronik (TTE) Kepala Desa Rambipuji.
 
 **Q4: Apa yang harus dilakukan jika saya lupa password akun saya?**
-> *Jawab*: Pilih menu "Lupa Password?" di halaman login aplikasi mobile, masukkan nomor HP terdaftar, lalu ikuti petunjuk verifikasi kode OTP yang dikirimkan via WhatsApp.
+> *Jawab*: Pilih menu "Lupa Password?" di halaman login aplikasi mobile, masukkan alamat email terdaftar, lalu ikuti petunjuk verifikasi kode OTP yang dikirimkan ke email Anda.
 
 **Q5: Bagaimana jika ada warga yang tidak memiliki Smartphone Android?**
 > *Jawab*: Warga dapat datang langsung ke Kantor Desa Rambipuji. Petugas Admin Desa atau Kepala Dusun akan membantu memasukkan pengajuan surat warga melalui menu *Tambah Pengajuan* di portal website desa.

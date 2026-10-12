@@ -6,9 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 
 class OtpVerificationPage extends StatelessWidget {
-  final String noHp;
+  final String email;
 
-  const OtpVerificationPage({super.key, required this.noHp});
+  const OtpVerificationPage({super.key, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +56,7 @@ class OtpVerificationPage extends StatelessWidget {
                         ],
                       ),
                       child: const Icon(
-                        Icons.mark_chat_read_rounded,
+                        Icons.mark_email_read_rounded,
                         size: 48,
                         color: primaryGreen,
                       ),
@@ -82,10 +82,10 @@ class OtpVerificationPage extends StatelessWidget {
                         ),
                         children: [
                           const TextSpan(
-                            text: 'Masukkan 6-digit kode OTP yang telah dikirim ke WhatsApp ',
+                            text: 'Masukkan 6-digit kode OTP yang telah dikirim ke Email ',
                           ),
                           TextSpan(
-                            text: noHp,
+                            text: email,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF1F2937),
@@ -157,7 +157,7 @@ class OtpVerificationPage extends StatelessWidget {
                               if (!controller.isLoading) {
                                 controller.verifyOtp(
                                   context,
-                                  noHp: noHp,
+                                  email: email,
                                   showSnackbar: ({
                                     required String message,
                                     required Color backgroundColor,
@@ -186,7 +186,7 @@ class OtpVerificationPage extends StatelessWidget {
                                   ? null
                                   : () => controller.verifyOtp(
                                         context,
-                                        noHp: noHp,
+                                        email: email,
                                         showSnackbar: ({
                                           required String message,
                                           required Color backgroundColor,

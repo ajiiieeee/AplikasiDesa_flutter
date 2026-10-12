@@ -5,10 +5,11 @@ import 'package:provider/provider.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 
 class ResetPasswordPage extends StatefulWidget {
-  final String noHp;
+  final String? email;
+  final String? noHp;
   final String otp;
 
-  const ResetPasswordPage({super.key, required this.noHp, required this.otp});
+  const ResetPasswordPage({super.key, this.email, this.noHp, required this.otp});
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
@@ -24,7 +25,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   void initState() {
     super.initState();
     controller = ResetPasswordController();
-    controller.setNoHp(widget.noHp);
+    final identifier = widget.email ?? widget.noHp ?? '';
+    controller.setEmail(identifier);
     controller.setOtp(widget.otp);
   }
 
@@ -91,7 +93,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Masukkan password baru Anda. Pastikan mengandung minimal 8 karakter.',
+                      'Masukkan password baru Anda. Pastikan mengandung minimal 8 karakter, huruf besar, huruf kecil, dan angka.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontSize: 13,

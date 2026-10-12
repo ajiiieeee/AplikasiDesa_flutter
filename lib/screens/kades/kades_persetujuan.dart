@@ -154,6 +154,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
           icon: Icons.check_circle,
         );
         _refreshData();
+        _tabController.animateTo(1);
 
         // Offer to open PDF if available
         if (pdfUrl.isNotEmpty && mounted) {
@@ -525,7 +526,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
                   border: Border.all(color: const Color(0xFFECEFF1)),
                 ),
                 child: Column(
@@ -559,6 +560,8 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                           _rowInfo('NIK:', item.nik),
                           _rowInfo('Keperluan:', item.keperluan),
                           _rowInfo('Tanggal:', item.tanggalDiajukan),
+                          if (item.noRegistrasi != null && item.noRegistrasi!.isNotEmpty)
+                            _rowInfo('No. Registrasi:', item.noRegistrasi!),
                           _rowInfo('Status:', 'Disetujui Sekretaris Desa'),
                           const SizedBox(height: 10),
                           Row(
@@ -645,7 +648,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
                   border: Border.all(color: const Color(0xFFECEFF1)),
                 ),
                 child: Column(
@@ -670,7 +673,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text('SELESAI',
@@ -688,8 +691,12 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                           _rowInfo('NIK:', item.nik),
                           _rowInfo('Jenis Surat:', item.namaSurat),
                           _rowInfo('Tgl. Pengajuan:', item.tanggalDiajukan),
-                          if (item.nomorSurat != null && item.nomorSurat!.isNotEmpty)
+                          if (item.nomorSuratKeluar != null && item.nomorSuratKeluar!.isNotEmpty)
+                            _rowInfo('No. Surat Final:', item.nomorSuratKeluar!)
+                          else if (item.nomorSurat != null && item.nomorSurat!.isNotEmpty)
                             _rowInfo('Nomor Surat:', item.nomorSurat!),
+                          if (item.noRegistrasi != null && item.noRegistrasi!.isNotEmpty)
+                            _rowInfo('No. Registrasi:', item.noRegistrasi!),
                           const SizedBox(height: 12),
                           Row(
                             children: [
