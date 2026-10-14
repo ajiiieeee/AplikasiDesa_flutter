@@ -14,6 +14,12 @@ class DetailPengaduanScreen extends StatefulWidget {
 }
 
 class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
+  // ── Tema ────────────────────────────────────────────────
+  static const _primaryGreen  = Color(0xFF2E7D32);
+  static const _primaryGreenL = Color(0xFF43A047);
+  static const _bgColor       = Color(0xFFF5F7FA);
+
+  // ── State ────────────────────────────────────────────────
   bool isLoading = true;
   Map<String, dynamic>? pengaduan;
   String errorMsg = '';
@@ -24,86 +30,85 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
     fetchDetailPengaduan();
   }
 
+  // ── Data Fetching ─────────────────────────────────────────
   Future<void> fetchDetailPengaduan() async {
+    setState(() {
+      isLoading = true;
+      errorMsg  = '';
+    });
+
     final url = Uri.parse('$baseURL/notifikasi/${widget.idPengaduan}');
 
     try {
       final response = await http.get(url);
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (!mounted) return;
-
         setState(() {
-          pengaduan = data;
+          pengaduan = json.decode(response.body);
           isLoading = false;
         });
       } else {
-        if (!mounted) return;
-
         setState(() {
-          errorMsg =
-              'Gagal mengambil data. Status code: ${response.statusCode}';
+          errorMsg  = 'Gagal mengambil data (${response.statusCode})';
           isLoading = false;
         });
       }
     } catch (e) {
       if (!mounted) return;
-
       setState(() {
-        errorMsg = 'Terjadi kesalahan: $e';
+        errorMsg  = 'Terjadi kesalahan: $e';
         isLoading = false;
       });
     }
   }
 
+  // ── Helpers ───────────────────────────────────────────────
   String getFotoUrl(String fotoPath) {
-    if (fotoPath.startsWith('http')) {
-      return fotoPath;
-    }
-
+    if (fotoPath.startsWith('http')) return fotoPath;
     final serverRoot = baseURL.replaceAll(RegExp(r'/api.*$'), '');
-
     return '$serverRoot/storage/$fotoPath';
   }
 
-  Widget buildUserAvatar() {
+  // ── Avatars ───────────────────────────────────────────────
+  Widget _buildUserAvatar() {
     return Container(
       padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade100,
+      decoration: const BoxDecoration(
+        color: Color(0xFFE8F5E9),
         shape: BoxShape.circle,
       ),
       child: const CircleAvatar(
         radius: 18,
         backgroundColor: Colors.white,
-        child: Icon(Icons.person, color: Colors.blue, size: 22),
+        child: Icon(Icons.person_rounded, color: _primaryGreen, size: 22),
       ),
     );
   }
 
-  Widget buildAdminAvatar() {
+  Widget _buildAdminAvatar() {
     return Container(
       padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade100,
+      decoration: const BoxDecoration(
+        color: Color(0xFFE8F5E9),
         shape: BoxShape.circle,
       ),
       child: const CircleAvatar(
         radius: 18,
         backgroundColor: Colors.white,
-        child: Icon(Icons.support_agent_rounded, color: Colors.blue, size: 23),
+        child: Icon(Icons.support_agent_rounded, color: _primaryGreen, size: 23),
       ),
     );
   }
 
-  Widget buildUserBubble() {
+  // ── Chat Bubbles ──────────────────────────────────────────
+  Widget _buildUserBubble() {
     final String ulasan = pengaduan?['ulasan'] ?? 'Tidak ada pesan';
-    final String? foto = pengaduan?['foto1']?.toString();
+    final String? foto  = pengaduan?['foto1']?.toString();
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -113,7 +118,7 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(right: 6, bottom: 6),
+                  padding: const EdgeInsets.only(right: 6, bottom: 5),
                   child: Text(
                     'Anda',
                     style: GoogleFonts.poppins(
@@ -126,8 +131,8 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade600, Colors.blue.shade400],
+                    gradient: const LinearGradient(
+                      colors: [_primaryGreen, _primaryGreenL],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -139,8 +144,8 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.withOpacity(0.18),
-                        blurRadius: 10,
+                        color: _primaryGreen.withValues(alpha: 0.20),
+                        blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                     ],
@@ -152,11 +157,10 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
                         ulasan,
                         style: GoogleFonts.poppins(
                           fontSize: 14.5,
-                          height: 1.4,
+                          height: 1.45,
                           color: Colors.white,
                         ),
                       ),
-
                       if (foto != null && foto.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         ClipRRect(
@@ -165,23 +169,22 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
                             getFotoUrl(foto),
                             width: MediaQuery.of(context).size.width * 0.65,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: MediaQuery.of(context).size.width * 0.65,
-                                height: 150,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.18),
-                                  borderRadius: BorderRadius.circular(14),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              width: MediaQuery.of(context).size.width * 0.65,
+                              height: 150,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.broken_image_rounded,
+                                  color: Colors.white,
+                                  size: 42,
                                 ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.broken_image_rounded,
-                                    color: Colors.white,
-                                    size: 42,
-                                  ),
-                                ),
-                              );
-                            },
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -192,29 +195,29 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          buildUserAvatar(),
+          _buildUserAvatar(),
         ],
       ),
     );
   }
 
-  Widget buildAdminBubble() {
+  Widget _buildAdminBubble() {
     final String feedback = pengaduan?['feedback'] ?? 'Belum ada tanggapan';
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          buildAdminAvatar(),
+          _buildAdminAvatar(),
           const SizedBox(width: 8),
           Flexible(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(left: 6, bottom: 6),
+                  padding: const EdgeInsets.only(left: 6, bottom: 5),
                   child: Text(
                     'Admin Desa',
                     style: GoogleFonts.poppins(
@@ -234,9 +237,10 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
                       bottomLeft: Radius.circular(4),
                       bottomRight: Radius.circular(18),
                     ),
+                    border: Border.all(color: const Color(0xFFE8F5E9)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -245,9 +249,9 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.reply_rounded,
-                        color: Colors.blue.shade500,
+                        color: _primaryGreen,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -256,7 +260,7 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
                           feedback,
                           style: GoogleFonts.poppins(
                             fontSize: 14.5,
-                            height: 1.4,
+                            height: 1.45,
                             color: Colors.black87,
                           ),
                         ),
@@ -272,44 +276,27 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
     );
   }
 
-  Widget buildInfoCard() {
+  Widget _buildInfoBanner() {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 18),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.blue.shade100),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFA5D6A7)),
       ),
       child: Row(
         children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.info_outline_rounded,
-              color: Colors.blue.shade600,
-            ),
-          ),
-          const SizedBox(width: 12),
+          const Icon(Icons.info_outline_rounded,
+              color: _primaryGreen, size: 22),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Detail percakapan pengaduan masyarakat dengan Admin Desa.',
               style: GoogleFonts.poppins(
-                fontSize: 13.5,
-                color: Colors.black87,
+                fontSize: 13,
+                color: const Color(0xFF2E7D32),
                 height: 1.4,
               ),
             ),
@@ -319,47 +306,56 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
     );
   }
 
-  Widget buildLoading() {
-    return Center(
-      child: CircularProgressIndicator(color: Colors.blue.shade600),
+  Widget _buildLoading() {
+    return const Center(
+      child: CircularProgressIndicator(
+        color: _primaryGreen,
+        strokeWidth: 3,
+      ),
     );
   }
 
-  Widget buildError(String message) {
+  Widget _buildError(String message) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 56,
-              color: Colors.red.shade400,
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.error_outline_rounded,
+                  size: 42, color: Colors.red.shade400),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
+              style: GoogleFonts.poppins(
+                  fontSize: 14, color: Colors.black87, height: 1.5),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  isLoading = true;
-                  errorMsg = '';
-                });
-                fetchDetailPengaduan();
-              },
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Coba Lagi'),
+              onPressed: fetchDetailPengaduan,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: Text(
+                'Coba Lagi',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade600,
+                backgroundColor: _primaryGreen,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 26, vertical: 13),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
+                elevation: 0,
               ),
             ),
           ],
@@ -368,24 +364,43 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
     );
   }
 
+  // ── Build ─────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF3F8FF),
+      backgroundColor: _bgColor,
       appBar: AppBar(
         elevation: 0,
-        centerTitle: false,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         titleSpacing: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [_primaryGreen, _primaryGreenL],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Colors.white, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Row(
           children: [
-            const CircleAvatar(
-              radius: 19,
-              backgroundColor: Colors.white,
-              child: Icon(
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
                 Icons.chat_bubble_rounded,
-                color: Colors.blue,
-                size: 21,
+                color: Colors.white,
+                size: 20,
               ),
             ),
             const SizedBox(width: 10),
@@ -396,49 +411,39 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
                   'Detail Pengaduan',
                   style: GoogleFonts.poppins(
                     color: Colors.white,
-                    fontSize: 17,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   'Percakapan dengan Admin Desa',
                   style: GoogleFonts.poppins(
-                    color: Colors.white70,
-                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.80),
+                    fontSize: 11.5,
                   ),
                 ),
               ],
             ),
           ],
         ),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue.shade700, Colors.blue.shade400],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
       ),
-      body:
-          isLoading
-              ? buildLoading()
-              : errorMsg.isNotEmpty
-              ? buildError(errorMsg)
+      body: isLoading
+          ? _buildLoading()
+          : errorMsg.isNotEmpty
+              ? _buildError(errorMsg)
               : pengaduan == null
-              ? buildError('Data tidak ditemukan')
-              : SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    buildInfoCard(),
-                    buildUserBubble(),
-                    buildAdminBubble(),
-                  ],
-                ),
-              ),
+                  ? _buildError('Data tidak ditemukan')
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildInfoBanner(),
+                          _buildUserBubble(),
+                          _buildAdminBubble(),
+                        ],
+                      ),
+                    ),
     );
   }
 }
