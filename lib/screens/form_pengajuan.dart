@@ -47,8 +47,7 @@ class _FormPengajuan extends State<FormPengajuan> {
   Map<String, dynamic>? suratData;
   List<dynamic> persyaratan = [];
 
-  // Berkas persyaratan — pakai XFile agar kompatibel web & mobile
-  Map<int, _FotoItem?> uploadedFiles = {};
+  // uploadedFiles dihapus — Berkas Persyaratan kini hanya tampil sebagai teks
 
   // Foto bukti lampiran (multi-foto)
   List<_FotoItem> buktiPhotos = [];
@@ -248,20 +247,8 @@ class _FormPengajuan extends State<FormPengajuan> {
     request.fields['keterangan']       = keperluan;
     request.fields['tanggal_diajukan'] = DateTime.now().toIso8601String();
 
-    // Berkas persyaratan & foto bukti tambahan
+    // Foto bukti lampiran saja (berkas persyaratan sudah jadi teks)
     int fotoIndex = 1;
-    for (final item in uploadedFiles.values) {
-      if (item != null && fotoIndex <= 8) {
-        final bytes = item.bytes ?? await item.xfile.readAsBytes();
-        request.files.add(http.MultipartFile.fromBytes(
-          'foto$fotoIndex',
-          bytes,
-          filename: item.xfile.name,
-        ));
-        fotoIndex++;
-      }
-    }
-
     for (int i = 0; i < buktiPhotos.length; i++) {
       if (fotoIndex <= 8) {
         final item = buktiPhotos[i];
@@ -446,24 +433,65 @@ class _FormPengajuan extends State<FormPengajuan> {
 
             const SizedBox(height: 16),
 
-            // ── SECTION: Berkas Persyaratan ───────────────────────────────
+            // ── SECTION: Berkas Persyaratan (teks dari database) ──────────
             if (persyaratan.isNotEmpty)
               _sectionCard(
                 primary: primary,
                 bgGreen: bgGreen,
                 title: 'Berkas Persyaratan',
-                icon: Icons.attach_file_rounded,
-                children: List.generate(persyaratan.length, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _buildUploadField(
-                      label: persyaratan[index]['nama_berkas'],
-                      item: uploadedFiles[index],
-                      primary: primary,
-                      onPicked: (item) => setState(() => uploadedFiles[index] = item),
+                icon: Icons.checklist_rounded,
+                children: [
+                  Text(
+                    'Siapkan dokumen berikut sebelum mengajukan surat:',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
                     ),
-                  );
-                }),
+                  ),
+                  const SizedBox(height: 10),
+                  ...List.generate(persyaratan.length, (index) {
+                    final nama = persyaratan[index]['nama_berkas']?.toString() ?? '-';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 2),
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              nama,
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: const Color(0xFF263238),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
               ),
 
             if (persyaratan.isNotEmpty) const SizedBox(height: 16),
@@ -799,55 +827,5 @@ class _FormPengajuan extends State<FormPengajuan> {
     );
   }
 
-  Widget _buildUploadField({
-    required String label,
-    required _FotoItem? item,
-    required Color primary,
-    required Function(_FotoItem) onPicked,
-  }) {
-    return InkWell(
-      onTap: () async {
-        final picked = await _pickFoto();
-        if (picked != null) onPicked(picked);
-      },
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: double.infinity,
-        height: 130,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: primary, width: 1.5),
-        ),
-        child: Center(
-          child: item == null
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset('assets/images/upload.png', width: 44, height: 44),
-                    const SizedBox(height: 8),
-                    Text(
-                      label,
-                      style: GoogleFonts.poppins(
-                        color: primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                )
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: _imagePreview(
-                    item: item,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
+  // _buildUploadField dihapus — tidak digunakan lagi
 }

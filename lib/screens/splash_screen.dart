@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/bottom_navbar.dart';
 import '../auth/LoginRegis.dart';
 import '../auth/auth.dart';
+import 'splashscreen.dart'; // OnBoardingScreen
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,6 +42,23 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     await Future.delayed(const Duration(seconds: 2, milliseconds: 500));
     if (!mounted) return;
 
+    // Cek apakah ini pertama kali install / first launch
+    final prefs = await SharedPreferences.getInstance();
+    final isFirstLaunch = prefs.getBool('is_first_launch') ?? true;
+
+    if (!mounted) return;
+
+    if (isFirstLaunch) {
+      // Pertama kali buka → tampilkan onboarding, tandai sudah pernah buka
+      await prefs.setBool('is_first_launch', false);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const OnBoardingScreen()),
+      );
+      return;
+    }
+
+    // Bukan first launch → cek token seperti biasa
     final loggedIn = await AuthService.isLoggedIn();
     final role     = await AuthService.getRole();
 
