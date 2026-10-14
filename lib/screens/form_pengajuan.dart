@@ -1,4 +1,3 @@
-import 'package:digitalv/widgets/bottom_navbar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -277,10 +276,8 @@ class _FormPengajuan extends State<FormPengajuan> {
         await Future.delayed(const Duration(seconds: 1));
         if (!mounted) return;
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => BottomNavBar()),
-        );
+        // Kembali ke halaman sebelumnya (BottomNavBar sudah ada di stack)
+        Navigator.pop(context);
       } else if (res.statusCode == 409) {
         final responseData = jsonDecode(res.body);
         showCustomSnackbar(

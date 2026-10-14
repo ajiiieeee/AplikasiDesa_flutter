@@ -169,7 +169,7 @@ class _PengaduanState extends State<Pengaduan> {
         actions: [
           TextButton.icon(
             onPressed: () {
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const RiwayatPengaduanScreen()),
               );

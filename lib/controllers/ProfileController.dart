@@ -258,7 +258,18 @@ Future<void> logout(BuildContext context) async {
   // Hapus data sensitif di SecureStorage dan data lokal di SharedPreferences
   await SecureStorageService.instance.clearSession();
   final prefs = await SharedPreferences.getInstance();
-  await prefs.clear();
+  // Hapus selektif — JANGAN hapus 'is_first_launch' agar OnBoarding tidak muncul lagi
+  for (final key in [
+    'token', 'bk_token',
+    'nik', 'role', 'role_name', 'bk_role',
+    'level', 'bk_level',
+    'nama', 'nama_lengkap',
+    'no_kk', 'alamat', 'rt', 'rw',
+    'tanggal_lahir', 'jk', 'jenis_kelamin',
+    'dusun', 'no_hp', 'email', 'foto_profil',
+  ]) {
+    await prefs.remove(key);
+  }
 
   if (!context.mounted) return;
 

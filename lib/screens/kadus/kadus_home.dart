@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/globals.dart';
 import '../../services/secure_storage_service.dart';
 import '../../widgets/bottom_navbar.dart';
+import '../../screens/kadus/kadus_surat_masuk.dart';
 import '../info_profile.dart';
 import '../notifikasi.dart';
 
@@ -304,7 +305,7 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                                       color: const Color(0xFF1565C0),
                                       bgColor: const Color(0xFFE3F2FD),
                                       onTap: () {
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => const BottomNavBar(initialIndex: 1, role: 'kepala_dusun'),
@@ -323,7 +324,7 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                                       color: const Color(0xFFE65100),
                                       bgColor: const Color(0xFFFFF3E0),
                                       onTap: () {
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => const BottomNavBar(initialIndex: 1, role: 'kepala_dusun'),
@@ -346,10 +347,10 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                                       color: primaryGreen,
                                       bgColor: const Color(0xFFE8F5E9),
                                       onTap: () {
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => const BottomNavBar(initialIndex: 1, role: 'kepala_dusun'),
+                                            builder: (context) => const KadusSuratMasukScreen(initialTabIndex: 1),
                                           ),
                                         );
                                       },
@@ -365,7 +366,7 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                                       color: const Color(0xFFC62828),
                                       bgColor: const Color(0xFFFFEBEE),
                                       onTap: () {
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => const BottomNavBar(initialIndex: 1, role: 'kepala_dusun'),
@@ -398,7 +399,7 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -466,7 +467,7 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -530,7 +531,7 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: iconColor, size: 18),
