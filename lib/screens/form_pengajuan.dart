@@ -46,9 +46,10 @@ class _FormPengajuan extends State<FormPengajuan> {
   Map<String, dynamic>? suratData;
   List<dynamic> persyaratan = [];
 
-  // uploadedFiles dihapus — Berkas Persyaratan kini hanya tampil sebagai teks
+  // Foto per berkas persyaratan dari admin (Key: indeks berkas 0..N, Value: _FotoItem)
+  final Map<int, _FotoItem> berkasPhotos = {};
 
-  // Foto bukti lampiran (multi-foto)
+  // Foto bukti lampiran tambahan (opsional)
   List<_FotoItem> buktiPhotos = [];
 
   @override
@@ -203,7 +204,7 @@ class _FormPengajuan extends State<FormPengajuan> {
     return item;
   }
 
-  // ── Tambah foto bukti ─────────────────────────────────────────────────────
+  // ── Tambah foto bukti lampiran tambahan ──────────────────────────────────
   Future<void> _tambahFotoBukti() async {
     final item = await _pickFoto();
     if (item != null) {
@@ -213,6 +214,110 @@ class _FormPengajuan extends State<FormPengajuan> {
 
   void _hapusFotoBukti(int index) {
     setState(() => buktiPhotos.removeAt(index));
+  }
+
+  // ── Pick Foto Berkas Persyaratan (Kamera / Galeri) ─────────────────────────
+  Future<void> _pickFotoBerkas(int index) async {
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Pilih Sumber Foto Dokumen',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF005697).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF005697)),
+                ),
+                title: Text('Ambil dari Kamera',
+                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+                subtitle: Text('Foto langsung dokumen menggunakan kamera HP',
+                    style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600])),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF005697).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.photo_library_rounded, color: Color(0xFF005697)),
+                ),
+                title: Text('Pilih dari Galeri',
+                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+                subtitle: Text('Pilih foto dokumen yang sudah ada di galeri HP',
+                    style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600])),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: source,
+        imageQuality: 85,
+      );
+      if (picked == null) return;
+
+      final item = _FotoItem(picked);
+      item.bytes = await picked.readAsBytes();
+
+      if (mounted) {
+        setState(() {
+          berkasPhotos[index] = item;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        showCustomSnackbar(
+          context: context,
+          message: 'Gagal mengambil gambar: $e',
+          backgroundColor: Colors.red,
+          icon: Icons.error,
+        );
+      }
+    }
+  }
+
+  void _hapusFotoBerkas(int index) {
+    setState(() {
+      berkasPhotos.remove(index);
+    });
   }
 
   // ── Submit form ───────────────────────────────────────────────────────────
@@ -229,6 +334,20 @@ class _FormPengajuan extends State<FormPengajuan> {
       return;
     }
 
+    // ── Validasi Berkas Persyaratan (Semua berkas yang disyaratkan admin WAJIB diisi) ──
+    for (int i = 0; i < persyaratan.length; i++) {
+      if (!berkasPhotos.containsKey(i) || berkasPhotos[i] == null) {
+        final nama = (persyaratan[i]['nama_berkas']?.toString() ?? 'Berkas ${i + 1}').trim().toUpperCase();
+        showCustomSnackbar(
+          context: context,
+          message: 'Foto berkas $nama wajib diunggah!',
+          backgroundColor: Colors.red.shade700,
+          icon: Icons.warning_amber_rounded,
+        );
+        return;
+      }
+    }
+
     setState(() => isLoading = true);
 
     final token = await SecureStorageService.instance.getToken() ?? '';
@@ -241,23 +360,39 @@ class _FormPengajuan extends State<FormPengajuan> {
       if (token.isNotEmpty) 'Authorization': 'Bearer $token',
     });
 
-    request.fields['id_surat']         = suratData?['id_surat']?.toString() ?? '';
+    request.fields['id_surat']         = suratData?['id_surat']?.toString() ?? widget.idSurat;
     request.fields['nik']              = nikController.text.trim();
     request.fields['keterangan']       = keperluan;
     request.fields['tanggal_diajukan'] = DateTime.now().toIso8601String();
 
-    // Foto bukti lampiran saja (berkas persyaratan sudah jadi teks)
+    // ── 1. Upload berkas persyaratan wajib (foto1, foto2, dst sesuai urutan) ──
     int fotoIndex = 1;
-    for (int i = 0; i < buktiPhotos.length; i++) {
-      if (fotoIndex <= 8) {
-        final item = buktiPhotos[i];
+    for (int i = 0; i < persyaratan.length; i++) {
+      if (fotoIndex <= 8 && berkasPhotos.containsKey(i) && berkasPhotos[i] != null) {
+        final item = berkasPhotos[i]!;
         final bytes = item.bytes ?? await item.xfile.readAsBytes();
         request.files.add(http.MultipartFile.fromBytes(
           'foto$fotoIndex',
           bytes,
-          filename: item.xfile.name,
+          filename: 'berkas_${i + 1}_${item.xfile.name}',
         ));
         fotoIndex++;
+      }
+    }
+
+    // ── 2. Fallback: upload foto bukti HANYA jika jenis surat tidak memiliki berkas persyaratan khusus ──
+    if (persyaratan.isEmpty) {
+      for (int i = 0; i < buktiPhotos.length; i++) {
+        if (fotoIndex <= 8) {
+          final item = buktiPhotos[i];
+          final bytes = item.bytes ?? await item.xfile.readAsBytes();
+          request.files.add(http.MultipartFile.fromBytes(
+            'foto$fotoIndex',
+            bytes,
+            filename: 'lampiran_${i + 1}_${item.xfile.name}',
+          ));
+          fotoIndex++;
+        }
       }
     }
 
@@ -355,10 +490,10 @@ class _FormPengajuan extends State<FormPengajuan> {
   // ══════════════════════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF2E7D32);
-    const primaryLight = Color(0xFF16A34A);
-    const bgGreen = Color(0xFFE8F5E9);
-    const fillGreen = Color(0xFFF1F8F1);
+    const primary = Color(0xFF004AAD);
+    const primaryLight = Color(0xFF004AAD);
+    const bgGreen = Color(0xFFE3F2FD);
+    const fillGreen = Color(0xFFF0F6FF);
 
     return Scaffold(
       appBar: AppBar(
@@ -374,7 +509,7 @@ class _FormPengajuan extends State<FormPengajuan> {
         ),
         backgroundColor: Colors.white,
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.15),
+        shadowColor: Colors.black.withValues(alpha: 0.15),
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
       backgroundColor: const Color(0xFFF5F7FA),
@@ -430,60 +565,231 @@ class _FormPengajuan extends State<FormPengajuan> {
 
             const SizedBox(height: 16),
 
-            // ── SECTION: Berkas Persyaratan (teks dari database) ──────────
+            // ── SECTION: Berkas Persyaratan (Input Foto per Persyaratan Admin) ──
             if (persyaratan.isNotEmpty)
               _sectionCard(
                 primary: primary,
                 bgGreen: bgGreen,
-                title: 'Berkas Persyaratan',
+                title: 'Berkas Persyaratan (Wajib)',
                 icon: Icons.checklist_rounded,
                 children: [
                   Text(
-                    'Siapkan dokumen berikut sebelum mengajukan surat:',
+                    'Admin mewajibkan Anda melampirkan foto dokumen di bawah ini. Semua berkas persyaratan wajib diunggah:',
                     style: GoogleFonts.poppins(
                       fontSize: 11,
-                      color: Colors.grey[600],
+                      color: Colors.grey[700],
                       fontStyle: FontStyle.italic,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 14),
                   ...List.generate(persyaratan.length, (index) {
-                    final nama = persyaratan[index]['nama_berkas']?.toString() ?? '-';
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
+                    final rawNama = persyaratan[index]['nama_berkas']?.toString() ?? 'Berkas ${index + 1}';
+                    final nama = rawNama.trim();
+                    final item = berkasPhotos[index];
+                    final isUploaded = item != null;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isUploaded ? const Color(0xFFF0FDF4) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isUploaded ? Colors.green.shade400 : primary.withValues(alpha: 0.25),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            margin: const EdgeInsets.only(top: 2),
-                            width: 22,
-                            height: 22,
-                            decoration: BoxDecoration(
-                              color: primary.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${index + 1}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: primary,
+                          // Header berkas: Nomor, Nama Berkas, & Status Badge
+                          Row(
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: isUploaded ? Colors.green.shade600 : primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: isUploaded
+                                      ? const Icon(Icons.check, size: 14, color: Colors.white)
+                                      : Text(
+                                          '${index + 1}',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Foto $nama',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: isUploaded ? Colors.green.shade100 : Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isUploaded ? Colors.green.shade300 : Colors.red.shade200,
+                                  ),
+                                ),
+                                child: Text(
+                                  isUploaded ? '✓ Terunggah' : 'Wajib Diisi',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: isUploaded ? Colors.green.shade800 : Colors.red.shade700,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              nama,
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: const Color(0xFF263238),
-                                fontWeight: FontWeight.w500,
+                          const SizedBox(height: 10),
+
+                          // Area Upload / Preview Foto
+                          if (!isUploaded)
+                            InkWell(
+                              onTap: () => _pickFotoBerkas(index),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: primary.withValues(alpha: 0.35),
+                                    style: BorderStyle.solid,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_a_photo_outlined,
+                                      size: 22,
+                                      color: primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Upload Foto $nama',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: primary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Text('*', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.green.shade200),
+                              ),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: SizedBox(
+                                      width: 65,
+                                      height: 65,
+                                      child: _imagePreview(
+                                        item: item,
+                                        fit: BoxFit.cover,
+                                        width: 65,
+                                        height: 65,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.xfile.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF1E293B),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '✓ Berkas $nama siap dikirim',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.green.shade700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            InkWell(
+                                              onTap: () => _pickFotoBerkas(index),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.autorenew_rounded, size: 14, color: primary),
+                                                  const SizedBox(width: 3),
+                                                  Text(
+                                                    'Ganti',
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: primary,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            InkWell(
+                                              onTap: () => _hapusFotoBerkas(index),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.delete_outline, size: 14, color: Colors.red.shade700),
+                                                  const SizedBox(width: 3),
+                                                  Text(
+                                                    'Hapus',
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: Colors.red.shade700,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
                         ],
                       ),
                     );
@@ -491,148 +797,149 @@ class _FormPengajuan extends State<FormPengajuan> {
                 ],
               ),
 
-            if (persyaratan.isNotEmpty) const SizedBox(height: 16),
-
-            // ── SECTION: Foto Bukti Lampiran ──────────────────────────────
-            _sectionCard(
-              primary: primary,
-              bgGreen: bgGreen,
-              title: 'Foto Bukti Lampiran',
-              icon: Icons.photo_library_outlined,
-              trailing: TextButton.icon(
-                onPressed: _tambahFotoBukti,
-                icon: const Icon(Icons.add_a_photo_outlined, size: 18),
-                label: Text(
-                  'Tambah Foto',
-                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+            // ── SECTION: Foto Bukti Lampiran (HANYA tampil jika jenis surat TIDAK memiliki berkas persyaratan khusus dari admin) ──
+            if (persyaratan.isEmpty) ...[
+              const SizedBox(height: 16),
+              _sectionCard(
+                primary: primary,
+                bgGreen: bgGreen,
+                title: 'Foto Bukti Lampiran (Opsional)',
+                icon: Icons.photo_library_outlined,
+                trailing: TextButton.icon(
+                  onPressed: _tambahFotoBukti,
+                  icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+                  label: Text(
+                    'Tambah Foto',
+                    style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: primary,
+                    backgroundColor: bgGreen,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
                 ),
-                style: TextButton.styleFrom(
-                  foregroundColor: primary,
-                  backgroundColor: bgGreen,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                ),
-              ),
-              children: [
-                if (buktiPhotos.isEmpty)
-                  // Placeholder kosong
-                  InkWell(
-                    onTap: _tambahFotoBukti,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: double.infinity,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: primary.withOpacity(0.3),
-                          style: BorderStyle.solid,
+                children: [
+                  if (buktiPhotos.isEmpty)
+                    // Placeholder kosong
+                    InkWell(
+                      onTap: _tambahFotoBukti,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: double.infinity,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: primary.withValues(alpha: 0.3),
+                            style: BorderStyle.solid,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_photo_alternate_outlined,
+                                size: 32, color: primary.withValues(alpha: 0.5)),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Tap untuk menambahkan foto bukti (Opsional)',
+                              style: GoogleFonts.poppins(
+                                color: primary.withValues(alpha: 0.6),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_photo_alternate_outlined,
-                              size: 36, color: primary.withOpacity(0.5)),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tap untuk menambahkan foto bukti',
-                            style: GoogleFonts.poppins(
-                              color: primary.withOpacity(0.6),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                    )
+                  else
+                    // Grid foto
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 1,
                       ),
-                    ),
-                  )
-                else
-                  // Grid foto
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                      childAspectRatio: 1,
-                    ),
-                    itemCount: buktiPhotos.length + 1,
-                    itemBuilder: (context, index) {
-                      // Tombol tambah di akhir grid
-                      if (index == buktiPhotos.length) {
-                        return InkWell(
-                          onTap: _tambahFotoBukti,
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: bgGreen,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: primary.withOpacity(0.4)),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add, size: 28, color: primary),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Tambah',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-
-                      // Thumbnail foto
-                      return Stack(
-                        children: [
-                          ClipRRect(
+                      itemCount: buktiPhotos.length + 1,
+                      itemBuilder: (context, index) {
+                        // Tombol tambah di akhir grid
+                        if (index == buktiPhotos.length) {
+                          return InkWell(
+                            onTap: _tambahFotoBukti,
                             borderRadius: BorderRadius.circular(10),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: double.infinity,
-                              child: _imagePreview(
-                                item: buktiPhotos[index],
-                                fit: BoxFit.cover,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: bgGreen,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: primary.withValues(alpha: 0.4)),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.add, size: 28, color: primary),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Tambah',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+
+                        // Thumbnail foto
+                        return Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: SizedBox(
                                 width: double.infinity,
                                 height: double.infinity,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 4,
-                            right: 4,
-                            child: GestureDetector(
-                              onTap: () => _hapusFotoBukti(index),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade600,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      blurRadius: 4,
-                                    )
-                                  ],
+                                child: _imagePreview(
+                                  item: buktiPhotos[index],
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
                                 ),
-                                padding: const EdgeInsets.all(4),
-                                child: const Icon(Icons.close, size: 14, color: Colors.white),
                               ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-              ],
-            ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: GestureDetector(
+                                onTap: () => _hapusFotoBukti(index),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade600,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.3),
+                                        blurRadius: 4,
+                                      )
+                                    ],
+                                  ),
+                                  padding: const EdgeInsets.all(4),
+                                  child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ],
 
             const SizedBox(height: 24),
 
@@ -696,7 +1003,7 @@ class _FormPengajuan extends State<FormPengajuan> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -708,7 +1015,7 @@ class _FormPengajuan extends State<FormPengajuan> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: primary.withOpacity(0.07),
+              color: primary.withValues(alpha: 0.07),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Row(
@@ -776,7 +1083,7 @@ class _FormPengajuan extends State<FormPengajuan> {
           contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: primary.withOpacity(0.3), width: 1.2),
+            borderSide: BorderSide(color: primary.withValues(alpha: 0.3), width: 1.2),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),

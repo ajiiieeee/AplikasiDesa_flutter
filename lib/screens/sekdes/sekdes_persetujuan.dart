@@ -106,7 +106,7 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF16A34A)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF004AAD)),
             child: Text('Setujui', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ],
@@ -302,7 +302,7 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF16A34A),
+                        backgroundColor: const Color(0xFF004AAD),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(
@@ -350,7 +350,7 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
     const bgGrey = Color(0xFFF5F7FA);
 
     return Scaffold(
@@ -398,7 +398,7 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
   }
 
   Widget _buildSuratListTab(Future<List<PengajuanModel>> futureData, {required bool isApprovalTab}) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
 
     return RefreshIndicator(
       color: primaryGreen,
@@ -448,7 +448,7 @@ class _SekdesPersetujuanScreenState extends State<SekdesPersetujuanScreen> with 
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),

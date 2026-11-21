@@ -138,7 +138,7 @@ class _KadesHomeScreenState extends State<KadesHomeScreen> {
   }
 
   void _showDetailModal(PengajuanModel item) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -232,7 +232,7 @@ class _KadesHomeScreenState extends State<KadesHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
     const bgGrey = Color(0xFFF8FAFC);
 
     return Scaffold(
@@ -416,7 +416,7 @@ class _KadesHomeScreenState extends State<KadesHomeScreen> {
                                     subtitle: 'Telah Diterbitkan',
                                     icon: Icons.check_circle_rounded,
                                     color: primaryGreen,
-                                    bgColor: const Color(0xFFE8F5E9),
+                                    bgColor: const Color(0xFFE3F2FD),
                                   )),
                                 ],
                               ),
@@ -480,7 +480,7 @@ class _KadesHomeScreenState extends State<KadesHomeScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3))],
+                                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
                                   border: Border.all(color: const Color(0xFFECEFF1)),
                                 ),
                                 child: ListTile(
@@ -539,7 +539,7 @@ class _KadesHomeScreenState extends State<KadesHomeScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
         border: Border.all(color: const Color(0xFFECEFF1)),
       ),
       child: Column(

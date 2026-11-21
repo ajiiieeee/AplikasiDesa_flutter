@@ -18,8 +18,8 @@ class NotificationScreen extends StatefulWidget {
 class _NotificationScreenState extends State<NotificationScreen>
     with SingleTickerProviderStateMixin {
   // ── Tema ────────────────────────────────────────────────
-  static const _primaryGreen   = Color(0xFF2E7D32);
-  static const _primaryGreenL  = Color(0xFF43A047);
+  static const _primaryGreen   = Color(0xFF004AAD);
+  static const _primaryGreenL  = Color(0xFF1E88E5);
   static const _bgGrey         = Color(0xFFF5F7FA);
   static const _cardBg         = Colors.white;
 
@@ -141,7 +141,7 @@ class _NotificationScreenState extends State<NotificationScreen>
     final iconData  = isPengajuan ? Icons.mark_email_read_rounded : Icons.campaign_rounded;
     final accentColor = isPengajuan
         ? _primaryGreen
-        : const Color(0xFF388E3C); // hijau sedikit lebih gelap untuk pengaduan
+        : const Color(0xFF004AAD); // hijau sedikit lebih gelap untuk pengaduan
 
     return FadeTransition(
       opacity: _fadeAnim,
@@ -157,7 +157,7 @@ class _NotificationScreenState extends State<NotificationScreen>
             decoration: BoxDecoration(
               color: _cardBg,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFE8F5E9)),
+              border: Border.all(color: const Color(0xFFE3F2FD)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -290,7 +290,7 @@ class _NotificationScreenState extends State<NotificationScreen>
             width: 90,
             height: 90,
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9),
+              color: const Color(0xFFE3F2FD),
               shape: BoxShape.circle,
             ),
             child: const Icon(

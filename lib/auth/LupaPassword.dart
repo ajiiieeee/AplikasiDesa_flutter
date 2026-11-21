@@ -9,7 +9,7 @@ class LupaPassword extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
 
     return ChangeNotifierProvider(
       create: (_) => LupaPasswordController(),
@@ -42,7 +42,7 @@ class LupaPassword extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFDCFCE7),
+                        color: const Color(0xFFE3F2FD),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(

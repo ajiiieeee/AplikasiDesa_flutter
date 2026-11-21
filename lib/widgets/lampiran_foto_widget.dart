@@ -71,7 +71,7 @@ class LampiranFotoWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.photo_library_outlined, size: 16, color: Color(0xFF2E7D32)),
+                const Icon(Icons.photo_library_outlined, size: 16, color: Color(0xFF004AAD)),
                 const SizedBox(width: 6),
                 Text(
                   title,
@@ -86,16 +86,16 @@ class LampiranFotoWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
+                color: const Color(0xFFE3F2FD),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFA5D6A7)),
+                border: Border.all(color: const Color(0xFFBBDEFB)),
               ),
               child: Text(
                 '${fotos.length} Berkas',
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2E7D32),
+                  color: const Color(0xFF004AAD),
                 ),
               ),
             ),
@@ -151,7 +151,7 @@ class LampiranFotoWidget extends StatelessWidget {
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Color(0xFF2E7D32),
+                                      color: Color(0xFF004AAD),
                                     ),
                                   ),
                                 ),

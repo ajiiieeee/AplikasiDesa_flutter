@@ -239,7 +239,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
   // ════════════════════════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF2E7D32);
+    const primaryGreen = Color(0xFF004AAD);
     const bgGrey       = Color(0xFFF5F7FA);
 
     return Scaffold(
@@ -273,9 +273,9 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
+                  color: const Color(0xFFE3F2FD),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFA5D6A7)),
+                  border: Border.all(color: const Color(0xFFBBDEFB)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +291,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
                             'Pengajuan ini dibuat atas nama warga dan akan langsung berstatus "Disetujui Kepala Dusun".',
                             style: GoogleFonts.poppins(
                               fontSize: 12,
-                              color: const Color(0xFF1B5E20),
+                              color: const Color(0xFF003580),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -301,7 +301,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
                               'Menampilkan warga Dusun: $_namaDusun',
                               style: GoogleFonts.poppins(
                                 fontSize: 11,
-                                color: const Color(0xFF388E3C),
+                                color: const Color(0xFF004AAD),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -325,7 +325,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -357,9 +357,9 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
                         suffixProps: DropdownSuffixProps(
                           dropdownButtonProps: DropdownButtonProps(
                             iconOpened: const Icon(Icons.arrow_drop_up,
-                                color: Color(0xFF2E7D32)),
+                                color: Color(0xFF004AAD)),
                             iconClosed: const Icon(Icons.arrow_drop_down,
-                                color: Color(0xFF2E7D32)),
+                                color: Color(0xFF004AAD)),
                           ),
                         ),
                         decoratorProps: DropDownDecoratorProps(
@@ -384,7 +384,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
                               hintText: 'Cari nama atau NIK...',
                               hintStyle: GoogleFonts.poppins(fontSize: 13),
                               prefixIcon: const Icon(Icons.search,
-                                  color: Color(0xFF2E7D32), size: 20),
+                                  color: Color(0xFF004AAD), size: 20),
                               filled: true,
                               fillColor: bgGrey,
                               border: OutlineInputBorder(
@@ -405,14 +405,14 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
                                 CircleAvatar(
                                   radius: 18,
                                   backgroundColor: isSelected
-                                      ? const Color(0xFF2E7D32)
-                                      : const Color(0xFFE8F5E9),
+                                      ? const Color(0xFF004AAD)
+                                      : const Color(0xFFE3F2FD),
                                   child: Icon(
                                     Icons.person_outline,
                                     size: 18,
                                     color: isSelected
                                         ? Colors.white
-                                        : const Color(0xFF2E7D32),
+                                        : const Color(0xFF004AAD),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -441,7 +441,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
                                 ),
                                 if (isSelected)
                                   const Icon(Icons.check_circle,
-                                      color: Color(0xFF2E7D32), size: 18),
+                                      color: Color(0xFF004AAD), size: 18),
                               ],
                             ),
                           ),
@@ -487,7 +487,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -533,7 +533,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -574,7 +574,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -672,7 +672,7 @@ class _KadusFormPengajuanScreenState extends State<KadusFormPengajuanScreen> {
   }
 
   Widget _buildStepHeader({required String step, required String title}) {
-    const primaryGreen = Color(0xFF2E7D32);
+    const primaryGreen = Color(0xFF004AAD);
     return Row(
       children: [
         Container(

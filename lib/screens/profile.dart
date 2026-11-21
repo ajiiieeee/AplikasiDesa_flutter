@@ -143,11 +143,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF0057A6),
+            color: const Color(0xFF004AAD),
           ),
         ),
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.25),
+        shadowColor: Colors.black.withValues(alpha: 0.25),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       backgroundColor: Colors.white,
@@ -323,14 +323,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: <Widget>[
                         const Icon(
                           Icons.edit,
-                          color: Color(0xFF0057A6),
+                          color: Color(0xFF004AAD),
                           size: 20,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           'Info Profil',
                           style: GoogleFonts.poppins(
-                            color: const Color(0xFF0057A6),
+                            color: const Color(0xFF004AAD),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -338,7 +338,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const Icon(
                       Icons.arrow_forward_ios,
-                      color: Color(0xFF0057A6),
+                      color: Color(0xFF004AAD),
                       size: 16,
                     ),
                   ],

@@ -19,10 +19,10 @@ class Pengaduan extends StatefulWidget {
 }
 
 class _PengaduanState extends State<Pengaduan> {
-  static const _primary   = Color(0xFF2E7D32);
-  static const _accent    = Color(0xFF16A34A);
-  static const _bgGreen   = Color(0xFFE8F5E9);
-  static const _fillGreen = Color(0xFFF1F8F1);
+  static const _primary   = Color(0xFF004AAD);
+  static const _accent    = Color(0xFF004AAD);
+  static const _bgGreen   = Color(0xFFE3F2FD);
+  static const _fillGreen = Color(0xFFF0F6FF);
   static const _bgPage    = Color(0xFFF5F7FA);
 
   final TextEditingController ulasanController = TextEditingController();
@@ -42,26 +42,161 @@ class _PengaduanState extends State<Pengaduan> {
     'Lainnya',
   ];
 
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-    if (pickedFile == null) return;
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final pickedFile = await ImagePicker().pickImage(
+        source: source,
+        imageQuality: 80,
+      );
+      if (pickedFile == null) return;
 
-    final bytes = await pickedFile.readAsBytes();
-    setState(() {
-      _pickedFile  = pickedFile;
-      _imageBytes  = bytes;
-      _imageFile   = kIsWeb ? null : File(pickedFile.path);
-    });
+      final bytes = await pickedFile.readAsBytes();
+
+      // Validasi ukuran file maksimal 5MB
+      const maxSizeBytes = 5 * 1024 * 1024; // 5 MB
+      if (bytes.lengthInBytes > maxSizeBytes) {
+        final sizeMB = (bytes.lengthInBytes / (1024 * 1024)).toStringAsFixed(1);
+        if (mounted) {
+          showCustomSnackbar(
+            context: context,
+            message: 'Foto terlalu besar ($sizeMB MB). Maksimal 5 MB.',
+            backgroundColor: Colors.orange,
+            icon: Icons.warning_amber_rounded,
+          );
+        }
+        return;
+      }
+
+      setState(() {
+        _pickedFile  = pickedFile;
+        _imageBytes  = bytes;
+        _imageFile   = kIsWeb ? null : File(pickedFile.path);
+      });
+    } catch (e) {
+      if (mounted) {
+        showCustomSnackbar(
+          context: context,
+          message: 'Gagal mengambil foto: $e',
+          backgroundColor: Colors.red,
+          icon: Icons.error,
+        );
+      }
+    }
+  }
+
+  void _showImageSourceDialog() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (BuildContext ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                Text(
+                  'Pilih Sumber Foto Bukti',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _primary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _pickImage(ImageSource.camera);
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            color: _fillGreen,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _primary.withValues(alpha: 0.3)),
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.camera_alt_rounded, color: _primary, size: 30),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Kamera',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: _primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _pickImage(ImageSource.gallery);
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            color: _fillGreen,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _primary.withValues(alpha: 0.3)),
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.photo_library_rounded, color: _primary, size: 30),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Galeri',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: _primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _submitForm() async {
     if (_selectedKategori == null) {
       showCustomSnackbar(
         context: context,
-        message: 'Kategori belum dipilih',
+        message: 'Kategori pengaduan belum dipilih',
         backgroundColor: Colors.orange,
         icon: Icons.warning_amber_rounded,
       );
@@ -71,7 +206,18 @@ class _PengaduanState extends State<Pengaduan> {
     if (ulasanController.text.trim().isEmpty) {
       showCustomSnackbar(
         context: context,
-        message: 'Ulasan tidak boleh kosong',
+        message: 'Uraian pengaduan tidak boleh kosong',
+        backgroundColor: Colors.orange,
+        icon: Icons.warning_amber_rounded,
+      );
+      return;
+    }
+
+    // Validasi foto bukti wajib minimal 1 foto
+    if (_imageBytes == null || _pickedFile == null) {
+      showCustomSnackbar(
+        context: context,
+        message: 'Foto bukti pengaduan wajib dilampirkan minimal 1 foto.',
         backgroundColor: Colors.orange,
         icon: Icons.warning_amber_rounded,
       );
@@ -193,7 +339,7 @@ class _PengaduanState extends State<Pengaduan> {
               decoration: BoxDecoration(
                 color: _bgGreen,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _primary.withOpacity(0.3)),
+                border: Border.all(color: _primary.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -232,7 +378,7 @@ class _PengaduanState extends State<Pengaduan> {
 
             // ── Upload Foto ───────────────────────────────────────────────
             _sectionCard(
-              title: 'Foto Pendukung (Opsional)',
+              title: 'Foto Bukti Pengaduan (Wajib *)',
               icon: Icons.photo_library_outlined,
               children: [
                 _buildUploadField(),
@@ -296,7 +442,7 @@ class _PengaduanState extends State<Pengaduan> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -310,7 +456,7 @@ class _PengaduanState extends State<Pengaduan> {
             padding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: _primary.withOpacity(0.07),
+              color: _primary.withValues(alpha: 0.07),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(16)),
             ),
@@ -358,7 +504,7 @@ class _PengaduanState extends State<Pengaduan> {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide:
-              BorderSide(color: _primary.withOpacity(0.4), width: 1.5),
+              BorderSide(color: _primary.withValues(alpha: 0.4), width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -446,7 +592,7 @@ class _PengaduanState extends State<Pengaduan> {
   // ── Upload foto ───────────────────────────────────────────────────────────
   Widget _buildUploadField() {
     return InkWell(
-      onTap: _pickImage,
+      onTap: _showImageSourceDialog,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
@@ -455,7 +601,7 @@ class _PengaduanState extends State<Pengaduan> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _imageBytes != null ? _primary : _primary.withOpacity(0.4),
+            color: _imageBytes != null ? _primary : _primary.withValues(alpha: 0.4),
             width: 1.5,
           ),
         ),
@@ -487,7 +633,7 @@ class _PengaduanState extends State<Pengaduan> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               blurRadius: 4,
                             )
                           ],
@@ -506,16 +652,16 @@ class _PengaduanState extends State<Pengaduan> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: _bgGreen,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.add_photo_alternate_outlined,
+                    child: const Icon(Icons.add_a_photo_outlined,
                         size: 30, color: _primary),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Tap untuk memilih foto',
+                    'Pilih Foto (Kamera / Galeri)',
                     style: GoogleFonts.poppins(
                       color: _primary,
                       fontWeight: FontWeight.w600,
@@ -524,9 +670,9 @@ class _PengaduanState extends State<Pengaduan> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Format JPG / PNG (opsional)',
+                    'Wajib melampirkan minimal 1 foto bukti (Maks. 5 MB)',
                     style: GoogleFonts.poppins(
-                        color: Colors.grey[500], fontSize: 11),
+                        color: Colors.red.shade400, fontSize: 11, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),

@@ -11,9 +11,9 @@ class DetailProfile extends StatefulWidget {
 }
 
 class _DetailProfileState extends State<DetailProfile> {
-  static const _primary  = Color(0xFF2E7D32);
-  static const _bgGreen  = Color(0xFFE8F5E9);
-  static const _fillGreen = Color(0xFFF1F8F1);
+  static const _primary  = Color(0xFF004AAD);
+  static const _bgGreen  = Color(0xFFE3F2FD);
+  static const _fillGreen = Color(0xFFF0F6FF);
 
   final TextEditingController nameController  = TextEditingController();
   final TextEditingController nikController   = TextEditingController();
@@ -153,7 +153,7 @@ class _DetailProfileState extends State<DetailProfile> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -166,7 +166,7 @@ class _DetailProfileState extends State<DetailProfile> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: _primary.withOpacity(0.07),
+              color: _primary.withValues(alpha: 0.07),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(16)),
             ),
@@ -201,7 +201,7 @@ class _DetailProfileState extends State<DetailProfile> {
     bool readOnly = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    final borderColor = readOnly ? _primary.withOpacity(0.4) : _primary;
+    final borderColor = readOnly ? _primary.withValues(alpha: 0.4) : _primary;
     final fillColor   = readOnly ? _fillGreen : Colors.white;
 
     return Padding(

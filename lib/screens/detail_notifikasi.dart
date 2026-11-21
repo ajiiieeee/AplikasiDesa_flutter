@@ -15,8 +15,8 @@ class DetailPengaduanScreen extends StatefulWidget {
 
 class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
   // ── Tema ────────────────────────────────────────────────
-  static const _primaryGreen  = Color(0xFF2E7D32);
-  static const _primaryGreenL = Color(0xFF43A047);
+  static const _primaryGreen  = Color(0xFF004AAD);
+  static const _primaryGreenL = Color(0xFF1E88E5);
   static const _bgColor       = Color(0xFFF5F7FA);
 
   // ── State ────────────────────────────────────────────────
@@ -76,7 +76,7 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
     return Container(
       padding: const EdgeInsets.all(2),
       decoration: const BoxDecoration(
-        color: Color(0xFFE8F5E9),
+        color: Color(0xFFE3F2FD),
         shape: BoxShape.circle,
       ),
       child: const CircleAvatar(
@@ -91,7 +91,7 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
     return Container(
       padding: const EdgeInsets.all(2),
       decoration: const BoxDecoration(
-        color: Color(0xFFE8F5E9),
+        color: Color(0xFFE3F2FD),
         shape: BoxShape.circle,
       ),
       child: const CircleAvatar(
@@ -237,7 +237,7 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
                       bottomLeft: Radius.circular(4),
                       bottomRight: Radius.circular(18),
                     ),
-                    border: Border.all(color: const Color(0xFFE8F5E9)),
+                    border: Border.all(color: const Color(0xFFE3F2FD)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.05),
@@ -282,9 +282,9 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
+        color: const Color(0xFFE3F2FD),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFA5D6A7)),
+        border: Border.all(color: const Color(0xFFBBDEFB)),
       ),
       child: Row(
         children: [
@@ -296,7 +296,7 @@ class _DetailPengaduanScreenState extends State<DetailPengaduanScreen> {
               'Detail percakapan pengaduan masyarakat dengan Admin Desa.',
               style: GoogleFonts.poppins(
                 fontSize: 13,
-                color: const Color(0xFF2E7D32),
+                color: const Color(0xFF004AAD),
                 height: 1.4,
               ),
             ),

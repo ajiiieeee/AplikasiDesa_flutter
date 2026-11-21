@@ -28,7 +28,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _showPassword      = false;
   bool _showKonfirmasi    = false;
 
-  static const _primaryGreen = Color(0xFF16A34A);
+  static const _primaryGreen = Color(0xFF004AAD);
   static const _bgColor      = Color(0xFFF8FAFC);
 
   @override
@@ -172,7 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
+                          color: const Color(0xFFE3F2FD),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(

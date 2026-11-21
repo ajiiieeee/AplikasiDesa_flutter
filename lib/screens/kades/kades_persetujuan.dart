@@ -111,7 +111,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
             icon: const Icon(Icons.draw_rounded, size: 16),
             label: Text('Sahkan & Terbitkan', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF16A34A),
+              backgroundColor: const Color(0xFF004AAD),
               foregroundColor: Colors.white,
             ),
           ),
@@ -126,7 +126,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator(color: Color(0xFF16A34A))),
+        builder: (_) => const Center(child: CircularProgressIndicator(color: Color(0xFF004AAD))),
       );
     }
 
@@ -174,7 +174,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF16A34A)),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF004AAD)),
                   child: Text('Buka PDF', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
@@ -292,7 +292,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
   }
 
   void _showDetailModal(PengajuanModel item) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -447,7 +447,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
     const bgGrey = Color(0xFFF5F7FA);
 
     return Scaffold(
@@ -489,7 +489,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
   }
 
   Widget _buildMenungguTab() {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
     return RefreshIndicator(
       color: primaryGreen,
       onRefresh: () async => _refreshData(),
@@ -611,7 +611,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
   }
 
   Widget _buildSelesaiTab() {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
     return RefreshIndicator(
       color: primaryGreen,
       onRefresh: () async => _refreshData(),
@@ -658,7 +658,7 @@ class _KadesPersetujuanScreenState extends State<KadesPersetujuanScreen>
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: const BoxDecoration(
-                        gradient: LinearGradient(colors: [Color(0xFF16A34A), Color(0xFF2E7D32)]),
+                        gradient: LinearGradient(colors: [Color(0xFF004AAD), Color(0xFF004AAD)]),
                         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
                       ),
                       child: Row(

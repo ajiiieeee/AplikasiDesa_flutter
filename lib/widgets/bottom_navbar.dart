@@ -125,7 +125,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 15,
                     offset: const Offset(0, -4),
                   ),
@@ -151,8 +151,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
             )
           : CurvedNavigationBar(
               backgroundColor: Colors.transparent,
-              color: const Color(0xFF0057A6),
-              buttonBackgroundColor: const Color(0xFF0057A6),
+              color: const Color(0xFF004AAD),
+              buttonBackgroundColor: const Color(0xFF004AAD),
               height: 60,
               items: const [
                 Icon(Icons.dashboard, size: 25, color: Colors.white),
@@ -173,7 +173,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   Widget _buildCustomNavItem(int index, IconData icon, String label) {
     final bool isSelected = _currentIndex == index;
-    const Color activeColor = Color(0xFF16A34A);
+    const Color activeColor = Color(0xFF004AAD);
     const Color inactiveColor = Color(0xFF9E9E9E);
 
     return InkWell(
@@ -187,7 +187,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withOpacity(0.12) : Colors.transparent,
+          color: isSelected ? activeColor.withValues(alpha: 0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(

@@ -109,7 +109,7 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
     const bgGrey = Color(0xFFF8FAFC);
 
     return Scaffold(
@@ -345,7 +345,7 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                                       subtitle: 'Selesai Diproses',
                                       icon: Icons.check_circle_rounded,
                                       color: primaryGreen,
-                                      bgColor: const Color(0xFFE8F5E9),
+                                      bgColor: const Color(0xFFE3F2FD),
                                       onTap: () {
                                         Navigator.push(
                                           context,
@@ -433,7 +433,7 @@ class _KadusHomeScreenState extends State<KadusHomeScreen> {
                             label: 'Total Surat Selesai Diterbitkan',
                             value: '$_selesai',
                             icon: Icons.task_alt_rounded,
-                            iconColor: const Color(0xFF2E7D32),
+                            iconColor: const Color(0xFF004AAD),
                           ),
                         ],
                       ),

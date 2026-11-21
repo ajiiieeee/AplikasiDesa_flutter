@@ -51,7 +51,7 @@ class _KadesMonitoringPengaduanScreenState
   }
 
   void _showDetailPengaduan(PengaduanModel item) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
 
     showModalBottomSheet(
       context: context,
@@ -128,9 +128,9 @@ class _KadesMonitoringPengaduanScreenState
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: item.isResponded ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                      color: item.isResponded ? const Color(0xFFE3F2FD) : const Color(0xFFFFF3E0),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: item.isResponded ? const Color(0xFFA5D6A7) : const Color(0xFFFFCC80)),
+                      border: Border.all(color: item.isResponded ? const Color(0xFFBBDEFB) : const Color(0xFFFFCC80)),
                     ),
                     child: Text(
                       (item.feedbackAdmin != null && item.feedbackAdmin!.isNotEmpty)
@@ -138,7 +138,7 @@ class _KadesMonitoringPengaduanScreenState
                           : 'Belum ada tanggapan resmi dari Admin Desa.',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        color: item.isResponded ? const Color(0xFF1B5E20) : const Color(0xFFE65100),
+                        color: item.isResponded ? const Color(0xFF003580) : const Color(0xFFE65100),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -183,7 +183,7 @@ class _KadesMonitoringPengaduanScreenState
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
     const bgGrey = Color(0xFFF5F7FA);
 
     return Scaffold(
@@ -244,7 +244,7 @@ class _KadesMonitoringPengaduanScreenState
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
                       border: Border.all(color: const Color(0xFFECEFF1)),
                     ),
                     child: Padding(
@@ -258,7 +258,7 @@ class _KadesMonitoringPengaduanScreenState
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: primaryGreen.withOpacity(0.12),
+                                  color: primaryGreen.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(item.kategori,
@@ -267,15 +267,15 @@ class _KadesMonitoringPengaduanScreenState
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: isResponded ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                                  color: isResponded ? const Color(0xFFE3F2FD) : const Color(0xFFFFF3E0),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: isResponded ? const Color(0xFFA5D6A7) : const Color(0xFFFFCC80)),
+                                  border: Border.all(color: isResponded ? const Color(0xFFBBDEFB) : const Color(0xFFFFCC80)),
                                 ),
                                 child: Text(
                                   isResponded ? 'Sudah Ditanggapi' : 'Belum Ditanggapi',
                                   style: GoogleFonts.poppins(
                                     fontSize: 10, fontWeight: FontWeight.bold,
-                                    color: isResponded ? const Color(0xFF2E7D32) : const Color(0xFFE65100),
+                                    color: isResponded ? const Color(0xFF004AAD) : const Color(0xFFE65100),
                                   ),
                                 ),
                               ),

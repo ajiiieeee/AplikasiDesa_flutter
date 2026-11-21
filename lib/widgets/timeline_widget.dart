@@ -33,8 +33,8 @@ class SuratTimelineWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF2E7D32);
-    const secondaryGreen = Color(0xFF4CAF50);
+    const primaryGreen = Color(0xFF004AAD);
+    const secondaryGreen = Color(0xFF1E88E5);
     const greyColor = Color(0xFFBDBDBD);
 
     final isDitolak = status.startsWith('Ditolak');
@@ -93,9 +93,9 @@ class SuratTimelineWidget extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FBE7).withOpacity(0.5),
+        color: const Color(0xFFE3F2FD).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFDCEDC8)),
+        border: Border.all(color: const Color(0xFFBBDEFB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,7 +161,7 @@ class SuratTimelineWidget extends StatelessWidget {
                           height: 28,
                           color: isDone && (index + 2 <= completedStep)
                               ? secondaryGreen
-                              : greyColor.withOpacity(0.5),
+                              : greyColor.withValues(alpha: 0.5),
                         ),
                     ],
                   ),

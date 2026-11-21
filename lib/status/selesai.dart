@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../config/globals.dart';
 import '../models/pengajuanselesai_model.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 import 'package:digitalv/widgets/timeline_widget.dart';
@@ -29,13 +31,11 @@ class _DisetujuiViewState extends State<DisetujuiView> {
 
   Future<bool> requestStoragePermission() async {
     if (Platform.isAndroid) {
-      var status = await Permission.manageExternalStorage.status;
-      if (!status.isGranted) {
-        status = await Permission.manageExternalStorage.request();
-        if (!status.isGranted) {
-          return false;
-        }
-      }
+      // Android 13+ (API 33+) tidak butuh permission storage untuk download ke app dir
+      // Cukup cek READ_EXTERNAL_STORAGE untuk versi lama
+      if (await Permission.storage.isGranted) return true;
+      final status = await Permission.storage.request();
+      if (!status.isGranted && !status.isPermanentlyDenied) return false;
     }
     return true;
   }
@@ -66,7 +66,7 @@ class _DisetujuiViewState extends State<DisetujuiView> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF2E7D32);
+    const primaryGreen = Color(0xFF004AAD);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -117,7 +117,7 @@ class _DisetujuiViewState extends State<DisetujuiView> {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -200,7 +200,7 @@ class _DisetujuiViewState extends State<DisetujuiView> {
                                   style: GoogleFonts.poppins(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF1B5E20),
+                                    color: const Color(0xFF003580),
                                   ),
                                 ),
                               ],
@@ -237,9 +237,9 @@ class _DisetujuiViewState extends State<DisetujuiView> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE8F5E9),
+                              color: const Color(0xFFE3F2FD),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFFA5D6A7)),
+                              border: Border.all(color: const Color(0xFFBBDEFB)),
                             ),
                             child: Row(
                               children: [
@@ -251,7 +251,7 @@ class _DisetujuiViewState extends State<DisetujuiView> {
                                     style: GoogleFonts.poppins(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF1B5E20),
+                                      color: const Color(0xFF003580),
                                     ),
                                   ),
                                 ),
@@ -275,41 +275,89 @@ class _DisetujuiViewState extends State<DisetujuiView> {
                                         downloadUrl = '$serverURL/${downloadUrl.startsWith('/') ? downloadUrl.substring(1) : downloadUrl}';
                                       }
 
-                                      if (!await requestStoragePermission()) {
+                                      final uri = Uri.parse(downloadUrl);
+
+                                      if (context.mounted) {
                                         showCustomSnackbar(
                                           context: context,
-                                          message: 'Izin penyimpanan ditolak',
-                                          backgroundColor: Colors.red,
-                                          icon: Icons.error,
+                                          message: 'Membuka dan mengunduh PDF...',
+                                          backgroundColor: Colors.blue,
+                                          icon: Icons.downloading_rounded,
                                         );
+                                      }
+
+                                      // Metode 1: Buka melalui external application (Browser / Download Manager)
+                                      // Ini metode standar Android modern (tidak memicu blokir "Izin penyimpanan ditolak" dan file otomatis masuk ke Download)
+                                      bool launched = false;
+                                      try {
+                                        if (await canLaunchUrl(uri)) {
+                                          launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                        }
+                                      } catch (_) {}
+
+                                      if (launched) {
+                                        if (context.mounted) {
+                                          showCustomSnackbar(
+                                            context: context,
+                                            message: 'Surat dibuka di browser/pengunduh perangkat.',
+                                            backgroundColor: Colors.green,
+                                            icon: Icons.check_circle,
+                                          );
+                                        }
                                         return;
                                       }
 
+                                      // Metode 2: Download langsung via Dio jika aplikasi external gagal
                                       try {
-                                        final fileName = downloadUrl.split('/').last;
-                                        final directory = Directory('/storage/emulated/0/Download');
+                                        final fileName = downloadUrl.split('/').last
+                                            .replaceAll(RegExp(r'[^\w\-_\.]'), '_');
 
-                                        if (!await directory.exists()) {
-                                          await directory.create(recursive: true);
+                                        Directory? directory;
+                                        if (Platform.isAndroid) {
+                                          try {
+                                            directory = Directory('/storage/emulated/0/Download');
+                                            if (!await directory.exists()) {
+                                              directory = await getExternalStorageDirectory();
+                                            }
+                                          } catch (_) {
+                                            directory = await getExternalStorageDirectory();
+                                          }
+                                        } else {
+                                          directory = await getApplicationDocumentsDirectory();
                                         }
 
+                                        directory ??= await getTemporaryDirectory();
                                         final filePath = '${directory.path}/$fileName';
-                                        Dio dio = Dio();
-                                        await dio.download(downloadUrl, filePath);
 
-                                        showCustomSnackbar(
-                                          context: context,
-                                          message: 'File berhasil diunduh di folder Download',
-                                          backgroundColor: Colors.green,
-                                          icon: Icons.check_circle,
+                                        Dio dio = Dio();
+                                        await dio.download(
+                                          downloadUrl,
+                                          filePath,
+                                          options: Options(receiveTimeout: const Duration(seconds: 60)),
                                         );
+
+                                        if (context.mounted) {
+                                          showCustomSnackbar(
+                                            context: context,
+                                            message: 'PDF berhasil diunduh ke: $filePath',
+                                            backgroundColor: Colors.green,
+                                            icon: Icons.check_circle,
+                                          );
+                                        }
                                       } catch (e) {
-                                        showCustomSnackbar(
-                                          context: context,
-                                          message: 'Gagal download file: $e',
-                                          backgroundColor: Colors.red,
-                                          icon: Icons.error,
-                                        );
+                                        // Metode 3: Fallback ke launchUrl mode default
+                                        try {
+                                          await launchUrl(uri, mode: LaunchMode.platformDefault);
+                                        } catch (_) {
+                                          if (context.mounted) {
+                                            showCustomSnackbar(
+                                              context: context,
+                                              message: 'Gagal mengunduh PDF: periksa koneksi internet.',
+                                              backgroundColor: Colors.red,
+                                              icon: Icons.error,
+                                            );
+                                          }
+                                        }
                                       }
                                     },
                               icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),

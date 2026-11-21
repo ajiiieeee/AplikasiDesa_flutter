@@ -99,7 +99,7 @@ class _DitolakStateView extends State<DitolakView> {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -277,9 +277,16 @@ class _DitolakStateView extends State<DitolakView> {
                                       futureDitolak = fetchDitolak();
                                     });
                                   } else {
+                                    String errorMsg = "Gagal menghapus surat";
+                                    try {
+                                      final resJson = jsonDecode(response.body);
+                                      if (resJson['message'] != null) {
+                                        errorMsg = resJson['message'];
+                                      }
+                                    } catch (_) {}
                                     showCustomSnackbar(
                                       context: context,
-                                      message: "Gagal menghapus surat",
+                                      message: errorMsg,
                                       backgroundColor: Colors.red,
                                       icon: Icons.error,
                                     );

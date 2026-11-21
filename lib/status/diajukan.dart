@@ -49,7 +49,7 @@ class _PengajuanViewState extends State<PengajuanView> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF2E7D32);
+    const primaryGreen = Color(0xFF004AAD);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -88,230 +88,265 @@ class _PengajuanViewState extends State<PengajuanView> {
           }
 
           final pengajuans = snapshot.data!;
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: pengajuans.length,
-            itemBuilder: (context, index) {
-              final item = pengajuans[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                  border: Border.all(color: const Color(0xFFECEFF1)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: const BoxDecoration(
-                        color: primaryGreen,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(18),
+          return RefreshIndicator(
+            color: primaryGreen,
+            onRefresh: () async {
+              setState(() {
+                futurePengajuan = fetchPengajuan();
+              });
+              await futurePengajuan;
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              itemCount: pengajuans.length,
+              itemBuilder: (context, index) {
+                final item = pengajuans[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(color: const Color(0xFFECEFF1)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Card
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: const BoxDecoration(
+                          color: primaryGreen,
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(18),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.description_rounded, color: Colors.white, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                item.namaSurat.toUpperCase(),
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.description_rounded, color: Colors.white, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              item.namaSurat.toUpperCase(),
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
 
-                    // Content
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Diajukan Pada:",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              Text(
-                                item.tanggalDiajukan,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF263238),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (item.keteranganDisplay.isNotEmpty && item.keteranganDisplay != '-') ...[
-                            const SizedBox(height: 6),
+                      // Content
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  item.isApprovedByAdmin ? "Keterangan:" : "Keperluan:",
+                                  "Diajukan Pada:",
                                   style: GoogleFonts.poppins(
                                     fontSize: 12,
                                     color: Colors.grey[600],
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    item.keteranganDisplay,
+                                Text(
+                                  item.tanggalDiajukan,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF263238),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (item.keteranganDisplay.isNotEmpty && item.keteranganDisplay != '-') ...[
+                              const SizedBox(height: 6),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.isApprovedByAdmin ? "Keterangan:" : "Keperluan:",
                                     style: GoogleFonts.poppins(
                                       fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF263238),
-                                    ),
-                                    textAlign: TextAlign.end,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFF8E1),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFFFFE082)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.info_outline, color: Color(0xFFF57F17), size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Surat Anda sedang dalam proses verifikasi pihak terkait.',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF5D4037),
+                                      color: Colors.grey[600],
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SuratTimelineWidget(status: item.status),
-                          const SizedBox(height: 10),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton.icon(
-                              onPressed: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: Text(
-                                      "Konfirmasi Hapus",
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      item.keteranganDisplay,
                                       style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF263238),
                                       ),
+                                      textAlign: TextAlign.end,
                                     ),
-                                    content: Text(
-                                      "Apakah Anda yakin ingin batalkan / hapus pengajuan surat ini?",
-                                      style: GoogleFonts.poppins(fontSize: 14),
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context, false),
-                                        child: Text(
-                                          "Batal",
-                                          style: GoogleFonts.poppins(color: Colors.grey[700]),
-                                        ),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () => Navigator.pop(context, true),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red,
-                                        ),
-                                        child: Text(
-                                          "Hapus",
-                                          style: GoogleFonts.poppins(color: Colors.white),
-                                        ),
-                                      ),
-                                    ],
                                   ),
-                                );
-
-                                if (confirm == true) {
-                                  final token = await SecureStorageService.instance.getToken() ?? '';
-                                  final authHeaders = {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    if (token.isNotEmpty) 'Authorization': 'Bearer $token',
-                                  };
-
-                                  final response = await http.delete(
-                                    Uri.parse('$baseURL/suratdelete/${item.idPengajuan}'),
-                                    headers: authHeaders,
-                                  );
-
-                                  if (response.statusCode == 200) {
-                                    showCustomSnackbar(
-                                      context: context,
-                                      message: "Pengajuan berhasil dihapus",
-                                      backgroundColor: Colors.green,
-                                      icon: Icons.check_circle,
-                                    );
-                                    setState(() {
-                                      futurePengajuan = fetchPengajuan();
-                                    });
-                                  } else {
-                                    showCustomSnackbar(
-                                      context: context,
-                                      message: "Gagal menghapus surat",
-                                      backgroundColor: Colors.red,
-                                      icon: Icons.error,
-                                    );
-                                  }
-                                }
-                              },
-                              icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
-                              label: Text(
-                                "Hapus Pengajuan",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
+                                ],
+                              ),
+                            ],
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF8E1),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFFFFE082)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.info_outline, color: Color(0xFFF57F17), size: 18),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Surat Anda sedang dalam proses verifikasi pihak terkait.',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: const Color(0xFF5D4037),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 12),
+                            SuratTimelineWidget(status: item.status),
+                            const SizedBox(height: 10),
+                            // Hanya tampilkan tombol Hapus jika status masih "Diajukan"
+                            // (belum diproses oleh Kadus)
+                            if (item.status == 'Diajukan')
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text(
+                                          "Konfirmasi Hapus",
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        content: Text(
+                                          "Apakah Anda yakin ingin batalkan / hapus pengajuan surat ini?",
+                                          style: GoogleFonts.poppins(fontSize: 14),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, false),
+                                            child: Text(
+                                              "Batal",
+                                              style: GoogleFonts.poppins(color: Colors.grey[700]),
+                                            ),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => Navigator.pop(context, true),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                            ),
+                                            child: Text(
+                                              "Hapus",
+                                              style: GoogleFonts.poppins(color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirm == true) {
+                                      final token = await SecureStorageService.instance.getToken() ?? '';
+                                      final authHeaders = {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+                                      };
+
+                                      final response = await http.delete(
+                                        Uri.parse('$baseURL/suratdelete/${item.idPengajuan}'),
+                                        headers: authHeaders,
+                                      );
+
+                                      if (response.statusCode == 200) {
+                                        if (context.mounted) {
+                                          showCustomSnackbar(
+                                            context: context,
+                                            message: "Pengajuan berhasil dihapus",
+                                            backgroundColor: Colors.green,
+                                            icon: Icons.check_circle,
+                                          );
+                                        }
+                                        setState(() {
+                                          futurePengajuan = fetchPengajuan();
+                                        });
+                                      } else {
+                                        if (context.mounted) {
+                                          String errorMsg = "Gagal menghapus surat";
+                                          try {
+                                            final resJson = jsonDecode(response.body);
+                                            if (resJson['message'] != null) {
+                                              errorMsg = resJson['message'];
+                                            }
+                                          } catch (_) {}
+                                          showCustomSnackbar(
+                                            context: context,
+                                            message: errorMsg,
+                                            backgroundColor: Colors.red,
+                                            icon: Icons.error,
+                                          );
+                                        }
+                                      }
+                                    }
+                                  },
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
+                                  label: Text(
+                                    "Hapus Pengajuan",
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  'Sedang diverifikasi – tidak dapat dibatalkan',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color: Colors.grey[500],
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                    ],
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

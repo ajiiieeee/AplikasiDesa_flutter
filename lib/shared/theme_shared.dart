@@ -2,8 +2,8 @@ part of 'shared.dart';
 
 double defaultMargin = 24;
 
-Color primaryColor = const Color(0xFF2E7D32);
-Color secondaryColor = const Color(0xFF4CAF50);
+Color primaryColor = const Color(0xFF004AAD);
+Color secondaryColor = const Color(0xFF1E88E5);
 Color backgroundColor = const Color(0xFFF5F7FA);
 Color cardColor = const Color(0xFFFFFFFF);
 Color successColor = const Color(0xFF4CAF50);

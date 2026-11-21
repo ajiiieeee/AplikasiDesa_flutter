@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "493392130994",
+    "project_id": "desa-rambipuji",
+    "storage_bucket": "desa-rambipuji.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:493392130994:android:9c15cc6c27f378ff92aaab",
+        "android_client_info": {
+          "package_name": "com.example.digitalv"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFcKb9IVyMy1_hizN20HOifEWYhS631oM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+

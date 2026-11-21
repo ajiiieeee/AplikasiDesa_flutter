@@ -12,6 +12,7 @@ import '../auth/register.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:digitalv/widgets/snackbarcustom.dart';
 import '../services/secure_storage_service.dart';
+import '../services/notification_service.dart';
 
 class Loginregis extends StatefulWidget {
   const Loginregis({super.key});
@@ -31,6 +32,9 @@ class _LoginregisState extends State<Loginregis> {
     await SecureStorageService.instance.saveToken(token);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
+
+    // Sinkronkan FCM Device Token ke server untuk Push Notification
+    await NotificationService.instance.syncTokenToBackend();
   }
 
 
@@ -52,10 +56,7 @@ class _LoginregisState extends State<Loginregis> {
     try {
       final response = await http.post(
         Uri.parse('$baseURL/login'),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Accept': 'application/json',
-        },
+        headers: getApiHeaders(),
         body: jsonEncode({'nik': nikLogin, 'password': passwordLogin}),
       );
 
@@ -97,6 +98,11 @@ class _LoginregisState extends State<Loginregis> {
           print('🔐 TOKEN YANG DISIMPAN: $token');
           print('👤 ROLE: $roleName (level $level)');
         }
+
+        // Sinkronkan FCM token ke backend secara otomatis
+        try {
+          NotificationService.instance.syncTokenToBackend();
+        } catch (_) {}
 
         showCustomSnackbar(
           context: context,
@@ -349,7 +355,7 @@ class _LoginregisState extends State<Loginregis> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -530,17 +536,17 @@ class _LoginregisState extends State<Loginregis> {
                               MaterialPageRoute(builder: (_) => const RegisterScreen()),
                             );
                           },
-                          icon: const Icon(Icons.person_add_alt_1_rounded, size: 20, color: Color(0xFF0284C7)),
+                          icon: const Icon(Icons.person_add_alt_1_rounded, size: 20, color: Color(0xFF004AAD)),
                           label: Text(
                             'Daftar / Aktivasi Akun',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0284C7),
+                              color: const Color(0xFF004AAD),
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFF0284C7), width: 2),
+                            side: const BorderSide(color: Color(0xFF004AAD), width: 2),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),

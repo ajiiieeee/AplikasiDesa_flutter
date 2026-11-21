@@ -196,7 +196,7 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF16A34A),
+                        backgroundColor: const Color(0xFF004AAD),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(
@@ -244,7 +244,7 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF16A34A);
+    const primaryGreen = Color(0xFF004AAD);
     const bgGrey = Color(0xFFF8FAFC);
 
     return Scaffold(
@@ -452,7 +452,7 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
                                       subtitle: 'Disetujui Sekdes',
                                       icon: Icons.assignment_turned_in_rounded,
                                       color: primaryGreen,
-                                      bgColor: const Color(0xFFE8F5E9),
+                                      bgColor: const Color(0xFFE3F2FD),
                                     ),
                                   ),
                                 ],
@@ -536,7 +536,7 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.03),
+                                      color: Colors.black.withValues(alpha: 0.03),
                                       blurRadius: 8,
                                       offset: const Offset(0, 3),
                                     ),
@@ -549,7 +549,7 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
                                   leading: Container(
                                     padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFE8F5E9),
+                                      color: const Color(0xFFE3F2FD),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(Icons.description_rounded, color: primaryGreen, size: 22),
@@ -578,7 +578,7 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
                                   trailing: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: primaryGreen.withOpacity(0.1),
+                                      color: primaryGreen.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -621,7 +621,7 @@ class _SekdesHomeScreenState extends State<SekdesHomeScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

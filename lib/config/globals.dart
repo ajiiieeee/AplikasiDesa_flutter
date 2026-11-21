@@ -6,10 +6,22 @@ const String serverURL = "https://desarambipuji-jember.com";
 // Base URL API
 const String baseURL = "$serverURL/api";
 
+const String appUserAgent = "Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36";
+
 const Map<String, String> headers = {
   'Content-Type': 'application/json',
   'Accept': 'application/json',
+  'User-Agent': appUserAgent,
 };
+
+Map<String, String> getApiHeaders({String? token, bool isJson = true}) {
+  return {
+    if (isJson) 'Content-Type': 'application/json; charset=UTF-8',
+    'Accept': 'application/json',
+    'User-Agent': appUserAgent,
+    if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+  };
+}
 
 void errorSnackBar(BuildContext context, String text) {
   ScaffoldMessenger.of(context).showSnackBar(

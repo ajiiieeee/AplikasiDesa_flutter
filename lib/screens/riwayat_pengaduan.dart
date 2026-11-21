@@ -20,9 +20,9 @@ class RiwayatPengaduanScreen extends StatefulWidget {
 }
 
 class _RiwayatPengaduanScreenState extends State<RiwayatPengaduanScreen> {
-  static const _primary   = Color(0xFF2E7D32);
-  static const _accent    = Color(0xFF16A34A);
-  static const _bgGreen   = Color(0xFFE8F5E9);
+  static const _primary   = Color(0xFF004AAD);
+  static const _accent    = Color(0xFF004AAD);
+  static const _bgGreen   = Color(0xFFE3F2FD);
   static const _bgPage    = Color(0xFFF5F7FA);
 
   List<PengaduanModel> _list = [];
@@ -236,8 +236,8 @@ class _PengaduanCard extends StatelessWidget {
 
   const _PengaduanCard({required this.item, required this.onEdit, required this.onDelete});
 
-  static const _primary  = Color(0xFF2E7D32);
-  static const _bgGreen  = Color(0xFFE8F5E9);
+  static const _primary  = Color(0xFF004AAD);
+  static const _bgGreen  = Color(0xFFE3F2FD);
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +246,7 @@ class _PengaduanCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3)),
         ],
       ),
       child: Column(
@@ -308,9 +308,9 @@ class _PengaduanCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade50,
+                      color: const Color(0xFFE3F2FD),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _primary.withOpacity(0.3)),
+                      border: Border.all(color: _primary.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,9 +416,9 @@ class _ActionBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -446,9 +446,9 @@ class _EditPengaduanSheet extends StatefulWidget {
 }
 
 class _EditPengaduanSheetState extends State<_EditPengaduanSheet> {
-  static const _primary   = Color(0xFF2E7D32);
-  static const _fillGreen = Color(0xFFF1F8F1);
-  static const _bgGreen   = Color(0xFFE8F5E9);
+  static const _primary   = Color(0xFF004AAD);
+  static const _fillGreen = Color(0xFFF0F6FF);
+  static const _bgGreen   = Color(0xFFE3F2FD);
 
   late TextEditingController _ulasanCtrl;
   late String? _selectedKategori;
@@ -553,7 +553,7 @@ class _EditPengaduanSheetState extends State<_EditPengaduanSheet> {
                 filled: true,
                 fillColor: _fillGreen,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primary.withOpacity(0.4))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primary.withValues(alpha: 0.4))),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _primary, width: 2)),
               ),
               child: DropdownButtonHideUnderline(
@@ -596,7 +596,7 @@ class _EditPengaduanSheetState extends State<_EditPengaduanSheet> {
                 decoration: BoxDecoration(
                   color: _bgGreen,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: _primary.withOpacity(0.4)),
+                  border: Border.all(color: _primary.withValues(alpha: 0.4)),
                 ),
                 child: _imageBytes != null
                     ? ClipRRect(
@@ -649,10 +649,10 @@ class _FormPengaduanBaru extends StatefulWidget {
 }
 
 class _FormPengaduanBaruState extends State<_FormPengaduanBaru> {
-  static const _primary   = Color(0xFF2E7D32);
-  static const _accent    = Color(0xFF16A34A);
-  static const _bgGreen   = Color(0xFFE8F5E9);
-  static const _fillGreen = Color(0xFFF1F8F1);
+  static const _primary   = Color(0xFF004AAD);
+  static const _accent    = Color(0xFF004AAD);
+  static const _bgGreen   = Color(0xFFE3F2FD);
+  static const _fillGreen = Color(0xFFF0F6FF);
   static const _bgPage    = Color(0xFFF5F7FA);
 
   final _ulasanCtrl = TextEditingController();
@@ -751,7 +751,7 @@ class _FormPengaduanBaruState extends State<_FormPengaduanBaru> {
               decoration: BoxDecoration(
                 color: _bgGreen,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _primary.withOpacity(0.3)),
+                border: Border.all(color: _primary.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -781,7 +781,7 @@ class _FormPengaduanBaruState extends State<_FormPengaduanBaru> {
                     filled: true,
                     fillColor: _fillGreen,
                     contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primary.withOpacity(0.4), width: 1.5)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _primary.withValues(alpha: 0.4), width: 1.5)),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _primary, width: 2)),
                   ),
                   child: DropdownButtonHideUnderline(
@@ -848,7 +848,7 @@ class _FormPengaduanBaruState extends State<_FormPengaduanBaru> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _imageBytes != null ? _primary : _primary.withOpacity(0.4), width: 1.5),
+                      border: Border.all(color: _imageBytes != null ? _primary : _primary.withValues(alpha: 0.4), width: 1.5),
                     ),
                     child: _imageBytes != null
                         ? Stack(
@@ -924,7 +924,7 @@ class _FormPengaduanBaruState extends State<_FormPengaduanBaru> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -932,7 +932,7 @@ class _FormPengaduanBaruState extends State<_FormPengaduanBaru> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: _primary.withOpacity(0.07),
+              color: _primary.withValues(alpha: 0.07),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Row(children: [

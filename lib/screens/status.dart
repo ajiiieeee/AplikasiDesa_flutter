@@ -13,7 +13,7 @@ class StatusTabScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF2E7D32);
+    const primaryGreen = Color(0xFF004AAD);
     const bgGrey = Color(0xFFF5F7FA);
 
     return Scaffold(

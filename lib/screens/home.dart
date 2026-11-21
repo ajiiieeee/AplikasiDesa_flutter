@@ -153,8 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF16A34A);
-    const accentGreen = Color(0xFF22C55E);
+    const primaryGreen = Color(0xFF004AAD);
+    const accentGreen = Color(0xFF1E88E5);
     const bgGrey = Color(0xFFF8FAFC);
 
     return Scaffold(
@@ -357,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           subtitle: 'Siap Diunduh',
                           icon: Icons.check_circle_rounded,
                           color: primaryGreen,
-                          bgColor: const Color(0xFFE8F5E9),
+                          bgColor: const Color(0xFFE3F2FD),
                         ),
                       ),
                     ],
@@ -374,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
+                          color: Colors.black.withValues(alpha: 0.04),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -389,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE8F5E9),
+                                color: const Color(0xFFE3F2FD),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
@@ -555,7 +555,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -621,12 +621,12 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
-          border: Border.all(color: const Color(0xFFCFD8DC).withOpacity(0.5)),
+          border: Border.all(color: const Color(0xFFCFD8DC).withValues(alpha: 0.5)),
         ),
         child: Column(
           children: [
