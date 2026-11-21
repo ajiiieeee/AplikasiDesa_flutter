@@ -21,7 +21,9 @@ void main() async {
   String role = await SecureStorageService.instance.getRole();
 
   if (token != null && token.isNotEmpty) {
-    NotificationService.instance.syncTokenToBackend();
+    try {
+      NotificationService.instance.syncTokenToBackend();
+    } catch (_) {}
   }
 
   runApp(MyApp(isLoggedIn: token != null && token.isNotEmpty, role: role));

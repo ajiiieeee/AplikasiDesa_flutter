@@ -17,105 +17,128 @@ class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  FirebaseMessaging? get _fcm {
+    try {
+      if (Firebase.apps.isNotEmpty) {
+        return FirebaseMessaging.instance;
+      }
+    } catch (e) {
+      debugPrint('FCM not available: $e');
+    }
+    return null;
+  }
+
   final FlutterLocalNotificationsPlugin _localNotif = FlutterLocalNotificationsPlugin();
 
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   Future<void> initialize() async {
-    // 1. Minta izin notifikasi eksplisit untuk Android 13+ & iOS
     try {
-      await Permission.notification.request();
-    } catch (_) {}
-
-    await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      provisional: false,
-    );
-
-    // 2. Buat saluran notifikasi Android berprioritas tinggi
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'desa_channel',
-      'Notifikasi Desa Rambipuji',
-      description: 'Saluran notifikasi pengajuan surat dan informasi Desa Rambipuji',
-      importance: Importance.max,
-      playSound: true,
-    );
-
-    await _localNotif
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
-
-    // 3. Inisialisasi plugin notifikasi lokal
-    const AndroidInitializationSettings androidInit =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initSettings =
-        InitializationSettings(android: androidInit);
-
-    await _localNotif.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        if (response.payload != null && response.payload!.isNotEmpty) {
-          try {
-            final data = jsonDecode(response.payload!);
-            handleNotificationNavigation(data);
-          } catch (_) {}
-        }
-      },
-    );
-
-    // 4. Tangani notifikasi saat aplikasi sedang AKTIF / TERBUKA (Foreground)
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
-
-      if (notification != null && android != null) {
-        _localNotif.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              channel.id,
-              channel.name,
-              channelDescription: channel.description,
-              importance: Importance.max,
-              priority: Priority.high,
-              icon: '@mipmap/ic_launcher',
-              playSound: true,
-            ),
-          ),
-          payload: jsonEncode(message.data),
-        );
+      final fcm = _fcm;
+      if (fcm == null) {
+        debugPrint('🔔 [FCM] NotificationService skipped: Firebase tidak diinisialisasi pada platform ini.');
+        return;
       }
-    });
 
-    // 5. Tangani ketika notifikasi diklik saat aplikasi di BACKGROUND
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      handleNotificationNavigation(message.data);
-    });
+      // 1. Minta izin notifikasi eksplisit untuk Android 13+ & iOS
+      try {
+        await Permission.notification.request();
+      } catch (_) {}
 
-    // 6. Tangani ketika notifikasi diklik saat aplikasi dalam kondisi MATI (Terminated)
-    RemoteMessage? initialMessage = await _fcm.getInitialMessage();
-    if (initialMessage != null) {
-      handleNotificationNavigation(initialMessage.data);
+      await fcm.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+
+      // 2. Buat saluran notifikasi Android berprioritas tinggi
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'desa_channel',
+        'Notifikasi Desa Rambipuji',
+        description: 'Saluran notifikasi pengajuan surat dan informasi Desa Rambipuji',
+        importance: Importance.max,
+        playSound: true,
+      );
+
+      await _localNotif
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+
+      // 3. Inisialisasi plugin notifikasi lokal
+      const AndroidInitializationSettings androidInit =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const InitializationSettings initSettings =
+          InitializationSettings(android: androidInit);
+
+      await _localNotif.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          if (response.payload != null && response.payload!.isNotEmpty) {
+            try {
+              final data = jsonDecode(response.payload!);
+              handleNotificationNavigation(data);
+            } catch (_) {}
+          }
+        },
+      );
+
+      // 4. Tangani notifikasi saat aplikasi sedang AKTIF / TERBUKA (Foreground)
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        RemoteNotification? notification = message.notification;
+        AndroidNotification? android = message.notification?.android;
+
+        if (notification != null && android != null) {
+          _localNotif.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                channel.id,
+                channel.name,
+                channelDescription: channel.description,
+                importance: Importance.max,
+                priority: Priority.high,
+                icon: '@mipmap/ic_launcher',
+                playSound: true,
+              ),
+            ),
+            payload: jsonEncode(message.data),
+          );
+        }
+      });
+
+      // 5. Tangani ketika notifikasi diklik saat aplikasi di BACKGROUND
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        handleNotificationNavigation(message.data);
+      });
+
+      // 6. Tangani ketika notifikasi diklik saat aplikasi dalam kondisi MATI (Terminated)
+      RemoteMessage? initialMessage = await fcm.getInitialMessage();
+      if (initialMessage != null) {
+        handleNotificationNavigation(initialMessage.data);
+      }
+
+      // 7. Listener saat FCM token berganti secara berkala
+      fcm.onTokenRefresh.listen((newToken) {
+        syncTokenToBackend(overrideToken: newToken);
+      });
+
+      // 8. Langsung coba sync token saat inisialisasi jika sudah ada data akun
+      syncTokenToBackend();
+    } catch (e) {
+      debugPrint('🔔 [FCM] Init error: $e');
     }
-
-    // 7. Listener saat FCM token berganti secara berkala
-    _fcm.onTokenRefresh.listen((newToken) {
-      syncTokenToBackend(overrideToken: newToken);
-    });
-
-    // 8. Langsung coba sync token saat inisialisasi jika sudah ada data akun
-    syncTokenToBackend();
   }
 
   /// Sinkronkan FCM Token perangkat ini ke Backend Laravel
   Future<void> syncTokenToBackend({String? overrideToken}) async {
     try {
-      String? token = overrideToken ?? await _fcm.getToken();
+      final fcm = _fcm;
+      if (fcm == null) return;
+
+      String? token = overrideToken ?? await fcm.getToken();
       String? authToken = await SecureStorageService.instance.getToken();
       String? nik = await SecureStorageService.instance.getNik();
 

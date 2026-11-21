@@ -33,13 +33,17 @@ class _LoginregisState extends State<Loginregis> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
 
-    // Sinkronkan FCM Device Token ke server untuk Push Notification
-    await NotificationService.instance.syncTokenToBackend();
+    // Sinkronkan FCM Device Token ke server untuk Push Notification (opsional, tahan error)
+    try {
+      await NotificationService.instance.syncTokenToBackend();
+    } catch (e) {
+      debugPrint('⚠️ FCM Sync Token skipped: $e');
+    }
   }
 
 
 
- Future<void> login(BuildContext context) async {
+  Future<void> login(BuildContext context) async {
     final String nikLogin = nikLoginController.text.trim();
     final String passwordLogin = loginPasswordController.text.trim();
 
@@ -53,18 +57,27 @@ class _LoginregisState extends State<Loginregis> {
       return;
     }
 
+    final loginUrl = Uri.parse('$baseURL/login');
+
     try {
+      // 1. URL Endpoint yang dipanggil
+      print('🌐 URL Endpoint: $loginUrl');
+
       final response = await http.post(
-        Uri.parse('$baseURL/login'),
+        loginUrl,
         headers: getApiHeaders(),
         body: jsonEncode({'nik': nikLogin, 'password': passwordLogin}),
-      );
+      ).timeout(const Duration(seconds: 20));
+
+      // 2. HTTP Status Code
+      print('📥 HTTP Status Code: ${response.statusCode}');
+
+      // 3. Response Body
+      print('📦 Response Body: ${response.body}');
+
+      if (!context.mounted) return;
 
       final responseData = jsonDecode(response.body);
-
-      //  Cetak response status dan body untuk debugging
-      print('📥 Status Code: ${response.statusCode}');
-      print('📦 Response Body: ${response.body}');
 
       if (response.statusCode == 200 &&
           responseData['status'] == 'success' &&
@@ -140,30 +153,55 @@ class _LoginregisState extends State<Loginregis> {
           icon: Icons.error,
         );
       }
-    } on SocketException {
+    } on SocketException catch (e, stackTrace) {
+      // 4. Pesan Exception
+      print('❗ Pesan Exception (SocketException): $e');
+      print('🧾 STACKTRACE: $stackTrace');
+      if (!context.mounted) return;
       showCustomSnackbarAtTop(
         context: context,
         message: 'Gagal terhubung ke server backend. Pastikan server Laravel berjalan.',
         backgroundColor: Colors.orange,
         icon: Icons.wifi_off,
       );
-    } on http.ClientException {
+    } on http.ClientException catch (e, stackTrace) {
+      // 4. Pesan Exception
+      print('❗ Pesan Exception (ClientException): $e');
+      print('🧾 STACKTRACE: $stackTrace');
+      if (!context.mounted) return;
       showCustomSnackbarAtTop(
         context: context,
-        message: 'Gagal terhubung ke http://localhost:8000. Pastikan backend Laravel aktif & CORS diizinkan.',
+        message: 'Gagal terhubung ke server backend. Pastikan backend Laravel aktif & CORS diizinkan.',
         backgroundColor: Colors.orange,
         icon: Icons.wifi_off,
       );
-    } on TimeoutException {
+    } on TimeoutException catch (e, stackTrace) {
+      // 4. Pesan Exception
+      print('❗ Pesan Exception (TimeoutException): $e');
+      print('🧾 STACKTRACE: $stackTrace');
+      if (!context.mounted) return;
       showCustomSnackbarAtTop(
         context: context,
         message: 'Koneksi timeout, coba lagi!',
         backgroundColor: Colors.orange,
         icon: Icons.timer_off,
       );
-    } catch (e, stackTrace) {
-      print('❗ ERROR: $e');
+    } on FormatException catch (e, stackTrace) {
+      // 4. Pesan Exception (jika respon bukan format JSON yang valid)
+      print('❗ Pesan Exception (FormatException): $e');
       print('🧾 STACKTRACE: $stackTrace');
+      if (!context.mounted) return;
+      showCustomSnackbarAtTop(
+        context: context,
+        message: 'Format respon dari server tidak valid.',
+        backgroundColor: Colors.red,
+        icon: Icons.error,
+      );
+    } catch (e, stackTrace) {
+      // 4. Pesan Exception
+      print('❗ Pesan Exception: $e');
+      print('🧾 STACKTRACE: $stackTrace');
+      if (!context.mounted) return;
       showCustomSnackbarAtTop(
         context: context,
         message: 'Terjadi kesalahan tak terduga: $e',
